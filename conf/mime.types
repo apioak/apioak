@@ -1,4 +1,3 @@
-
 types {
     text/html                             html htm shtml;
     text/css                              css;
@@ -73,6 +72,7 @@ types {
     audio/ogg                             ogg;
     audio/x-m4a                           m4a;
     audio/x-realaudio                     ra;
+    audio/wav                             wav;
 
     video/3gpp                            3gpp 3gp;
     video/mp2t                            ts;
