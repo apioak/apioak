@@ -1,0 +1,17 @@
+# 开启 SSL 功能
+ssl on;
+# SSL 证书文件路径，由证书签发机构提供
+ssl_certificate      /etc/ngx-openresty/cert/api.pem;
+# SSL 密钥文件路径，由证书签发机构提供
+ssl_certificate_key  /etc/ngx-openresty/cert/api.key;
+
+ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;
+ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+ssl_prefer_server_ciphers on;
+
+ssl_stapling on;
+ssl_stapling_verify on;
+# CA 根证书文件路径，由证书签发机构提供
+ssl_trusted_certificate /etc/ngx-openresty/cert/full_chain.pem;
+ssl_session_cache shared:SSL:50m;
+ssl_session_timeout 10m;
