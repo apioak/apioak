@@ -13,11 +13,11 @@ _M.env = 'prod'
 
 -- MySQL配置
 _M.mysql = {
-    db_host = '172.22.0.2',
+    db_host = '127.0.0.1',
     db_port = 3306,
-    db_user = 'apigateway',
-    db_password = 'apigateway',
-    db_name = 'apigateway',
+    db_user = 'root',
+    db_password = '123456',
+    db_name = 'gateway',
     db_timeout = 10000,
     db_charset = 'utf8',
 }
