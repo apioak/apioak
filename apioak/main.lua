@@ -1,8 +1,8 @@
-local env              = require "config.env"
+local env              = require "conf.env"
 local ipairs           = ipairs
-local utils            = require "lib.tools.utils"
-local singletons       = require "config.singletons"
-local response         = require "lib.response"
+local utils            = require "apioak.lib.tools.utils"
+local singletons       = require "apioak.singletons"
+local response         = require "apioak.lib.response"
 local ngx_balancer     = require "ngx.balancer"
 local get_last_failure = ngx_balancer.get_last_failure
 local set_current_peer = ngx_balancer.set_current_peer
