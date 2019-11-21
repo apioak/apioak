@@ -1,6 +1,6 @@
 local ngx_log = ngx.log
 
-local _LEVELS = {
+local _NGX_LOG_LEVELS = {
     debug  = ngx.DEBUG,
     info   = ngx.INFO,
     notice = ngx.NOTICE,
@@ -13,7 +13,7 @@ local _LEVELS = {
 
 local _M = {}
 
-for log_name, log_level in pairs(_LEVELS) do
+for log_name, log_level in pairs(_NGX_LOG_LEVELS) do
     _M[log_name] = function(...)
         ngx_log(log_level, ...)
     end

@@ -21,10 +21,12 @@ dependencies = {
     "lua-resty-ngxvar = 0.4",
     "lua-resty-jit-uuid = 0.0.7",
     "lua-resty-jwt = 0.2.0",
-    "lua-resty-radixtree = 1.4",
+    "lua-resty-libr3 = 1.2-0",
     "lua-resty-http = 0.15-0",
     "jsonschema = 0.3",
     "luasocket = 3.0rc1-2",
+    "luafilesystem = 1.7.0-2",
+    "lua-tinyyaml = 0.1",
 }
 
 build = {
