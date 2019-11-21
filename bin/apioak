@@ -1,1 +1,88 @@
-#!/usr/bin/env bash
+#!/usr/bin/env lua
+
+local script_path = debug.getinfo(1).source:sub(2)
+
+local function trim(s)
+    return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
+
+local function execute_cmd(cmd)
+    local t = io.popen(cmd)
+    local data = t:read("*all")
+    t:close()
+    return data
+end
+
+local apioak_home
+if script_path:sub(1, 4) == '/usr' or script_path:sub(1, 4) == '/bin' then
+    apioak_home = "/usr/local/apioak"
+else
+    apioak_home = trim(execute_cmd("pwd"))
+end
+
+local openresty_bin = trim(execute_cmd("which openresty"))
+if not openresty_bin then
+    error("can not find the openresty.")
+end
+
+execute_cmd("mkdir -p " .. apioak_home .. "/logs")
+
+local openresty_launch = openresty_bin .. [[  -p ]] .. apioak_home .. [[ -c ]]
+        .. apioak_home .. [[/conf/nginx.conf]]
+
+local _M = {}
+
+function _M.help()
+    print([[
+Usage: apioak [action] <argument>
+help:       show this message, then exit
+start:      start the apioak server
+stop:       stop the apioak server
+restart:    restart the apioak server
+reload:     reload the apioak server
+test:       test the apioak nginx config
+]])
+end
+
+function _M.start()
+    _M.test()
+    local cmd = openresty_launch
+    os.execute(cmd)
+end
+
+function _M.stop()
+    _M.test()
+    local cmd = openresty_launch .. [[ -s stop]]
+    os.execute(cmd)
+end
+
+function _M.restart()
+    _M.test()
+    local cmd = openresty_launch .. [[ -s stop]]
+    os.execute(cmd)
+    cmd = openresty_launch
+    os.execute(cmd)
+end
+
+function _M.reload()
+    _M.test()
+    local cmd = openresty_launch .. [[ -s reload]]
+    os.execute(cmd)
+end
+
+function _M.test()
+    local cmd = openresty_launch .. [[ -t]]
+    os.execute(cmd)
+end
+
+local cmd_action = arg[1]
+if not cmd_action then
+    return _M.help()
+end
+
+if not _M[cmd_action] then
+    print("invalid argument: ", cmd_action, "\n")
+    return
+end
+
+_M[cmd_action](arg[2])
