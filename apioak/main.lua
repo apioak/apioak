@@ -16,6 +16,7 @@ local ngx_log          = ngx.log
 local ngx_DEBUG        = ngx.DEBUG
 local ngx_ERR          = ngx.ERR
 local ngx_WARN         = ngx.WARN
+local pdk              = require("apioak.pdk")
 
 -- 开启的插件名称
 local enable_plugins = {
@@ -53,31 +54,31 @@ end
 local plugins = {}
 
 -- 定义执行流对象
-local _M = {}
+local APIOAK = {}
 
 -- 初始化项目配置
-function _M.init(options)
+function APIOAK.init(options)
     options = options or {}
     singletons.config = env
     plugins = loading_plugins(enable_plugins)
 end
 
 -- 初始化插件配置
-function _M.init_worker()
+function APIOAK.init_worker()
     for _, plugin in ipairs(plugins) do
         plugin.handler:init_worker()
     end
 end
 
 -- 请求转发、重定向等操作
-function _M.rewrite()
+function APIOAK.rewrite()
     for _, plugin in ipairs(plugins) do
         plugin.handler:rewrite()
     end
 end
 
 -- 请求IP准入、权限认证相关操作
-function _M.access()
+function APIOAK.access()
     -- 获取Nginx内置变量
     local var = ngx.var
     -- 获取Nginx共享变量
@@ -127,7 +128,7 @@ function _M.access()
 end
 
 --负载均衡 优先接口自定义，之后是项目设置
-function _M.balancer()
+function APIOAK.balancer()
     local ctx = ngx.ctx
     local upstream = ctx.upstream
     -- 初始化错误重试计数器
@@ -195,7 +196,7 @@ function _M.balancer()
 end
 
 -- 响应头部过滤处理
-function _M.header_filter()
+function APIOAK.header_filter()
     local ctx = ngx.ctx
     for _, plugin in ipairs(plugins) do
         plugin.handler:header_filter(ctx)
@@ -203,7 +204,7 @@ function _M.header_filter()
 end
 
 -- 响应体过滤处理
-function _M.body_filter()
+function APIOAK.body_filter()
     local ctx = ngx.ctx
     for _, plugin in ipairs(plugins) do
         plugin.handler:body_filter(ctx)
@@ -211,11 +212,11 @@ function _M.body_filter()
 end
 
 -- 会话完成后本地异步完成日志处理
-function _M.log()
+function APIOAK.log()
     local ctx = ngx.ctx
     for _, plugin in ipairs(plugins) do
         plugin.handler:log(ctx)
     end
 end
 
-return _M
+return APIOAK
