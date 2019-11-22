@@ -40,3 +40,5 @@ luac.out
 *.hex
 
 .idea
+
+/conf/
