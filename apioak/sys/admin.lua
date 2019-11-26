@@ -5,7 +5,6 @@ local _M = {}
 local resources = {
     routes = require("apioak.admin.routes"),
     upstreams = require("apioak.admin.upstreams"),
-    plugins = require("apioak.admin.plugins"),
 }
 
 local router_handle = function(params)
@@ -25,7 +24,9 @@ local router_handle = function(params)
         end
         req_body = res
     end
-    resource[method](res_id, req_body)
+    local code, body = resource[method](res_id, req_body)
+    ngx.say(body)
+    ngx.exit(code)
 end
 
 local router

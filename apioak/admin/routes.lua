@@ -15,7 +15,7 @@ function _M.get(id)
 end
 
 function _M.put(id, conf)
-    local key = "routes"
+    local key = "/routes"
     if id then
         key = string.format("%s/%s", key, id)
     end
@@ -27,7 +27,7 @@ function _M.put(id, conf)
 end
 
 function _M.post(conf)
-    local key = "routes"
+    local key = "/routes"
     local res, err = pdk.etcd.push(key, conf)
     if err then
         return 500, err
