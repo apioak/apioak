@@ -13,6 +13,7 @@ local ngx_re_match     = ngx.re.match
 local string_format    = string.format
 local table_insert     = table.insert
 local ngx_log          = ngx.log
+local ngx_exit         = ngx.exit
 local ngx_DEBUG        = ngx.DEBUG
 local ngx_ERR          = ngx.ERR
 local ngx_WARN         = ngx.WARN
@@ -62,6 +63,7 @@ function APIOAK.init(options)
     options = options or {}
     singletons.config = env
     plugins = loading_plugins(enable_plugins)
+    sys.admin.init_worker()
 end
 
 -- 初始化插件配置
@@ -69,9 +71,11 @@ function APIOAK.init_worker()
 
     sys.router.init_worker()
 
+    sys.plugin.init_worker()
+
     sys.upstream.init_worker()
 
-    sys.plugin.init_worker()
+    --require("apioak.sys.admin").init_worker()
 
     --for _, plugin in ipairs(plugins) do
     --    plugin.handler:init_worker()
@@ -224,6 +228,19 @@ function APIOAK.log()
     local ctx = ngx.ctx
     for _, plugin in ipairs(plugins) do
         plugin.handler:log(ctx)
+    end
+end
+
+do
+    local admin_routers
+    function APIOAK.http_admin()
+        if not admin_routers then
+            admin_routers = sys.admin.routers()
+        end
+        local ok = admin_routers:dispatch(ngx.var.uri, ngx.req.get_method())
+        if not ok then
+            ngx.exit(404)
+        end
     end
 end
 

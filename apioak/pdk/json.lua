@@ -2,7 +2,9 @@ local type = type
 local pairs = pairs
 local cjson = require("cjson")
 
-local _M = {}
+local _M = {
+    decode = require("cjson.safe").decode,
+}
 
 function _M.encode(obj)
 
@@ -59,14 +61,6 @@ function _M.encode(obj)
     end
 
     return cjson.encode(dump_obj(obj)), nil
-end
-
-function _M.decode(data)
-    if not data then
-        return nil, 'this param is error'
-    end
-
-    return cjson.decode(data), nil
 end
 
 return _M
