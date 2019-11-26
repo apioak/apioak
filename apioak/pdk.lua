@@ -4,5 +4,6 @@ return {
     json = require("apioak.pdk.json"),
     etcd = require("apioak.pdk.etcd"),
     conf = require("apioak.pdk.config"),
+    cache = require("apioak.pdk.cache"),
     r3 = require("apioak.pdk.r3"),
 }

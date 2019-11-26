@@ -40,3 +40,6 @@ luac.out
 *.hex
 
 .idea
+
+deps/
+logs/
