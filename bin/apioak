@@ -16,8 +16,23 @@ end
 local apioak_home
 if script_path:sub(1, 4) == '/usr' or script_path:sub(1, 4) == '/bin' then
     apioak_home = "/usr/local/apioak"
+    package.cpath = "/usr/local/apioak/deps/lib64/lua/5.1/?.so;"
+            .. "/usr/local/apioak/deps/lib/lua/5.1/?.so;"
+            .. package.cpath
+
+    package.path = "/usr/local/apioak/deps/share/lua/5.1/apioak/lua/?.lua;"
+            .. "/usr/local/apioak/deps/share/lua/5.1/?.lua;"
+            .. "/usr/share/lua/5.1/apioak/lua/?.lua;"
+            .. "/usr/local/share/lua/5.1/apioak/lua/?.lua;"
+            .. package.path
 else
     apioak_home = trim(execute_cmd("pwd"))
+    package.cpath = apioak_home .. "/deps/lib64/lua/5.1/?.so;"
+            .. package.cpath
+
+    package.path = apioak_home .. "/apioak/?.lua;"
+            .. apioak_home .. "/deps/share/lua/5.1/?.lua;"
+            .. package.path
 end
 
 local openresty_bin = trim(execute_cmd("which openresty"))
@@ -45,27 +60,21 @@ test:       test the apioak nginx config
 end
 
 function _M.start()
-    _M.test()
     local cmd = openresty_launch
     os.execute(cmd)
 end
 
 function _M.stop()
-    _M.test()
     local cmd = openresty_launch .. [[ -s stop]]
     os.execute(cmd)
 end
 
 function _M.restart()
-    _M.test()
-    local cmd = openresty_launch .. [[ -s stop]]
-    os.execute(cmd)
-    cmd = openresty_launch
-    os.execute(cmd)
+    _M.stop()
+    _M.start()
 end
 
 function _M.reload()
-    _M.test()
     local cmd = openresty_launch .. [[ -s reload]]
     os.execute(cmd)
 end
@@ -73,6 +82,35 @@ end
 function _M.test()
     local cmd = openresty_launch .. [[ -t]]
     os.execute(cmd)
+end
+
+function _M.init_etcd()
+    local yaml = require("tinyyaml")
+    local file, err = io.open(apioak_home .. "/conf/apioak.yaml", "r")
+    if err then
+        error(err)
+    end
+
+    local content = file:read("*a")
+    file:close()
+
+    local config = yaml.parse(content)
+    local etcd_config = config.etcd
+    local etcd_uri = string.format("%s/v2/keys/%s", etcd_config.host, etcd_config.prefix)
+    local timeout = etcd_config.timeout
+    for _, name in ipairs({
+        "routes",
+        "upstreams",
+        "plugins",
+    }) do
+        local command = string.format("curl %s/%s?prev_exist=false -X PUT -d dir=true --connect-timeout %s 2>&1",
+                etcd_uri, name, timeout)
+        local res = execute_cmd(command)
+        if not res:find("index", 1, true)
+                and not res:find("createdIndex", 1, true) then
+            error(command .. "\n" .. res)
+        end
+    end
 end
 
 local cmd_action = arg[1]
