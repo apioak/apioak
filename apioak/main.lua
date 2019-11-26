@@ -17,6 +17,7 @@ local ngx_DEBUG        = ngx.DEBUG
 local ngx_ERR          = ngx.ERR
 local ngx_WARN         = ngx.WARN
 local pdk              = require("apioak.pdk")
+local sys              = require("apioak.sys")
 
 -- 开启的插件名称
 local enable_plugins = {
@@ -65,16 +66,23 @@ end
 
 -- 初始化插件配置
 function APIOAK.init_worker()
-    for _, plugin in ipairs(plugins) do
-        plugin.handler:init_worker()
-    end
+
+    sys.router.init_worker()
+
+    sys.upstream.init_worker()
+
+    sys.plugin.init_worker()
+
+    --for _, plugin in ipairs(plugins) do
+    --    plugin.handler:init_worker()
+    --end
 end
 
 -- 请求转发、重定向等操作
 function APIOAK.rewrite()
-    for _, plugin in ipairs(plugins) do
-        plugin.handler:rewrite()
-    end
+    --for _, plugin in ipairs(plugins) do
+    --    plugin.handler:rewrite()
+    --end
 end
 
 -- 请求IP准入、权限认证相关操作
