@@ -3,7 +3,7 @@ local pdk = require("apioak.pdk")
 local _M = {}
 
 function _M.get(id)
-    local key = "/upstreams"
+    local key = "upstreams"
     if id then
         key = string.format("%s/%s", key, id)
     end
@@ -15,7 +15,7 @@ function _M.get(id)
 end
 
 function _M.put(id, conf)
-    local key = "/upstreams"
+    local key = "upstreams"
     if id then
         key = string.format("%s/%s", key, id)
     end
@@ -27,7 +27,7 @@ function _M.put(id, conf)
 end
 
 function _M.post(conf)
-    local key = "/upstreams"
+    local key = "upstreams"
     local res, err = pdk.etcd.push(key, conf)
     if err then
         return 500, err
@@ -36,7 +36,7 @@ function _M.post(conf)
 end
 
 function _M.delete(id)
-    local key = "/upstreams"
+    local key = "upstreams"
     if id then
         key = string.format("%s/%s", key, id)
     end
