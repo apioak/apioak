@@ -118,7 +118,7 @@ function _M.init_etcd()
         end
     end
     local hello_api_command = string.format("curl %s/routes/1 -X PUT -d '{\"uri\":\"/hello/world\",\"method\":\"GET\"}'", etcd_uri)
-    execute_cmd(hello_api_command)
+    os.execute(hello_api_command)
 end
 
 local cmd_action = arg[1]
