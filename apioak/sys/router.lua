@@ -82,7 +82,7 @@ function _M.create_r3_routes()
         routes[key].handler = function(param, oak_ctx)
             oak_ctx.matched = {}
             oak_ctx.matched.param = param
-            oak_ctx.matched.route = route
+            oak_ctx.matched.path = route.path
         end
     end
     router = r3route.new(routes)
