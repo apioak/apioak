@@ -40,8 +40,6 @@ if not openresty_bin then
     error("can not find the openresty.")
 end
 
-execute_cmd("mkdir -p " .. apioak_home .. "/logs")
-
 local openresty_launch = openresty_bin .. [[  -p ]] .. apioak_home .. [[ -c ]]
         .. apioak_home .. [[/conf/nginx.conf]]
 
@@ -84,6 +82,15 @@ function _M.test()
     os.execute(cmd)
 end
 
+function _M.init()
+    local logs = io.open(apioak_home .. "/logs", "rb")
+    if not logs then
+        execute_cmd("mkdir -p " .. apioak_home .. "/logs")
+    else
+        logs:close()
+    end
+end
+
 function _M.init_etcd()
     local yaml = require("tinyyaml")
     local file, err = io.open(apioak_home .. "/conf/apioak.yaml", "r")
@@ -101,7 +108,6 @@ function _M.init_etcd()
     for _, name in ipairs({
         "routes",
         "upstreams",
-        "plugins",
     }) do
         local command = string.format("curl %s/%s?prev_exist=false -X PUT -d dir=true --connect-timeout %s 2>&1",
                 etcd_uri, name, timeout)
@@ -111,6 +117,8 @@ function _M.init_etcd()
             error(command .. "\n" .. res)
         end
     end
+    local hello_api_command = string.format("curl %s/routes/1 -X PUT -d '{\"uri\":\"/hello/world\",\"method\":\"GET\"}'", etcd_uri)
+    execute_cmd(hello_api_command)
 end
 
 local cmd_action = arg[1]
