@@ -41,19 +41,17 @@ local function loading_plugins(plugins, store)
     return load_plugins
 end
 
--- 加载的插件
 local plugins = {}
 
--- 定义执行流对象
 local APIOAK = {}
 
--- 初始化项目配置
+
 function APIOAK.init(options)
     options = options or {}
     plugins = loading_plugins(enable_plugins)
 end
 
--- 初始化插件配置
+
 function APIOAK.init_worker()
 
     sys.admin.init_worker()
@@ -64,43 +62,53 @@ function APIOAK.init_worker()
 
     sys.upstream.init_worker()
 
-end
-
--- 请求转发、重定向等操作
-function APIOAK.rewrite()
+    sys.balancer.init_worker()
 
 end
 
--- 请求IP准入、权限认证相关操作
-function APIOAK.access()
+
+function APIOAK.http_rewrite()
+
+end
+
+
+function APIOAK.http_redirect()
+
+end
+
+
+function APIOAK.http_access()
     ngx.ctx.oak_ctx = {}
     local oak_ctx = ngx.ctx.oak_ctx
     local routers = sys.router.get()
-    -- pdk.log.error("---", type(routers))
-    routers:dispatch(ngx.var.uri, ngx.req.get_method(), oak_ctx)
-    ngx.say(oak_ctx.matched.route.path)
-    ngx_exit(200)
+    local match_ok =routers:dispatch(ngx.var.uri, ngx.req.get_method(), oak_ctx)
+    if not match_ok then
+        pdk.log.error("uri match not found")
+        ngx_exit(404)
+    end
+    ngx.var.upstream_uri = ngx.var.uri
 end
 
---负载均衡 优先接口自定义，之后是项目设置
-function APIOAK.balancer()
 
+function APIOAK.http_balancer()
+    sys.balancer.go()
 end
 
--- 响应头部过滤处理
-function APIOAK.header_filter()
 
-end
-
--- 响应体过滤处理
-function APIOAK.body_filter()
+function APIOAK.http_header_filter()
 
 end
 
--- 会话完成后本地异步完成日志处理
-function APIOAK.log()
+
+function APIOAK.http_body_filter()
 
 end
+
+
+function APIOAK.http_log()
+
+end
+
 
 do
     local admin_routers
