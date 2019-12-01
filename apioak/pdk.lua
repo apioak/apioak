@@ -9,4 +9,5 @@ return {
     string   = require("apioak.pdk.string"),
     request  = require("apioak.pdk.request"),
     response = require("apioak.pdk.response"),
+    schema   = require("apioak.pdk.schema"),
 }
