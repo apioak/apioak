@@ -117,7 +117,7 @@ function _M.init_etcd()
             error(command .. "\n" .. res)
         end
     end
-    local hello_api_command = string.format("curl %s/routes/1 -X PUT -d '{\"uri\":\"/hello/world\",\"method\":\"GET\"}'", etcd_uri)
+    local hello_api_command = string.format("curl %s/routes/1 -X PUT -d 'value={\"uri\":\"/hello/world\",\"method\":\"GET\"}'", etcd_uri)
     os.execute(hello_api_command)
 end
 
