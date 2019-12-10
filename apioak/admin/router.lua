@@ -2,7 +2,27 @@ local pdk = require("apioak.pdk")
 
 local _M = {}
 
-_M.cached_key = "routes"
+_M.cached_key = "routers"
+
+function _M.list()
+
+end
+
+function _M.query(params)
+    ngx.say("query: ", params.id)
+end
+
+function _M.create(params)
+    ngx.say("create: ", params.id)
+end
+
+function _M.update(params)
+    ngx.say("update: ", params.id)
+end
+
+function _M.delete(params)
+    ngx.say("delete: ", params.id)
+end
 
 function _M.get(id)
     local key = "routes"
@@ -49,7 +69,7 @@ function _M.post(conf)
     return res.status, res.body
 end
 
-function _M.delete(id)
+function _M.del(id)
     local key = "routes"
     if id then
         key = string.format("%s/%s", key, id)
