@@ -24,6 +24,8 @@ function APIOAK.init()
     require("jit.opt").start("minstitch=2", "maxtrace=4000",
             "maxrecord=8000", "sizemcode=64",
             "maxmcode=4000", "maxirconst=1000")
+
+	    sys.admin.init_worker() --临时加入，提交代码之前删除掉
 end
 
 function APIOAK.init_worker()
