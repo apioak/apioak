@@ -27,6 +27,7 @@ dependencies = {
     "luasocket = 3.0rc1-2",
     "luafilesystem = 1.7.0-2",
     "lua-tinyyaml = 0.1",
+    "multipart = 0.5.5-1",
 }
 
 build = {
