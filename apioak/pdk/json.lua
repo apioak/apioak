@@ -1,67 +1,54 @@
-local type = type
-local pairs = pairs
-local cJson = require("cjson.safe")
+local type        = type
+local pairs       = pairs
+local tostring    = tostring
+local clear_tab   = require("table.clear")
+local json_decode = require("cjson.safe").decode
+local json_encode = require("cjson.safe").encode
+local cached_tab  = {}
 
-local _M = {
-    decode = cJson.decode,
-    encode = cJson.encode,
-}
+local _M = {}
 
-function _M.encode_func(obj)
-
-    local dump_obj;
-
-    local function get_key(key)
-        if type(key) == "number" then
-            return key
-        elseif type(key) == "string" then
-            return tostring(key)
-        end
+local function serialise_obj(data)
+    if type(data) == "function" or type(data) == "userdata"
+            or type(data) == "cdata"
+            or type(data) == "table" then
+        return tostring(data)
     end
 
-    local function get_val(val)
-        if type(val) == "table" then
-            return dump_obj(val)
-        else
-            return tostring(val)
-        end
+    return data
+end
+
+local function tab_clone_with_serialise(data)
+    if type(data) ~= "table" then
+        return serialise_obj(data)
     end
 
-    local function count_elements(obj)
-        local count = 0
-        for k, v in pairs(obj) do
-            count = count + 1
-        end
-        return count
-    end
-
-    dump_obj = function(obj)
-        if type(obj) ~= "table" then
-            return count_elements(obj)
-        end
-
-        local tokens = {}
-        local max_count = count_elements(obj)
-        for k, v in pairs(obj) do
-            local key_name = get_key(k)
-            if type(v) == "table" then
-                key_name = key_name
+    local t = {}
+    for k, v in pairs(data) do
+        if type(v) == "table" then
+            if cached_tab[v] then
+                t[serialise_obj(k)] = tostring(v)
+            else
+                cached_tab[v] = true
+                t[serialise_obj(k)] = tab_clone_with_serialise(v)
             end
-            tokens[key_name] = get_val(v)
-        end
 
-        if max_count == 0 then
-            tokens = {}
+        else
+            t[serialise_obj(k)] = serialise_obj(v)
         end
-        return tokens;
     end
 
-    if type(obj) ~= "table" then
-        return nil, "the params you input is " .. type(obj) ..
-                ", not a table, the value is " .. tostring(obj)
-    end
+    return t
+end
 
-    return cJson.encode(dump_obj(obj)), nil
+_M.decode = json_decode
+
+_M.encode = function(data, force)
+    if force then
+        clear_tab(cached_tab)
+        data = tab_clone_with_serialise(data)
+    end
+    return json_encode(data)
 end
 
 return _M
