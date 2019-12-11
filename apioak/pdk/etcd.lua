@@ -1,78 +1,96 @@
-local type       = type
-local error      = error
-local str_format = string.format
-local etcd       = require("resty.etcd")
-local config     = require("apioak.pdk.config")
+local config = require("apioak.pdk.config")
+local etcd   = require("resty.etcd")
 
-local function new()
-    local all_config  = config.all()
-    local etcd_config = all_config.etcd
+local _M = {}
 
-    local _ETCD = {
-        prefix = nil,
-    }
+local function get_cli()
+    local oak_conf = config.all()
+    local etcd_conf = oak_conf.etcd
 
+    local etcd_options = {}
+    etcd_options.http_host  = etcd_conf.host
+    etcd_options.timeout    = etcd_conf.timeout
+    etcd_options.protocol   = "v2"
+    etcd_options.key_prefix = "/v2/keys"
+    local prefix = etcd_conf.prefix or ""
 
-    function _ETCD._init()
-        local cli, err = etcd.new({
-            http_host = etcd_config.host or nil,
-            timeout   = etcd_config.timeout or nil,
-        })
+    local cli, err = etcd:new(etcd_options)
 
-        if err then
-            error("[pdk.etcd] content failure")
-        end
-
-        if not etcd_config.prefix or type(etcd_config.prefix) ~= "string" then
-            error("[pdk.etcd] prefix [" .. etcd_config.prefix "] invalid")
-        end
-
-        _ETCD.prefix = etcd_config.prefix
-
-        return cli
+    if err then
+        return nil, prefix, err
     end
 
-
-    function _ETCD._valid(key)
-        if not key or type(key) ~= "string" then
-            error("[pdk.etcd] key [" .. key .. "] invalid")
-        end
-
-        return str_format("/%s/%s", _ETCD.prefix, key)
-    end
-
-
-    function _ETCD.get(key)
-        local  cli = _ETCD._init()
-        key = _ETCD._valid(key)
-        return cli:get(key)
-    end
-
-
-    function _ETCD.set(key, value)
-        local  cli = _ETCD._init()
-        key = _ETCD._valid(key)
-        return cli:set(key, value)
-    end
-
-
-    function _ETCD.push(key, value)
-        local  cli = _ETCD._init()
-        key = _ETCD._valid(key)
-        return cli:push(key, value)
-    end
-
-
-    function _ETCD.delete(key)
-        local  cli = _ETCD._init()
-        key = _ETCD._valid(key)
-        return cli:delete(key)
-    end
-
-
-    return _ETCD
+    return cli, prefix, nil
 end
 
-return {
-    new = new
-}
+function _M.query(key)
+    local cli, prefix, cli_err = get_cli()
+    if not cli then
+        return nil, 500, cli_err
+    end
+    local res, err = cli:get(prefix .. key)
+    if err then
+        return nil, 500, err
+    end
+
+    if res.status ~= 200 then
+        return nil, res.status, res.reason
+    end
+
+    return res.body.node, res.status, nil
+end
+
+function _M.update(key, value)
+    local cli, prefix, cli_err = get_cli()
+    if not cli then
+        return nil, 500, cli_err
+    end
+    local res, err = cli:set(prefix .. key, value)
+    if err then
+        return nil, 500, err
+    end
+
+    if res.status ~= 200 and res.status ~= 201 then
+        return nil, res.status, res.reason
+    end
+
+    return res.body.node, res.status, nil
+end
+
+function _M.create(key, value)
+    local cli, prefix, cli_err = get_cli()
+    if not cli then
+        return nil, 500, cli_err
+    end
+
+    local res, err = cli:push(prefix .. key, value)
+    if err then
+        return nil, 500, err
+    end
+
+    if res.status ~= 201 then
+        return nil, res.status, res.reason
+    end
+
+    return res.body.node, res.status, nil
+end
+
+function _M.delete(key)
+    local cli, prefix, cli_err = get_cli()
+    if not cli then
+        return nil, 500, cli_err
+    end
+
+    local res, err = cli:delete(prefix .. key)
+    if err then
+        return nil, 500, err
+    end
+
+    if res.status ~= 200 then
+        return nil, res.status, res.reason
+    end
+
+    return res.body.node, res.status, nil
+end
+
+return _M
