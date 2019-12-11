@@ -9,6 +9,8 @@ function _M.list()
 end
 
 function _M.query(params)
+
+    ngx.say("this is get")
     ngx.say("query: ", params.id)
 end
 
