@@ -2,7 +2,7 @@ local pdk = require("apioak.pdk")
 
 local _M = {}
 
-_M.cached_key = "routers"
+_M.cached_key = "/routers"
 
 function _M.list()
 

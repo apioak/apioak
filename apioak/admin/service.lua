@@ -2,11 +2,7 @@ local pdk = require("apioak.pdk")
 
 local _M = {}
 
-_M.cached_key = "services"
-
-function _M.list()
-
-end
+_M.cached_key = "/services"
 
 function _M.list()
 
