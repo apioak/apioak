@@ -20,6 +20,14 @@ function _M.init_worker()
 
     router:insert_route("/apioak/admin/services", admin.service.list, { method = { "GET" } })
 
+    router:insert_route("/apioak/admin/service", admin.service.create, { method = { "POST" } })
+
+    router:insert_route("/apioak/admin/service/{id}", admin.service.update, { method = { "PUT" } })
+
+    router:insert_route("/apioak/admin/service/{id}", admin.service.delete, { method = { "DELETE" } })
+
+    router:insert_route("/apioak/admin/service/{id}", admin.service.query, { method = { "GET" } })
+
     router:insert_route("/apioak/admin/plugins", admin.plugin.list, { method = { "GET" } })
 
     router:compile()
