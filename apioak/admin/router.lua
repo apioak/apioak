@@ -16,6 +16,7 @@ end
 
 function _M.query(params)
 
+    ngx.say("aaaaaaaa")
     ngx.say("query: ", params.id)
 end
 
