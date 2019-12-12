@@ -9,12 +9,12 @@
 - [删除服务](#删除服务)
 - [服务列表](#服务列表)
 
-#### 结构解析
+### 结构解析
 |名称|必选|说明|
 |---|---|---|
-|name                          |是| 服务名称。|
-|prefix                        |是| 服务请求前缀。|
-|desc                          |否| 服务说明。|
+|name                          |是| 服务名称，字符长度 `1-20`。|
+|prefix                        |是| 服务请求前缀，字符长度 `1-20`。|
+|desc                          |否| 服务说明，字符长度 `1-50`。|
 |upstreams                     |是| 上游服务节点集合。|
 |upstreams.prod                |否| 生产环境节点，`prod`、`beta`、`beta` 至少存在一个。|
 |upstreams.prod.host           |是| 上游主机地址。|
@@ -23,8 +23,10 @@
 |upstreams.prod.nodes[].port   |是| 节点端口，取值范围 `0-65535`。|
 |upstreams.prod.nodes[].ip     |是| 节点IP地址。|
 |upstreams.prod.nodes[].weight |是| 节点权重，取值范围 `0-100`。|
+|upstreams.beta                |是| 同 `upstreams.prod`。|
+|upstreams.dev                 |是| 同 `upstreams.prod`。|
 
-#### 创建服务
+### 创建服务
 ```shell
 curl -X POST http://127.0.0.1:10080/apioak/admin/service -d '
 {
@@ -84,7 +86,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service -d '
 }'
 ```
 
-#### 更新服务
+### 更新服务
 ```shell
 curl -X POST http://127.0.0.1:10080/apioak/admin/service/00000000000000010080 -d '
 {
@@ -144,17 +146,17 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service/00000000000000010080 -d
 }'
 ```
 
-#### 查询服务
+### 查询服务
 ```shell
 curl -X GET http://127.0.0.1:10080/apioak/admin/service/00000000000000010080
 ```
 
-#### 删除服务
+### 删除服务
 ```shell
 curl -X DELETE http://127.0.0.1:10080/apioak/admin/service/00000000000000010080
 ```
 
-#### 服务列表
+### 服务列表
 ```shell
 curl -X GET http://127.0.0.1:10080/apioak/admin/services
 ```
