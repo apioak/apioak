@@ -2,6 +2,7 @@ local ngx  = ngx
 local type = type
 local find = string.find
 local json = require("cjson.safe")
+local tostring  = tostring
 local multipart = require "multipart"
 
 local CONTENT_TYPE           = "Content-Type"
@@ -22,9 +23,13 @@ end
 
 function _M.body()
     local req_method = ngx.var.request_method
-    local content_type = _header(CONTENT_TYPE)
-    if req_method ~= "POST" then
+    if req_method ~= "POST" and req_method ~= "PUT" then
         return nil, "[pdk.request] " .. req_method .. " request cannot get body"
+    end
+
+    local content_type = _header(CONTENT_TYPE)
+    if not content_type then
+        return nil, "[pdk.request] unsupported content type '" .. tostring(content_type) .. "'"
     end
 
     ngx.req.read_body()
