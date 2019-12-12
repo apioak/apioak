@@ -14,9 +14,6 @@ function _M.query(params)
 end
 
 function _M.create(params)
-
-    ngx.say("aaaaaa")
-
     ngx.say("create: ", params.id)
 end
 
