@@ -1,12 +1,35 @@
 local pdk = require("apioak.pdk")
+local prefix_key = "/services"
 local etcd_key = "/routers"
 
 local _M = {}
 
 _M.etcd_key = etcd_key
 
-function _M.list()
-    local result, code, err = pdk.etcd.query(etcd_key)
+
+local function get_key(params)
+    local service_id = params.service_id or nil
+    local route_id = params.id or nil
+    if not service_id then
+        pdk.response.exit(404, "service_id not found")
+    end
+    if not route_id then
+        pdk.response.exit(404, "route_id not found")
+    end
+    local key = prefix_key .. "/" .. service_id .. etcd_key .. "/" .. route_id
+
+    return key
+end
+
+
+function _M.list(params)
+    local service_id = params.service_id or nil
+    if not service_id then
+        pdk.response.exit(404, "service_id not found")
+    end
+    local key = prefix_key .. "/" .. service_id .. etcd_key
+
+    local result, code, err = pdk.etcd.query(key)
     if err then
         return pdk.response.exit(code, { err_message = err })
     end
@@ -15,25 +38,66 @@ function _M.list()
 end
 
 function _M.query(params)
+    local key = get_key(params)
 
-    ngx.say("query: ", params.id)
+    local data, code, etcd_err = pdk.etcd.query(key)
+    if data then
+        pdk.response.exit(code, data)
+    else
+        pdk.response.exit(code, etcd_err)
+    end
 end
 
 function _M.create(params)
-    ngx.say("create: ", params.id)
+    local service_id = params.service_id or nil
+    if not service_id then
+        pdk.response.exit(404, "service_id not found")
+    end
+    local key = prefix_key .. "/" .. service_id .. etcd_key
+
+    local body, body_err = pdk.request.body()
+    if body_err then
+        pdk.response.exit(500, { err_message = body_err })
+    end
+
+    local _, schema_err = pdk.schema.check(pdk.schema.router, body)
+    if schema_err then
+        pdk.response.exit(500, { err_message = schema_err })
+    end
+
+    local data, code, etcd_err = pdk.etcd.create(key, body)
+    if data then
+        pdk.response.exit(code, data)
+    else
+        pdk.response.exit(code, etcd_err)
+    end
 end
 
 function _M.update(params)
-    ngx.say("update: ", params.id)
+    local key = get_key(params)
+
+    local body, body_err = pdk.request.body()
+    if body_err then
+        pdk.response.exit(500, { err_message = body_err })
+    end
+
+    local _, schema_err = pdk.schema.check(pdk.schema.router, body)
+    if schema_err then
+        pdk.response.exit(500, { err_message = schema_err })
+    end
+
+    local data, code, etcd_err = pdk.etcd.update(key, body)
+    if data then
+        pdk.response.exit(code, data)
+    else
+        pdk.response.exit(code, etcd_err)
+    end
 end
 
 function _M.delete(params)
-    local router_id = params.id or nil
-    if not router_id then
-        pdk.response.exit(404, "router not found")
-    end
+    local key = get_key(params)
 
-    local result, code, err = pdk.etcd.delete(etcd_key .. '/' .. router_id)
+    local result, code, err = pdk.etcd.delete(key)
     if err then
         return pdk.response.exit(code, { err_message = err })
     end
@@ -41,6 +105,7 @@ function _M.delete(params)
     return pdk.response.exit(code, result)
 end
 
+--以下方法会进行更改键,怎么确认键这个再进行商量下
 function _M.plugin_create(params)
     local router_id = params.id or nil
     if not router_id then
