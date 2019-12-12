@@ -1,11 +1,17 @@
 local pdk = require("apioak.pdk")
+local etcd_key = "/routers"
 
 local _M = {}
 
-_M.cached_key = "/routers"
+_M.etcd_key = etcd_key
 
 function _M.list()
+    local result, code, err = pdk.etcd.query(etcd_key)
+    if err then
+        return pdk.response.exit(code, { err_message = err })
+    end
 
+    return pdk.response.exit(code, result.nodes)
 end
 
 function _M.query(params)
@@ -22,65 +28,123 @@ function _M.update(params)
 end
 
 function _M.delete(params)
-    ngx.say("delete: ", params.id)
+    local router_id = params.id or nil
+    if not router_id then
+        pdk.response.exit(404, "router not found")
+    end
+
+    local result, code, err = pdk.etcd.delete(etcd_key .. '/' .. router_id)
+    if err then
+        return pdk.response.exit(code, { err_message = err })
+    end
+
+    return pdk.response.exit(code, result)
 end
 
-function _M.get(id)
-    local key = "routes"
-    if id then
-        key = string.format("%s/%s", key, id)
+function _M.plugin_create(params)
+    local router_id = params.id or nil
+    if not router_id then
+        pdk.response.exit(404, "router not found")
     end
-    local etcd_cli = pdk.etcd.new()
-    local res, err = etcd_cli.get(key)
+
+    local body, body_err = pdk.request.body()
+    if body_err then
+        pdk.response.exit(500, { err_message = body_err })
+    end
+
+    local _, schema_err = pdk.schema.check(pdk.schema.plugin, body)
+    if schema_err then
+        pdk.response.exit(500, { err_message = schema_err })
+    end
+
+    local key = etcd_key .. '/' .. router_id
+    local res, code, err = pdk.etcd.query(key)
     if err then
-        return 500, err
+        pdk.response.exit(code, { err_message = err })
     end
-    return res.status, res.body
+
+    if res.value.plugins then
+        res.value.plugins[body.name] = body.config or {}
+    else
+        local plugins = {}
+        plugins[body.name] = body.config or {}
+        res.value.plugins = plugins
+    end
+
+    res, code, err = pdk.etcd.update(key, res.value)
+    if err then
+        pdk.response.exit(code, { err_message = err })
+    end
+    pdk.response.exit(code, res)
 end
 
-function _M.put(id, conf)
-    if not id then
-        return 500, { error_msg = " route id undefined" }
-    end
-    if not conf then
-        return 500, { error_msg = " route conf undefined" }
-    end
-
-    local res, err = pdk.schema.check(pdk.schema.routes, conf)
-    if not res then
-        return 500, { error_msg = err }
+function _M.plugin_delete(params)
+    local router_id = params.id or nil
+    local plugin_key = params.plugin_key or nil
+    if not router_id or not plugin_key then
+        pdk.response.exit(404, "router not found")
     end
 
-    local key = pdk.string.format("%s/%s", _M.cached_key, id)
-    local etcd_cli = pdk.etcd.new()
-    res, err = etcd_cli.set(key, conf)
+    local key = etcd_key .. '/' .. router_id
+    local res, code, err = pdk.etcd.query(key)
     if err then
-        return 500, err
+        pdk.response.exit(code, { err_message = err })
     end
-    return res.status, res.body
+
+    if not res.value.plugins or not res.value.plugins[plugin_key] then
+        pdk.response.exit(500, { err_message = "plugin empty" })
+    end
+
+    res.value.plugins[plugin_key] = nil
+
+    res, code, err = pdk.etcd.update(key, res.value)
+    if err then
+        pdk.response.exit(code, { err_message = err })
+    end
+    pdk.response.exit(code, res)
 end
 
-function _M.post(conf)
-    local key = "routes"
-    local etcd_cli = pdk.etcd.new()
-    local res, err = etcd_cli.push(key, conf)
-    if err then
-        return 500, err
-    end
-    return res.status, res.body
-end
+local push_schema = {
+    type = "object",
+    properties = {
+        push_upstream = {
+            type = "string",
+            enum = { "dev", "beta", "prod" }
+        },
+        push_status = {
+            type = "boolean"
+        }
+    },
+    required = { "push_upstream", "push_status" }
+}
 
-function _M.del(id)
-    local key = "routes"
-    if id then
-        key = string.format("%s/%s", key, id)
+function _M.push_upstream(params)
+    local router_id = params.id or nil
+    if not router_id then
+        pdk.response.exit(404, "router not found")
     end
-    local etcd_cli = pdk.etcd.new()
-    local res, err = etcd_cli.del(key)
+    local body, body_err = pdk.request.body()
+    if body_err then
+        pdk.response.exit(500, { err_message = body_err })
+    end
+
+    local _, schema_err = pdk.schema.check(push_schema, body)
+    if schema_err then
+        pdk.response.exit(500, { err_message = schema_err })
+    end
+
+    local key = etcd_key .. '/' .. router_id
+    local router, code, err = pdk.etcd.query(key)
     if err then
-        return 500, err
+        pdk.response.exit(code, { err_message = err })
     end
-    return res.status, res.body
+
+    router.value.is_push[body.push_upstream] = body.push_status
+    router, code, err = pdk.etcd.update(key, router.value)
+    if err then
+        pdk.response.exit(code, { err_message = err })
+    end
+    pdk.response.exit(code, router)
 end
 
 return _M

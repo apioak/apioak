@@ -32,10 +32,6 @@ local router = {
     },
 }
 
-local service_plugins = {
-
-}
-
 local service_upstreams = {
     type = "object",
     properties = {
@@ -106,6 +102,21 @@ local service = {
     },
     required = { "name", "prefix", "upstreams" },
 }
+
+local plugin = {
+    type = "object",
+    properties = {
+        name = {
+            type = "string",
+        },
+        config = {
+            type = "object"
+        },
+    },
+    required = { "name" }
+}
+
+_M.plugin = plugin
 
 _M.service = service
 
