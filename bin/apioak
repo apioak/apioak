@@ -103,11 +103,12 @@ function _M.init_etcd()
 
     local config = yaml.parse(content)
     local etcd_config = config.etcd
-    local etcd_uri = string.format("%s/v2/keys/%s", etcd_config.host, etcd_config.prefix)
+    local etcd_uri = string.format("%s/v2/keys%s", etcd_config.host, etcd_config.prefix)
     local timeout = etcd_config.timeout
     for _, name in ipairs({
         "routes",
         "upstreams",
+        "services"
     }) do
         local command = string.format("curl %s/%s?prev_exist=false -X PUT -d dir=true --connect-timeout %s 2>&1",
                 etcd_uri, name, timeout)

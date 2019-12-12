@@ -87,4 +87,67 @@ function _M.delete(params)
     end
 end
 
+function _M.plugin_create(params)
+    local service_id = params.id or nil
+    if not service_id then
+        pdk.response.exit(404, "router not found")
+    end
+
+    local body, body_err = pdk.request.body()
+    if body_err then
+        pdk.response.exit(500, { err_message = body_err })
+    end
+
+    local _, schema_err = pdk.schema.check(pdk.schema.plugin, body)
+    if schema_err then
+        pdk.response.exit(500, { err_message = schema_err })
+    end
+
+    local key = etcd_key .. '/' .. service_id
+    local res, code, err = pdk.etcd.query(key)
+    if err then
+        pdk.response.exit(code, { err_message = err })
+    end
+
+    if res.value.plugins then
+        res.value.plugins[body.name] = body.config or {}
+    else
+        local plugins = {}
+        plugins[body.name] = body.config or {}
+        res.value.plugins = plugins
+    end
+
+    res, code, err = pdk.etcd.update(key, res.value)
+    if err then
+        pdk.response.exit(code, { err_message = err })
+    end
+    pdk.response.exit(code, res)
+end
+
+function _M.plugin_delete(params)
+    local service_id = params.id or nil
+    local plugin_key = params.plugin_key or nil
+    if not service_id or not plugin_key then
+        pdk.response.exit(404, "router not found")
+    end
+
+    local key = etcd_key .. '/' .. service_id
+    local res, code, err = pdk.etcd.query(key)
+    if err then
+        pdk.response.exit(code, { err_message = err })
+    end
+
+    if not res.value.plugins or not res.value.plugins[plugin_key] then
+        pdk.response.exit(500, { err_message = "plugin empty" })
+    end
+
+    res.value.plugins[plugin_key] = nil
+
+    res, code, err = pdk.etcd.update(key, res.value)
+    if err then
+        pdk.response.exit(code, { err_message = err })
+    end
+    pdk.response.exit(code, res)
+end
+
 return _M

@@ -18,6 +18,12 @@ function _M.init_worker()
 
     router:insert_route("/apioak/admin/router/{id}", admin.router.delete, { method = { "DELETE" } })
 
+    router:insert_route("/apioak/admin/router/{id}/plugins", admin.router.plugin_create, { method = { "POST" } })
+
+    router:insert_route("/apioak/admin/router/{id}/plugins/{plugin_key}", admin.router.plugin_delete, { method = { "DELETE" } })
+
+    router:insert_route("/apioak/admin/router/{id}/push_upstream", admin.router.push_upstream, { method = { "PUT" } })
+
     router:insert_route("/apioak/admin/services", admin.service.list, { method = { "GET" } })
 
     router:insert_route("/apioak/admin/service", admin.service.create, { method = { "POST" } })
@@ -27,6 +33,10 @@ function _M.init_worker()
     router:insert_route("/apioak/admin/service/{id}", admin.service.delete, { method = { "DELETE" } })
 
     router:insert_route("/apioak/admin/service/{id}", admin.service.query, { method = { "GET" } })
+
+    router:insert_route("/apioak/admin/service/{id}/plugins", admin.service.plugin_create, { method = { "POST" } })
+
+    router:insert_route("/apioak/admin/service/{id}/plugins/{plugin_key}", admin.service.plugin_delete, { method = { "DELETE" } })
 
     router:insert_route("/apioak/admin/plugins", admin.plugin.list, { method = { "GET" } })
 
