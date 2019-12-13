@@ -22,91 +22,14 @@ local id_define = {
 local router = {
     type = 'object',
     properties = {
-        service_id = {
-            type = 'string'
-        },
-        name = {
-            type = 'string',
-            minLength = 1,
-            maxLength = 180
-        },
-        path = {
-            type = 'string',
-            minLength = 1,
-            maxLength = 4096
-        },
+        id = { type = 'number' },
+        uri = { type = 'string', minLength = 1, maxLength = 4096 },
         method = {
             type = "string",
-            enum = { "GET", "POST", "PUT", "DELETE", "HEAD" }
+            enum = { "GET", "POST", "PUT", "DELETE" }
         },
-        enable_cors = {
-            type = "number",
-            enum = { 0, 1 }
-        },
-        desc = {
-            type = "string"
-        },
-        request_params = {
-            type = "array",
-            minItems = 1,
-            uniqueItems = true,
-            items = {
-                type = "object",
-                properties = {
-                    name = {
-                        type = 'string',
-                        minLength = 1,
-                        maxLength = 180
-                    },
-                    position = {
-                        type = "string",
-                        enum = { "Header", "Path", "Query" }
-                    },
-                    field_type = {
-                        type = "string",
-                        enum = { "string", "int", "long", "float", "double", "boolean" }
-                    },
-                    default_val = { --默认值这里好像要根据上面的值来做判断 不会写
-                        type = "string"
-                    },
-                    is_require = {
-                        type = "number",
-                        enum = { 0, 1 }
-                    },
-                    desc = {
-                        type = "string"
-                    }
-                }
-            }
-        },
-        service_path = {
-            type = 'string',
-            minLength = 1,
-            maxLength = 4096
-        },
-        service_method = {
-            type = "string",
-            enum = { "GET", "POST", "PUT", "DELETE", "HEAD" }
-        },
-        timeout = {
-            type = "number",
-        },
-        service_params = {
-            type = "array",
-            minItems = 1,
-            uniqueItems = true,
-            items = {
-                type = "object",
-                properties = {
-                    service_name = {
-                        type = "string",
-                    },
-
-                }
-            }
-        }
+        required = { "uri" },
     },
-    required = { "service_id", "name", "path", "method", "enable_cors", "service_path", "service_path", "service_method" },
 }
 
 local service_upstreams = {
