@@ -90,7 +90,7 @@ end
 function _M.plugin_create(params)
     local service_id = params.id or nil
     if not service_id then
-        pdk.response.exit(404, "router not found")
+        pdk.response.exit(404, "service not found")
     end
 
     local body, body_err = pdk.request.body()
@@ -126,10 +126,15 @@ end
 
 function _M.plugin_delete(params)
     local service_id = params.id or nil
-    local plugin_key = params.plugin_key or nil
-    if not service_id or not plugin_key then
-        pdk.response.exit(404, "router not found")
+    if not service_id then
+        pdk.response.exit(404, "service not found")
     end
+
+    local args = ngx.req.get_uri_args()
+    if not args['plugin_name'] then
+        pdk.response.exit(404, args)
+    end
+    local plugin_key = args['plugin_name']
 
     local key = etcd_key .. '/' .. service_id
     local res, code, err = pdk.etcd.query(key)
