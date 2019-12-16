@@ -12,14 +12,11 @@ function _M.init_worker()
         if premature then
             return
         end
-        local etcd_cli = pdk.etcd.new()
-        local route_responses, err = etcd_cli.get('routes')
-        local route_body = route_responses.body
-        local route_nodes = {}
-        if not route_body.node or not route_body.node.nodes then
+        local route_responses, code, err = pdk.etcd.query('/routes')
+        if not route_responses or not route_responses.nodes then
             pdk.log.error("[sys.router] router not set")
         else
-            route_nodes = route_body.node.nodes
+            route_nodes = route_responses.nodes
         end
 
         local default_method = { "GET", "PUT", "POST", "DELETE", "PATCH" }
