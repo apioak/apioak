@@ -4,7 +4,7 @@ local pdk    = require("apioak.pdk")
 local sys    = require("apioak.sys")
 
 local function run_plugin(phase, oak_ctx)
-    local plugins = sys.plugin.loading()
+    local plugins = pdk.plugin.loading()
     for _, plugin in ipairs(plugins) do
         if plugin[phase] then
             plugin[phase](oak_ctx)

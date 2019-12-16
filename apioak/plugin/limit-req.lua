@@ -7,7 +7,13 @@ if not limit then
     return ngx.exit(500)
 end
 
-local _M = {}
+local _M = {
+    type  = "Traffic Control",
+    name  = "Limit Req",
+    desc  = "Add a limit req to your APIs.",
+    key   = "limit-req",
+    order = 1103,
+}
 
 function _M.http_access(oak_ctx)
     local key = ngx_var.binary_remote_addr
@@ -22,7 +28,7 @@ function _M.http_access(oak_ctx)
     if delay >= 0.001 then
         ngx.sleep(delay)
     end
-    return;
+    return
 end
 
 return _M
