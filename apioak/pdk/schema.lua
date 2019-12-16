@@ -67,7 +67,8 @@ local service_upstreams = {
                 },
                 required = { "ip", "port", "weight" }
             }
-        }
+        },
+        required = { "host", "type", "nodes" }
     }
 }
 
