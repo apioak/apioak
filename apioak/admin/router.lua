@@ -93,12 +93,9 @@ function _M.update(params)
 end
 
 function _M.delete(params)
-    local router_id = params.id or nil
-    if not router_id then
-        pdk.response.exit(404, "router not found")
-    end
+    local key = get_key(params)
 
-    local result, code, err = pdk.etcd.delete(etcd_key .. '/' .. router_id)
+    local result, code, err = pdk.etcd.delete(key)
     if err then
         return pdk.response.exit(code, { err_message = err })
     end
