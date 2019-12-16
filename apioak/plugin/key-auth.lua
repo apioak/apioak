@@ -1,12 +1,13 @@
 local get_headers = ngx.req.get_headers
 local pdk = require("apioak.pdk")
-local plugin_name = "key-auth"
 local ipairs   = ipairs
 
 local _M = {
-    version = 0.1,
-    type = 'auth',
-    name = plugin_name,
+    type = 'Authentication',
+    name = "Key Auth",
+    desc = "Add a key authentication to your APIs.",
+    key = "key-auth",
+    order = 1201
 }
 
 --get headers

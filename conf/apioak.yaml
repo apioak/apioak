@@ -7,5 +7,4 @@ plugins:
   - limit-req
   - limit-count
   - limit-conn
-  - proxy-rewrite
   - key-auth
