@@ -1,6 +1,7 @@
 local pdk = require("apioak.pdk")
 local prefix_key = "/services"
 local etcd_key = "/routers"
+local default_upstream = "mock"
 
 local _M = {}
 
@@ -17,7 +18,7 @@ local function get_key(params)
     end
     local key = prefix_key .. "/" .. tonumber(service_id) .. etcd_key .. "/" .. route_id
 
-    return key
+    return key, route_id
 end
 
 function _M.list(params)
@@ -36,7 +37,7 @@ function _M.list(params)
 end
 
 function _M.query(params)
-    local key = get_key(params)
+    local key, router_id = get_key(params)
 
     local data, code, etcd_err = pdk.etcd.query(key)
     if data then
@@ -65,6 +66,7 @@ function _M.create(params)
 
     local data, code, etcd_err = pdk.etcd.create(key, body)
     if data then
+        upstream_router(pdk.string.autocomplete_id(data.createdIndex), data.value, default_upstream, true)
         pdk.response.exit(code, data)
     else
         pdk.response.exit(code, etcd_err)
@@ -72,7 +74,7 @@ function _M.create(params)
 end
 
 function _M.update(params)
-    local key = get_key(params)
+    local key, route_id = get_key(params)
 
     local body, body_err = pdk.request.body()
     if body_err then
@@ -86,6 +88,7 @@ function _M.update(params)
 
     local data, code, etcd_err = pdk.etcd.update(key, body)
     if data then
+        upstream_router(route_id, data.value, default_upstream, true)
         pdk.response.exit(code, data)
     else
         pdk.response.exit(code, etcd_err)
@@ -93,21 +96,19 @@ function _M.update(params)
 end
 
 function _M.delete(params)
-    local key = get_key(params)
+    local key, router_id = get_key(params)
 
     local result, code, err = pdk.etcd.delete(key)
     if err then
         return pdk.response.exit(code, { err_message = err })
     end
 
+    delete_all_upstream(router_id)
     return pdk.response.exit(code, result)
 end
 
 function _M.plugin_create(params)
-    local router_id = params.id or nil
-    if not router_id then
-        pdk.response.exit(404, "router not found")
-    end
+    local key, route_id = get_key(params)
 
     local body, body_err = pdk.request.body()
     if body_err then
@@ -119,7 +120,6 @@ function _M.plugin_create(params)
         pdk.response.exit(500, { err_message = schema_err })
     end
 
-    local key = etcd_key .. '/' .. router_id
     local res, code, err = pdk.etcd.query(key)
     if err then
         pdk.response.exit(code, { err_message = err })
@@ -137,17 +137,19 @@ function _M.plugin_create(params)
     if err then
         pdk.response.exit(code, { err_message = err })
     end
+    upstream_router(route_id, res.value, default_upstream, true)
     pdk.response.exit(code, res)
 end
 
 function _M.plugin_delete(params)
-    local router_id = params.id or nil
-    local plugin_key = params.plugin_key or nil
-    if not router_id or not plugin_key then
-        pdk.response.exit(404, "router not found")
-    end
+    local key, router_id = get_key(params)
 
-    local key = etcd_key .. '/' .. router_id
+    local args = ngx.req.get_uri_args()
+    if not args['plugin_name'] then
+        pdk.response.exit(404, args)
+    end
+    local plugin_key = args['plugin_name']
+
     local res, code, err = pdk.etcd.query(key)
     if err then
         pdk.response.exit(code, { err_message = err })
@@ -163,6 +165,7 @@ function _M.plugin_delete(params)
     if err then
         pdk.response.exit(code, { err_message = err })
     end
+    upstream_router(route_id, res.value, default_upstream, true)
     pdk.response.exit(code, res)
 end
 
@@ -206,7 +209,26 @@ function _M.push_upstream(params)
     if err then
         pdk.response.exit(code, { err_message = err })
     end
+    upstream_router(router_id, router.value, body.push_upstream, body.push_status)
     pdk.response.exit(code, router)
+end
+
+function upstream_router(router_id, router, push_schema, push_status)
+    local key = etcd_key .. '_' .. push_schema .. '/' .. router_id
+    if push_status then
+        local res, code, err = pdk.etcd.update(key, router)
+    else
+        local res, code, err = pdk.etcd.delete(key)
+    end
+    if err then
+        pdk.response.exit(code, {err_message = 'upstream_router error: ' .. err})
+    end
+end
+
+function delete_all_upstream(router_id)
+    for _, index in ipairs({'mock', 'dev', 'beta', 'prod'}) do
+        upstream_router(router_id, nil, index, false)
+    end
 end
 
 return _M

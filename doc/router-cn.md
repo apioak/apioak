@@ -61,7 +61,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{service_id} -d '
     "path": "/news",
     "method": "GET",
     "enable_cors": true,
-    "desc":"Query the news list interface by time and column"
+    "desc":"Query the news list interface by time and column",
     "request_params": [
         {
             "name": "time",
@@ -93,9 +93,9 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{service_id} -d '
             "desc": "",
         }
     ],
-    "response_type": 'JSON',
-    "response_success": '{"code":200,"message":"OK"}',
-    "response_fail": '{"code":500,"message":"error"}',
+    "response_type": "JSON',
+    "response_success": "{\"code\":200,\"message\":\"OK\"}",
+        "response_fail": "{\"code\":500,\"message\":\"error\"}",
     "response_error_codes":[
         {
             "code": "200",
@@ -115,7 +115,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{service_id}/{id} -d '
     "path": "/news",
     "method": "GET",
     "enable_cors": true,
-    "desc":"Query the news list interface by time and column"
+    "desc":"Query the news list interface by time and column",
     "request_params": [
         {
             "name": "time",
@@ -147,9 +147,9 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{service_id}/{id} -d '
             "desc": "",
         }
     ],
-    "response_type": 'JSON',
-    "response_success": '{"code":200,"message":"OK"}',
-    "response_fail": '{"code":500,"message":"error"}',
+    "response_type": "JSON',
+    "response_success": "{\"code\":200,\"message\":\"OK\"}",
+    "response_fail": "{\"code\":500,\"message\":\"error\"}",
     "response_error_codes":[
         {
             "code": "200",
