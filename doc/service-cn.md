@@ -8,6 +8,8 @@
 - [查询服务](#查询服务)
 - [删除服务](#删除服务)
 - [服务列表](#服务列表)
+- [添加/重新配置服务下插件](#添加/重新配置服务下插件)
+- [删除服务下插件](#删除服务下插件)
 
 ### 结构解析
 |名称|必选|说明|
@@ -25,6 +27,8 @@
 |upstreams.prod.nodes[].weight |是| 节点权重，取值范围 `0-100`。|
 |upstreams.beta                |是| 同 `upstreams.prod`。|
 |upstreams.dev                 |是| 同 `upstreams.prod`。|
+|plugins                       |是| 服务下插件对象集合。|
+|plugins[plugin_name?]         |是| 所属插件下存储相关参数配置。|
 
 ### 创建服务
 ```shell
@@ -83,6 +87,14 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service -d '
             ]
         }
     },
+    "plugins":{
+        "limit-conn": {
+            "conn": 200,
+            "burst": 100,
+            "key": "http_x_real_ip",
+            "default_conn_delay":1,
+        },
+    }
 }'
 ```
 
@@ -143,6 +155,14 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service/00000000000000010080 -d
             ]
         }
     },
+    "plugins":{
+        "limit-conn": {
+            "conn": 200,
+            "burst": 100,
+            "key": "http_x_real_ip",
+            "default_conn_delay":1,
+        },
+    }
 }'
 ```
 
@@ -159,4 +179,23 @@ curl -X DELETE http://127.0.0.1:10080/apioak/admin/service/00000000000000010080
 ### 服务列表
 ```shell
 curl -X GET http://127.0.0.1:10080/apioak/admin/services
+```
+
+### 添加/重新配置服务下插件
+```shell
+curl -X POST http://127.0.0.1:10080/apioak/admin/service/00000000000000010080/plugin -d '
+{
+    "name": "limit-conn",
+    "config": {
+        "conn": 200,
+        "burst": 100,
+        "key": "http_x_real_ip",
+        "default_conn_delay":1,
+    }
+}'
+```
+
+### 删除服务下插件
+```shell
+curl -X DELETE http://127.0.0.1:10080/apioak/admin/service/00000000000000010080/plugin?plugin_name=limit-conn
 ```
