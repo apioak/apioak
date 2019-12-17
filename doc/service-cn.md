@@ -92,8 +92,8 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service -d '
             "conn": 200,
             "burst": 100,
             "key": "http_x_real_ip",
-            "default_conn_delay":1,
-        },
+            "default_conn_delay":1
+        }
     }
 }'
 ```
@@ -160,8 +160,8 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service/00000000000000010080 -d
             "conn": 200,
             "burst": 100,
             "key": "http_x_real_ip",
-            "default_conn_delay":1,
-        },
+            "default_conn_delay":1
+        }
     }
 }'
 ```
