@@ -101,9 +101,18 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router -d '
         {
             "code": "200",
             "msg": "OK",
-            "desc": "",
+            "desc": ""
         }
     ],
+    "plugins":{
+        "limit-conn": {
+            "conn": 200,
+            "burst": 100,
+            "key": "http_x_real_ip",
+            "default_conn_delay":1
+        }
+    }
+    
 }'
 ```
 
@@ -155,9 +164,18 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id} -d '
         {
             "code": "200",
             "msg": "OK",
-            "desc": "",
+            "desc": ""
         }
     ],
+    "plugins":{
+        "limit-conn": {
+            "conn": 200,
+            "burst": 100,
+            "key": "http_x_real_ip",
+            "default_conn_delay":1
+        }
+    }
+    
 }'
 ```
 
@@ -186,7 +204,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id}/plugin -d '
         "conn": 200,
         "burst": 100,
         "key": "http_x_real_ip",
-        "default_conn_delay":1,
+        "default_conn_delay":1
     }
 }'
 ```

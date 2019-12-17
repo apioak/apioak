@@ -82,7 +82,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service -d '
                 }
             ]
         }
-    },
+    }
 }'
 ```
 
@@ -142,7 +142,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service/00000000000000010080 -d
                 }
             ]
         }
-    },
+    }
 }'
 ```
 
