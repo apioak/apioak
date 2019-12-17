@@ -32,7 +32,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service -d '
 {
     "name":"First APIOAK Project",
     "prefix":"/one",
-    "desc":"this is a first apioak project"
+    "desc":"this is a first apioak project",
     "upstreams":{
         "prod":{
             "host":"prod.apioak.com",
@@ -92,7 +92,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service/00000000000000010080 -d
 {
     "name":"First APIOAK Project",
     "prefix":"/one",
-    "desc":"this is a first apioak project"
+    "desc":"this is a first apioak project",
     "upstreams":{
         "prod":{
             "host":"prod.apioak.com",
