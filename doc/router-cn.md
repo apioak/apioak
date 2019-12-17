@@ -83,20 +83,20 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router -d '
             "name": "time",
             "position": "Query",
             "type": "string",
-            "desc": "",
+            "desc": ""
         }
-    ]
+    ],
     "constant_params":[
         {
             "name": "gateway",
             "position": "Query",
             "value": true,
-            "desc": "",
+            "desc": ""
         }
     ],
-    "response_type": "JSON',
+    "response_type": "JSON",
     "response_success": "{\"code\":200,\"message\":\"OK\"}",
-        "response_fail": "{\"code\":500,\"message\":\"error\"}",
+    "response_fail": "{\"code\":500,\"message\":\"error\"}",
     "response_error_codes":[
         {
             "code": "200",
@@ -104,6 +104,15 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router -d '
             "desc": "",
         }
     ],
+    "plugins":{
+        "limit-conn": {
+            "conn": 200,
+            "burst": 100,
+            "key": "http_x_real_ip",
+            "default_conn_delay":1,
+        },
+    }
+    
 }'
 ```
 
@@ -137,18 +146,18 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id} -d '
             "name": "time",
             "position": "Query",
             "type": "string",
-            "desc": "",
+            "desc": ""
         }
-    ]
+    ],
     "constant_params":[
         {
             "name": "gateway",
             "position": "Query",
             "value": true,
-            "desc": "",
+            "desc": ""
         }
     ],
-    "response_type": "JSON',
+    "response_type": "JSON",
     "response_success": "{\"code\":200,\"message\":\"OK\"}",
     "response_fail": "{\"code\":500,\"message\":\"error\"}",
     "response_error_codes":[
@@ -158,6 +167,14 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id} -d '
             "desc": "",
         }
     ],
+    "plugins":{
+        "limit-conn": {
+            "conn": 200,
+            "burst": 100,
+            "key": "http_x_real_ip",
+            "default_conn_delay":1,
+        },
+    }
 }'
 ```
 
