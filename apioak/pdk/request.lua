@@ -21,6 +21,14 @@ local function _header(key)
     return headers
 end
 
+function _M.query(key)
+    local query = ngx.req.get_uri_args()
+    if key then
+        return query[key]
+    end
+    return query
+end
+
 function _M.body()
     local req_method = ngx.var.request_method
     if req_method ~= "POST" and req_method ~= "PUT" then
