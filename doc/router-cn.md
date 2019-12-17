@@ -10,6 +10,7 @@
 - [接口列表](#接口列表)
 - [添加/重新配置接口下插件](#添加/重新配置接口下插件)
 - [删除接口下插件](#删除接口下插件)
+- [接口上下线](#接口上下线)
 
 ### 结构解析
 |名称|类型|必选|说明|
@@ -54,7 +55,7 @@
 
 ### 创建接口
 ```shell
-curl -X POST http://127.0.0.1:10080/apioak/admin/router/{service_id} -d '
+curl -X POST http://127.0.0.1:10080/apioak/admin/router -d '
 {
     "service_id": "00000000000000010080",
     "name": "news list interface",
@@ -108,7 +109,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{service_id} -d '
 
 ### 更新接口
 ```shell
-curl -X POST http://127.0.0.1:10080/apioak/admin/router/{service_id}/{id} -d '
+curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id} -d '
 {
     "service_id": "00000000000000010080",
     "name": "news list interface",
@@ -162,23 +163,24 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{service_id}/{id} -d '
 
 ### 查询接口
 ```shell
-curl -X GET http://127.0.0.1:10080/apioak/admin/router/{service_id}/{id}
+curl -X GET http://127.0.0.1:10080/apioak/admin/router/{id}?service_id={service_id}
 ```
 
 ### 删除接口
 ```shell
-curl -X DELETE http://127.0.0.1:10080/apioak/admin/router/{service_id}/{id}
+curl -X DELETE http://127.0.0.1:10080/apioak/admin/router/{id}?service_id={service_id}
 ```
 
 ### 接口列表
 ```shell
-curl -X GET http://127.0.0.1:10080/apioak/admin/routers/{service_id}
+curl -X GET http://127.0.0.1:10080/apioak/admin/routers?service_id={service_id}
 ```
 
 ### 添加/重新配置接口下插件
 ```shell
 curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id}/plugin -d '
 {
+    "service_id": "00000000000000010080",
     "name": "limit-conn",
     "config": {
         "conn": 200,
@@ -191,5 +193,15 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id}/plugin -d '
 
 ### 删除接口下插件
 ```shell
-curl -X DELETE http://127.0.0.1:10080/apioak/admin/router/{id}/plugin?plugin_name=limit-conn
+curl -X DELETE http://127.0.0.1:10080/apioak/admin/router/{id}/plugin?service_id={service_id}&plugin_name=limit-conn
+```
+
+### 接口上下线
+```shell
+curl -X GET http://127.0.0.1:10080/apioak/admin/router/{id}/push_upstream -d '
+{
+    "service_id": "00000000000000010080",
+    "push_upstream": "beta",
+    "push_status": true
+}'
 ```
