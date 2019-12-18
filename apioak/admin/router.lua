@@ -8,7 +8,11 @@ local _M = {}
 _M.etcd_key = etcd_key
 
 local function router_path(service_id, router_id)
-    local key = prefix_key .. etcd_key .. '_' .. tonumber(service_id)
+    if tonumber(service_id) ~= nil then
+        service_id = tonumber(service_id)
+    end
+
+    local key = prefix_key .. etcd_key .. '_' .. service_id
     if router_id then
         key = key .. '/' .. router_id
     end

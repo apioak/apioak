@@ -23,7 +23,17 @@ local router = {
     type = 'object',
     properties = {
         service_id = {
-
+            anyOf = {
+                {
+                    type = "string",
+                    minLength = 1,
+                    maxLength = 64,
+                },
+                {
+                    type = "number",
+                    minimum = 1
+                }
+            }
         },
         name = {
             type = 'string',
@@ -144,7 +154,17 @@ local router = {
                         enum = { "Header", "Path", "Query" }
                     },
                     value = {
-                        type = "string",
+                        anyOf = {
+                            {
+                                type = "string",
+                            },
+                            {
+                                type = "number",
+                            },
+                            {
+                                type = "boolean",
+                            }
+                        }
                     },
                     desc = {
                         type = "string",
@@ -185,8 +205,7 @@ local router = {
             }
         }
     },
-    --required = { "service_id", "name", "path", "method", "enable_cors", "service_path", "service_method", "response_type", "response_success", "response_fail"},
-    --required = { "service_id", "name", "path", "method", "enable_cors", "service_path", "service_method", "response_type", "response_success", "response_fail"},
+    required = { "service_id", "name", "path", "method", "enable_cors", "service_path", "service_method", "response_type", "response_success", "response_fail"},
 }
 
 local service_upstreams = {
