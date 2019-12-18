@@ -44,8 +44,8 @@
 |constant_params[].value           |string |否| 常量参数值。|
 |constant_params[].desc            |string |否| 常量参数描述。|
 |response_type                     |string |是| 返回类型：`JSON`、`HTML`、`TEXT`、`XML`、`BINARY`。|
-|response_success                  |string |否| 成功返回类型。|
-|response_fail                     |string |否| 错误返回类型。|
+|response_success                  |string |是| 成功返回类型。|
+|response_fail                     |string |是| 错误返回类型。|
 |response_error_codes              |array  |否| 错误码配置。|
 |response_error_codes[].code       |integer|否| 错误码。|
 |response_error_codes[].msg        |string |否| 错误信息。|

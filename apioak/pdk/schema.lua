@@ -22,14 +22,171 @@ local id_define = {
 local router = {
     type = 'object',
     properties = {
-        id = { type = 'number' },
-        uri = { type = 'string', minLength = 1, maxLength = 4096 },
+        service_id = {
+
+        },
+        name = {
+            type = 'string',
+            minLength = 1,
+            maxLength = 300
+        },
+        path = {
+            type = 'string',
+            minLength = 1,
+            maxLength = 200
+        },
         method = {
             type = "string",
-            enum = { "GET", "POST", "PUT", "DELETE" }
+            enum = { "GET", "POST", "PUT", "DELETE", "HEAD" }
         },
-        required = { "uri" },
+        enable_cors = {
+            type = "boolean",
+            enum = { true, false }
+        },
+        desc = {
+            type = "string"
+        },
+        request_params = {
+            type = "array",
+            uniqueItems = true,
+            items = {
+                type = "object",
+                properties = {
+                    name = {
+                        type = 'string',
+                        minLength = 1,
+                        maxLength = 300
+                    },
+                    position = {
+                        type = "string",
+                        enum = { "Header", "Path", "Query" }
+                    },
+                    type = {
+                        type = "string",
+                        enum = { "string", "int", "long", "float", "double", "boolean" }
+                    },
+                    default_val = {
+                        type = "string"
+                    },
+                    require = {
+                        type = "boolean",
+                        enum = { true, false }
+                    },
+                    desc = {
+                        type = "string",
+                        minLength = 1,
+                        maxLength = 500
+                    }
+                }
+            }
+        },
+        service_path = {
+            type = 'string',
+            minLength = 1,
+            maxLength = 200
+        },
+        service_method = {
+            type = "string",
+            enum = { "GET", "POST", "PUT", "DELETE", "HEAD" }
+        },
+        timeout = {
+            type = "number",
+            minimum = 1,
+            exclusiveMaximum = 181
+        },
+        service_params = {
+            type = "array",
+            uniqueItems = true,
+            items = {
+                type = "object",
+                properties = {
+                    service_name = {
+                        type = "string",
+                        minLength = 1,
+                        maxLength = 300
+                    },
+                    service_position = {
+                        type = "string",
+                        enum = { "Header", "Path", "Query" }
+                    },
+                    name = {
+                        type = 'string',
+                        minLength = 1,
+                        maxLength = 300
+                    },
+                    position = {
+                        type = "string",
+                        enum = { "Header", "Path", "Query" }
+                    },
+                    type = {
+                        type = "string",
+                        enum = { "string", "int", "long", "float", "double", "boolean" }
+                    },
+                    desc = {
+                        type = "string"
+                    }
+                }
+            }
+        },
+        constant_params = {
+            type = "array",
+            uniqueItems = true,
+            items = {
+                type = "object",
+                properties = {
+                    name = {
+                        type = 'string',
+                        minLength = 1,
+                        maxLength = 300
+                    },
+                    position = {
+                        type = "string",
+                        enum = { "Header", "Path", "Query" }
+                    },
+                    value = {
+                        type = "string",
+                    },
+                    desc = {
+                        type = "string",
+                    }
+                }
+            }
+        },
+        response_type = {
+            type = "string",
+            enum = { "JSON", "HTML", "TEXT", "XML", "BINARY" }
+        },
+        response_success = {
+            type = "string",
+        },
+        response_fail = {
+            type = "string",
+        },
+        response_error_codes = {
+            type = "array",
+            uniqueItems = true,
+            items = {
+                type = "object",
+                properties = {
+                    code = {
+                        type = "number",
+                    },
+                    msg = {
+                        type = "string",
+                        minLength = 1,
+                        maxLength = 300
+                    },
+                    desc = {
+                        type = "string",
+                        minLength = 1,
+                        maxLength = 500
+                    }
+                }
+            }
+        }
     },
+    --required = { "service_id", "name", "path", "method", "enable_cors", "service_path", "service_method", "response_type", "response_success", "response_fail"},
+    --required = { "service_id", "name", "path", "method", "enable_cors", "service_path", "service_method", "response_type", "response_success", "response_fail"},
 }
 
 local service_upstreams = {
