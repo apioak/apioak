@@ -96,7 +96,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service/00000000000000010080 -d
     "upstreams":{
         "prod":{
             "host":"prod.apioak.com",
-            "chash":"chash",
+            "type":"chash",
             "nodes":[
                 {
                     "port":10111,
@@ -112,7 +112,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service/00000000000000010080 -d
         },
         "dev":{
             "host":"dev.apioak.com",
-            "chash":"roundrobin",
+            "type":"roundrobin",
             "nodes":[
                 {
                     "port":10333,
@@ -128,7 +128,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service/00000000000000010080 -d
         },
         "beta":{
             "host":"beta.apioak.com",
-            "chash":"chash",
+            "type":"chash",
             "nodes":[
                 {
                     "port":10555,
@@ -160,4 +160,3 @@ curl -X DELETE http://127.0.0.1:10080/apioak/admin/service/00000000000000010080
 ```shell
 curl -X GET http://127.0.0.1:10080/apioak/admin/services
 ```
-

@@ -1,21 +1,23 @@
-## 接口
+## 路由
 
-> 接口相关
+> 路由是API网关的核心，负责所有请求的转发、认证、鉴权等。
+
 
 - [结构解析](#结构解析)
-- [创建接口](#创建接口)
-- [更新接口](#更新接口)
-- [查询接口](#查询接口)
+- [创建接口](#创建路由)
+- [更新接口](#更新路由)
+- [查询接口](#查询路由)
 - [删除接口](#删除接口)
-- [接口列表](#接口列表)
-- [添加/重新配置接口下插件](#添加/重新配置接口下插件)
-- [删除接口下插件](#删除接口下插件)
-- [接口上下线](#接口上下线)
+- [接口列表](#路由列表)
+- [接口插件保存](#路由插件保存)
+- [接口插件删除](#路由插件删除)
+- [接口环境发布](#路由环境发布)
+- [接口环境删除](#路由环境删除)
+
 
 ### 结构解析
 |名称|类型|必选|说明|
 |---|---|---|---|
-|service_id                        |string |是| 接口所属服务ID。|
 |name                              |string |是| 接口名称，字符长度 `1-60`。|
 |path                              |string |是| 前端路径地址。|
 |method                            |string |是| 前端请求方式：`GET`、`POST`、`PUT`、`DELETE`、`HEAD`。|
@@ -51,13 +53,14 @@
 |response_error_codes[].msg        |string |否| 错误信息。|
 |response_error_codes[].desc       |string |否| 错误备注。|
 |plugins                           |object |否| 服务下插件对象集合。|
-|plugins[plugin_name?]             |object |否| 所属插件下存储相关参数配置。|
+|plugins[plugin_key?]              |object |否| 所属插件下存储相关参数配置。|
+|push_dev                          |object |否| 发布环境，包括 `prod`、 `beta`、 `dev`，值为boolean。|
 
-### 创建接口
+
+### 创建路由
 ```shell
-curl -X POST http://127.0.0.1:10080/apioak/admin/router -d '
+curl -X POST http://127.0.0.1:10080/apioak/admin/router -H "APIOAK-SERVICE-ID: {service_id}" -d '
 {
-    "service_id": "00000000000000010080",
     "name": "news list interface",
     "path": "/news",
     "method": "GET",
@@ -90,7 +93,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router -d '
         {
             "name": "gateway",
             "position": "Query",
-            "value": true,
+            "value": "apioak",
             "desc": ""
         }
     ],
@@ -99,7 +102,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router -d '
     "response_fail": "{\"code\":500,\"message\":\"error\"}",
     "response_error_codes":[
         {
-            "code": "200",
+            "code": 200,
             "msg": "OK",
             "desc": ""
         }
@@ -112,15 +115,14 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router -d '
             "default_conn_delay":1
         }
     }
-    
 }'
 ```
 
-### 更新接口
+
+### 更新路由
 ```shell
-curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id} -d '
+curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id} -H "APIOAK-SERVICE-ID: {service_id}" -d '
 {
-    "service_id": "00000000000000010080",
     "name": "news list interface",
     "path": "/news",
     "method": "GET",
@@ -153,7 +155,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id} -d '
         {
             "name": "gateway",
             "position": "Query",
-            "value": true,
+            "value": "apioak",
             "desc": ""
         }
     ],
@@ -162,7 +164,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id} -d '
     "response_fail": "{\"code\":500,\"message\":\"error\"}",
     "response_error_codes":[
         {
-            "code": "200",
+            "code": 200,
             "msg": "OK",
             "desc": ""
         }
@@ -175,51 +177,36 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id} -d '
             "default_conn_delay":1
         }
     }
-    
 }'
 ```
 
-### 查询接口
+
+### 查询路由
 ```shell
-curl -X GET http://127.0.0.1:10080/apioak/admin/router/{id}?service_id={service_id}
+curl -X GET http://127.0.0.1:10080/apioak/admin/router/{router_id} -H "APIOAK-SERVICE-ID: {service_id}"
 ```
 
-### 删除接口
+
+### 删除路由
 ```shell
-curl -X DELETE http://127.0.0.1:10080/apioak/admin/router/{id}?service_id={service_id}
+curl -X DELETE http://127.0.0.1:10080/apioak/admin/router/{router_id} -H "APIOAK-SERVICE-ID: {service_id}"
 ```
 
-### 接口列表
+
+### 路由列表
 ```shell
-curl -X GET http://127.0.0.1:10080/apioak/admin/routers?service_id={service_id}
+curl -X GET http://127.0.0.1:10080/apioak/admin/routers -H "APIOAK-SERVICE-ID: {service_id}"
 ```
 
-### 添加/重新配置接口下插件
-```shell
-curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id}/plugin -d '
-{
-    "service_id": "00000000000000010080",
-    "name": "limit-conn",
-    "config": {
-        "conn": 200,
-        "burst": 100,
-        "key": "http_x_real_ip",
-        "default_conn_delay":1
-    }
-}'
-```
 
-### 删除接口下插件
+### 路由环境发布
 ```shell
-curl -X DELETE http://127.0.0.1:10080/apioak/admin/router/{id}/plugin?service_id={service_id}&plugin_name=limit-conn
+curl -X GET http://127.0.0.1:10080/apioak/admin/router/{router_id}/env/{env} -H "APIOAK-SERVICE-ID: {service_id}" -d '
 ```
+> `env` 变量值为 `prod`、`beta`、`dev`。
 
-### 接口上下线
+
+### 路由环境删除
 ```shell
-curl -X GET http://127.0.0.1:10080/apioak/admin/router/{id}/push_upstream -d '
-{
-    "service_id": "00000000000000010080",
-    "push_upstream": "beta",
-    "push_status": true
-}'
+curl -X GET http://127.0.0.1:10080/apioak/admin/router/{router_id}/env/{env} -H "APIOAK-SERVICE-ID: {service_id}" -d '
 ```
