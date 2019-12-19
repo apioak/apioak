@@ -104,8 +104,6 @@ function _M.create(params)
         end
     end
 
-    ngx.say(etcd_key)
-
     local data, code, etcd_err = pdk.etcd.create(etcd_key, body)
     if data then
         pdk.response.exit(code, data)
