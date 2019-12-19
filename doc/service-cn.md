@@ -100,7 +100,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service -d '
 
 ### 更新服务
 ```shell
-curl -X POST http://127.0.0.1:10080/apioak/admin/service/00000000000000010080 -d '
+curl -X POST http://127.0.0.1:10080/apioak/admin/service/{service_id} -d '
 {
     "name":"First APIOAK Project",
     "prefix":"/one",
@@ -108,7 +108,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service/00000000000000010080 -d
     "upstreams":{
         "prod":{
             "host":"prod.apioak.com",
-            "chash":"chash",
+            "type":"chash",
             "nodes":[
                 {
                     "port":10111,
@@ -124,7 +124,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service/00000000000000010080 -d
         },
         "dev":{
             "host":"dev.apioak.com",
-            "chash":"roundrobin",
+            "type":"roundrobin",
             "nodes":[
                 {
                     "port":10333,
@@ -140,7 +140,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service/00000000000000010080 -d
         },
         "beta":{
             "host":"beta.apioak.com",
-            "chash":"chash",
+            "type":"chash",
             "nodes":[
                 {
                     "port":10555,
@@ -168,34 +168,17 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/service/00000000000000010080 -d
 
 ### 查询服务
 ```shell
-curl -X GET http://127.0.0.1:10080/apioak/admin/service/00000000000000010080
+curl -X GET http://127.0.0.1:10080/apioak/admin/service/{service_id}
 ```
+
 
 ### 删除服务
 ```shell
-curl -X DELETE http://127.0.0.1:10080/apioak/admin/service/00000000000000010080
+curl -X DELETE http://127.0.0.1:10080/apioak/admin/service/{service_id}
 ```
+
 
 ### 服务列表
 ```shell
 curl -X GET http://127.0.0.1:10080/apioak/admin/services
-```
-
-### 添加/重新配置服务下插件
-```shell
-curl -X POST http://127.0.0.1:10080/apioak/admin/service/00000000000000010080/plugin -d '
-{
-    "name": "limit-conn",
-    "config": {
-        "conn": 200,
-        "burst": 100,
-        "key": "http_x_real_ip",
-        "default_conn_delay":1,
-    }
-}'
-```
-
-### 删除服务下插件
-```shell
-curl -X DELETE http://127.0.0.1:10080/apioak/admin/service/00000000000000010080/plugin?plugin_name=limit-conn
 ```
