@@ -1,12 +1,46 @@
-local pdk = require("apioak.pdk")
+local pdk      = require("apioak.pdk")
+local tostring = tostring
 
-local etcd_key = "/services"
+local etcd_key
+local uri_params
+
+local function create_etcd_key(service_id)
+    if service_id then
+        etcd_key = "/services/" .. tostring(service_id)
+    else
+        etcd_key = "/services"
+    end
+end
+
+local function get_uri_param(key)
+    local val = uri_params[key] or nil
+    if not val then
+        pdk.response.exit(500,
+                { err_message = pdk.string.format("property \"URI: %s\" is required", key) })
+    end
+    return val
+end
+
+local function get_body()
+    local body, err = pdk.request.body()
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+    return body
+end
+
+local function check_schema(schema, body)
+    local _, err = pdk.schema.check(schema, body)
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+end
 
 local _M = {}
 
-_M.etcd_key = etcd_key
-
 function _M.list()
+    create_etcd_key()
+
     local data, code, etcd_err = pdk.etcd.query(etcd_key)
     if data then
         pdk.response.exit(code, data)
@@ -16,12 +50,12 @@ function _M.list()
 end
 
 function _M.query(params)
-    local service_id = params.id or nil
-    if not service_id then
-        pdk.response.exit(404, "service not found")
-    end
+    uri_params       = params
+    local service_id = get_uri_param('service_id')
 
-    local data, code, etcd_err = pdk.etcd.query(etcd_key .. "/" .. service_id)
+    create_etcd_key(service_id)
+
+    local data, code, etcd_err = pdk.etcd.query(etcd_key)
     if data then
         pdk.response.exit(code, data)
     else
@@ -30,15 +64,11 @@ function _M.query(params)
 end
 
 function _M.create()
-    local body, body_err = pdk.request.body()
-    if body_err then
-        pdk.response.exit(500, { err_message = body_err })
-    end
+    local body = get_body()
 
-    local _, schema_err = pdk.schema.check(pdk.schema.service, body)
-    if schema_err then
-        pdk.response.exit(500, { err_message = schema_err })
-    end
+    check_schema(pdk.schema.service, body)
+
+    create_etcd_key()
 
     local data, code, etcd_err = pdk.etcd.create(etcd_key, body)
     if data then
@@ -49,23 +79,15 @@ function _M.create()
 end
 
 function _M.update(params)
-    local service_id = params.id or nil
-    if not service_id then
-        pdk.response.exit(404, "service not found")
-    end
+    uri_params       = params
+    local service_id = get_uri_param('service_id')
+    local body       = get_body()
 
-    local body, body_err = pdk.request.body()
-    if body_err then
-        pdk.response.exit(500, { err_message = body_err })
-    end
+    check_schema(pdk.schema.service, body)
 
-    body.id = service_id
-    local _, schema_err = pdk.schema.check(pdk.schema.service, body)
-    if schema_err then
-        pdk.response.exit(500, { err_message = schema_err })
-    end
+    create_etcd_key(service_id)
 
-    local data, code, etcd_err = pdk.etcd.update(etcd_key .. "/" .. service_id, body)
+    local data, code, etcd_err = pdk.etcd.update(etcd_key, body)
     if data then
         pdk.response.exit(code, data)
     else
@@ -74,12 +96,12 @@ function _M.update(params)
 end
 
 function _M.delete(params)
-    local service_id = params.id or nil
-    if not service_id then
-        pdk.response.exit(404, "service not found")
-    end
+    uri_params       = params
+    local service_id = get_uri_param('service_id')
 
-    local data, code, etcd_err = pdk.etcd.delete(etcd_key .. "/" .. service_id)
+    create_etcd_key(service_id)
+
+    local data, code, etcd_err = pdk.etcd.delete(etcd_key)
     if data then
         pdk.response.exit(code, data)
     else
@@ -88,36 +110,28 @@ function _M.delete(params)
 end
 
 function _M.plugin_create(params)
-    local service_id = params.id or nil
-    if not service_id then
-        pdk.response.exit(404, "router not found")
-    end
+    uri_params       = params
+    local service_id = get_uri_param('service_id')
+    local body       = get_body()
 
-    local body, body_err = pdk.request.body()
-    if body_err then
-        pdk.response.exit(500, { err_message = body_err })
-    end
+    check_schema(pdk.schema.plugin, body)
 
-    local _, schema_err = pdk.schema.check(pdk.schema.plugin, body)
-    if schema_err then
-        pdk.response.exit(500, { err_message = schema_err })
-    end
+    create_etcd_key(service_id)
 
-    local key = etcd_key .. '/' .. service_id
-    local res, code, err = pdk.etcd.query(key)
+    local res, code, err = pdk.etcd.query(etcd_key)
     if err then
         pdk.response.exit(code, { err_message = err })
     end
 
     if res.value.plugins then
-        res.value.plugins[body.name] = body.config or {}
+        res.value.plugins[body.key] = body.config or {}
     else
         local plugins = {}
-        plugins[body.name] = body.config or {}
+        plugins[body.key] = body.config or {}
         res.value.plugins = plugins
     end
 
-    res, code, err = pdk.etcd.update(key, res.value)
+    res, code, err = pdk.etcd.update(etcd_key, res.value)
     if err then
         pdk.response.exit(code, { err_message = err })
     end
@@ -125,25 +139,25 @@ function _M.plugin_create(params)
 end
 
 function _M.plugin_delete(params)
-    local service_id = params.id or nil
-    local plugin_key = params.plugin_key or nil
-    if not service_id or not plugin_key then
-        pdk.response.exit(404, "router not found")
-    end
+    uri_params       = params
+    local service_id = get_uri_param('service_id')
+    local plugin_key = get_uri_param('plugin_key')
 
-    local key = etcd_key .. '/' .. service_id
-    local res, code, err = pdk.etcd.query(key)
+    create_etcd_key(service_id)
+
+    local res, code, err = pdk.etcd.query(etcd_key)
     if err then
         pdk.response.exit(code, { err_message = err })
     end
 
     if not res.value.plugins or not res.value.plugins[plugin_key] then
-        pdk.response.exit(500, { err_message = "plugin empty" })
+        pdk.response.exit(500,
+                { err_message = pdk.string.format("property \"PLUGIN: %s\" not found", plugin_key) })
     end
 
     res.value.plugins[plugin_key] = nil
 
-    res, code, err = pdk.etcd.update(key, res.value)
+    res, code, err = pdk.etcd.update(etcd_key, res.value)
     if err then
         pdk.response.exit(code, { err_message = err })
     end
