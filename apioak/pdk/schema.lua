@@ -25,12 +25,12 @@ local router = {
         name = {
             type = 'string',
             minLength = 1,
-            maxLength = 300
+            maxLength = 50
         },
         path = {
             type = 'string',
             minLength = 1,
-            maxLength = 200
+            maxLength = 100
         },
         method = {
             type = "string",
@@ -52,7 +52,7 @@ local router = {
                     name = {
                         type = 'string',
                         minLength = 1,
-                        maxLength = 300
+                        maxLength = 50
                     },
                     position = {
                         type = "string",
@@ -72,7 +72,7 @@ local router = {
                     desc = {
                         type = "string",
                         minLength = 0,
-                        maxLength = 50
+                        maxLength = 90
                     }
                 }
             }
@@ -80,7 +80,7 @@ local router = {
         service_path = {
             type = 'string',
             minLength = 1,
-            maxLength = 200
+            maxLength = 100
         },
         service_method = {
             type = "string",
@@ -100,7 +100,7 @@ local router = {
                     service_name = {
                         type = "string",
                         minLength = 1,
-                        maxLength = 300
+                        maxLength = 50
                     },
                     service_position = {
                         type = "string",
@@ -109,7 +109,7 @@ local router = {
                     name = {
                         type = 'string',
                         minLength = 1,
-                        maxLength = 300
+                        maxLength = 50
                     },
                     position = {
                         type = "string",
@@ -134,14 +134,24 @@ local router = {
                     name = {
                         type = 'string',
                         minLength = 1,
-                        maxLength = 300
+                        maxLength = 50
                     },
                     position = {
                         type = "string",
                         enum = { "Header", "Path", "Query" }
                     },
                     value = {
-                        type = "string",
+                        anyOf = {
+                            {
+                                type = "string",
+                            },
+                            {
+                                type = "number",
+                            },
+                            {
+                                type = "boolean",
+                            }
+                        }
                     },
                     desc = {
                         type = "string",
@@ -171,17 +181,18 @@ local router = {
                     msg = {
                         type = "string",
                         minLength = 0,
-                        maxLength = 50
+                        maxLength = 60
                     },
                     desc = {
                         type = "string",
                         minLength = 0,
-                        maxLength = 50
+                        maxLength = 90
                     }
                 }
             }
         }
     },
+    required = { "name", "path", "method", "enable_cors", "service_path", "service_method", "response_type", "response_success", "response_fail"},
 }
 
 local service_upstreams = {
@@ -231,7 +242,7 @@ local service = {
         name = {
             type = 'string',
             minLength = 1,
-            maxLength = 20
+            maxLength = 50
         },
         prefix = {
             type = 'string',
@@ -241,7 +252,7 @@ local service = {
         desc = {
             type = 'string',
             minLength = 0,
-            maxLength = 50
+            maxLength = 90
         },
         upstreams = {
             type = "object",
