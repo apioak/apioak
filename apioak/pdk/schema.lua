@@ -22,28 +22,15 @@ local id_define = {
 local router = {
     type = 'object',
     properties = {
-        service_id = {
-            anyOf = {
-                {
-                    type = "string",
-                    minLength = 1,
-                    maxLength = 64,
-                },
-                {
-                    type = "number",
-                    minimum = 1
-                }
-            }
-        },
         name = {
             type = 'string',
             minLength = 1,
-            maxLength = 300
+            maxLength = 50
         },
         path = {
             type = 'string',
             minLength = 1,
-            maxLength = 200
+            maxLength = 100
         },
         method = {
             type = "string",
@@ -65,7 +52,7 @@ local router = {
                     name = {
                         type = 'string',
                         minLength = 1,
-                        maxLength = 300
+                        maxLength = 50
                     },
                     position = {
                         type = "string",
@@ -84,8 +71,8 @@ local router = {
                     },
                     desc = {
                         type = "string",
-                        minLength = 1,
-                        maxLength = 500
+                        minLength = 0,
+                        maxLength = 90
                     }
                 }
             }
@@ -93,7 +80,7 @@ local router = {
         service_path = {
             type = 'string',
             minLength = 1,
-            maxLength = 200
+            maxLength = 100
         },
         service_method = {
             type = "string",
@@ -113,7 +100,7 @@ local router = {
                     service_name = {
                         type = "string",
                         minLength = 1,
-                        maxLength = 300
+                        maxLength = 50
                     },
                     service_position = {
                         type = "string",
@@ -122,7 +109,7 @@ local router = {
                     name = {
                         type = 'string',
                         minLength = 1,
-                        maxLength = 300
+                        maxLength = 50
                     },
                     position = {
                         type = "string",
@@ -147,7 +134,7 @@ local router = {
                     name = {
                         type = 'string',
                         minLength = 1,
-                        maxLength = 300
+                        maxLength = 50
                     },
                     position = {
                         type = "string",
@@ -193,19 +180,19 @@ local router = {
                     },
                     msg = {
                         type = "string",
-                        minLength = 1,
-                        maxLength = 300
+                        minLength = 0,
+                        maxLength = 60
                     },
                     desc = {
                         type = "string",
-                        minLength = 1,
-                        maxLength = 500
+                        minLength = 0,
+                        maxLength = 90
                     }
                 }
             }
         }
     },
-    required = { "service_id", "name", "path", "method", "enable_cors", "service_path", "service_method", "response_type", "response_success", "response_fail"},
+    required = { "name", "path", "method", "enable_cors", "service_path", "service_method", "response_type", "response_success", "response_fail"},
 }
 
 local service_upstreams = {
@@ -255,7 +242,7 @@ local service = {
         name = {
             type = 'string',
             minLength = 1,
-            maxLength = 20
+            maxLength = 50
         },
         prefix = {
             type = 'string',
@@ -264,8 +251,8 @@ local service = {
         },
         desc = {
             type = 'string',
-            minLength = 1,
-            maxLength = 50
+            minLength = 0,
+            maxLength = 90
         },
         upstreams = {
             type = "object",
@@ -274,7 +261,7 @@ local service = {
                 prod = service_upstreams,
                 beta = service_upstreams,
                 dev = service_upstreams
-            }
+            },
         }
     },
     required = { "name", "prefix", "upstreams" },
@@ -283,14 +270,14 @@ local service = {
 local plugin = {
     type = "object",
     properties = {
-        name = {
+        key = {
             type = "string",
         },
         config = {
             type = "object"
         },
     },
-    required = { "name" }
+    required = { "key" }
 }
 
 _M.plugin = plugin

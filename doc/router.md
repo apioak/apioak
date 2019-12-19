@@ -1,21 +1,20 @@
 ## Router
 
-> Router correlation interface
+> Routing is the core of the API gateway and is responsible for forwarding, authentication, and authentication of all requests.
 
 - [Data Structure](#Data-Structure)
-- [Create Router](#Create-Router)
-- [Update Router](#Update-Router)
-- [Query Router](#Query-Router)
-- [Delete Router](#Delete-Router)
-- [Router List](#Router-List)
-- [Create/update the plug-in under router](#Create/update-the-plugin-under-router)
-- [Delete the plugin below router](#Delete-the-plugin-below-router)
-- [Line up and down the router](#Line-up-and-down-the-router)
+- [Router Create](#Router-Create)
+- [Router Update](#Router-Update)
+- [Router Query](#Router-Query)
+- [Router Remove](#Router-Remove)
+- [Router Lists](#Router-Lists)
+- [Router Env Push](#Router-Env-Push)
+- [Router Env Remove](#Router-Env-Remove)
+
 
 ### Data Structure
 |Name|type|Required|Description|
 |---|---|---|---|
-|service_id                        |string |Y| Router belongs to the service ID.|
 |name                              |string |Y| Router name, character length `1-60`.|
 |path                              |string |Y| Front-end path address.|
 |method                            |string |Y| Front-end request mode：`GET`、`POST`、`PUT`、`DELETE`、`HEAD`.|
@@ -51,13 +50,14 @@
 |response_error_codes[].msg        |string |N| Error message.|
 |response_error_codes[].desc       |string |N| Error note.|
 |plugins                           |object |N| A collection of plug-in objects under the service.|
-|plugins[plugin_name?]             |object |N| The associated parameter configuration is stored under the owning plug-in.|
+|plugins[plugin_key?]              |object |N| The associated parameter configuration is stored under the owning plug-in.|
+|push_dev                          |object |N| Push environment，key is `prod`、 `beta`、 `dev`，value is `boolean`.|
 
-### Create Router
+
+### Router Create
 ```shell
-curl -X POST http://127.0.0.1:10080/apioak/admin/router -d '
+curl -X POST http://127.0.0.1:10080/apioak/admin/router -H "APIOAK-SERVICE-ID: {service_id}" -d '
 {
-    "service_id": "00000000000000010080",
     "name": "news list interface",
     "path": "/news",
     "method": "GET",
@@ -90,7 +90,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router -d '
         {
             "name": "gateway",
             "position": "Query",
-            "value": true,
+            "value": "apioak",
             "desc": ""
         }
     ],
@@ -99,7 +99,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router -d '
     "response_fail": "{\"code\":500,\"message\":\"error\"}",
     "response_error_codes":[
         {
-            "code": "200",
+            "code": 200,
             "msg": "OK",
             "desc": ""
         }
@@ -112,15 +112,13 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router -d '
             "default_conn_delay":1
         }
     }
-    
 }'
 ```
 
-### Update Router
+### Router Update
 ```shell
-curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id} -d '
+curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id} -H "APIOAK-SERVICE-ID: {service_id}" -d '
 {
-    "service_id": "00000000000000010080",
     "name": "news list interface",
     "path": "/news",
     "method": "GET",
@@ -153,7 +151,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id} -d '
         {
             "name": "gateway",
             "position": "Query",
-            "value": true,
+            "value": "apioak",
             "desc": ""
         }
     ],
@@ -162,7 +160,7 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id} -d '
     "response_fail": "{\"code\":500,\"message\":\"error\"}",
     "response_error_codes":[
         {
-            "code": "200",
+            "code": 200,
             "msg": "OK",
             "desc": ""
         }
@@ -175,51 +173,36 @@ curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id} -d '
             "default_conn_delay":1
         }
     }
-    
 }'
 ```
 
-### Query Router
+
+### Router Query
 ```shell
-curl -X GET http://127.0.0.1:10080/apioak/admin/router/{id}?service_id={service_id}
+curl -X GET http://127.0.0.1:10080/apioak/admin/router/{router_id} -H "APIOAK-SERVICE-ID: {service_id}"
 ```
 
-### Delete Router
+
+### Router Remove
 ```shell
-curl -X DELETE http://127.0.0.1:10080/apioak/admin/router/{id}?service_id={service_id}
+curl -X DELETE http://127.0.0.1:10080/apioak/admin/router/{router_id} -H "APIOAK-SERVICE-ID: {service_id}"
 ```
 
-### Router List
+
+### Router Lists
 ```shell
-curl -X GET http://127.0.0.1:10080/apioak/admin/routers?service_id={service_id}
+curl -X GET http://127.0.0.1:10080/apioak/admin/routers -H "APIOAK-SERVICE-ID: {service_id}"
 ```
 
-### Create/update the plug-in under router
-```shell
-curl -X POST http://127.0.0.1:10080/apioak/admin/router/{id}/plugin -d '
-{
-    "service_id": "00000000000000010080",
-    "name": "limit-conn",
-    "config": {
-        "conn": 200,
-        "burst": 100,
-        "key": "http_x_real_ip",
-        "default_conn_delay":1
-    }
-}'
-```
 
-### Delete the plugin below router
+### Router Env Push
 ```shell
-curl -X DELETE http://127.0.0.1:10080/apioak/admin/router/{id}/plugin?service_id={service_id}&plugin_name=limit-conn
+curl -X GET http://127.0.0.1:10080/apioak/admin/router/{router_id}/env/{env} -H "APIOAK-SERVICE-ID: {service_id}" -d '
 ```
+> `env` variable is `prod`、`beta`、`dev`.
 
-### Line up and down the router
+
+### Router Env Remove
 ```shell
-curl -X GET http://127.0.0.1:10080/apioak/admin/router/{id}/push_upstream -d '
-{
-    "service_id": "00000000000000010080",
-    "push_upstream": "beta",
-    "push_status": true
-}'
+curl -X GET http://127.0.0.1:10080/apioak/admin/router/{router_id}/env/{env} -H "APIOAK-SERVICE-ID: {service_id}" -d '
 ```
