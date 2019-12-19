@@ -22,9 +22,6 @@ local id_define = {
 local router = {
     type = 'object',
     properties = {
-        service_id = {
-
-        },
         name = {
             type = 'string',
             minLength = 1,
@@ -74,8 +71,8 @@ local router = {
                     },
                     desc = {
                         type = "string",
-                        minLength = 1,
-                        maxLength = 500
+                        minLength = 0,
+                        maxLength = 50
                     }
                 }
             }
@@ -173,20 +170,18 @@ local router = {
                     },
                     msg = {
                         type = "string",
-                        minLength = 1,
-                        maxLength = 300
+                        minLength = 0,
+                        maxLength = 50
                     },
                     desc = {
                         type = "string",
-                        minLength = 1,
-                        maxLength = 500
+                        minLength = 0,
+                        maxLength = 50
                     }
                 }
             }
         }
     },
-    --required = { "service_id", "name", "path", "method", "enable_cors", "service_path", "service_method", "response_type", "response_success", "response_fail"},
-    --required = { "service_id", "name", "path", "method", "enable_cors", "service_path", "service_method", "response_type", "response_success", "response_fail"},
 }
 
 local service_upstreams = {
@@ -245,7 +240,7 @@ local service = {
         },
         desc = {
             type = 'string',
-            minLength = 1,
+            minLength = 0,
             maxLength = 50
         },
         upstreams = {
@@ -255,7 +250,7 @@ local service = {
                 prod = service_upstreams,
                 beta = service_upstreams,
                 dev = service_upstreams
-            }
+            },
         }
     },
     required = { "name", "prefix", "upstreams" },
@@ -264,14 +259,14 @@ local service = {
 local plugin = {
     type = "object",
     properties = {
-        name = {
+        key = {
             type = "string",
         },
         config = {
             type = "object"
         },
     },
-    required = { "name" }
+    required = { "key" }
 }
 
 _M.plugin = plugin

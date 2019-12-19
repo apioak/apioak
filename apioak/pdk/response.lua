@@ -40,6 +40,16 @@ function _M.exit(code, body)
     end
 end
 
+function _M.say(code, body)
+    if code and type(code) == "number" then
+        ngx.status = code
+    else
+        code = nil
+    end
+    ngx_header[CONTENT_TYPE] = CONTENT_TYPE_HTML
+    ngx_say(body)
+end
+
 function _M.set_header(key, value)
     ngx_header[key] = value
 end
