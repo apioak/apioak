@@ -6,9 +6,11 @@ _M.insert = table.insert
 
 _M.concat = table.concat
 
-_M.clear = table.clear
+_M.clear  = table.clear
 
-_M.clone = table.clone
+_M.clone  = table.clone
+
+_M.remove = table.remove
 
 _M.has = function(val, tab)
     for _, v in ipairs(tab) do

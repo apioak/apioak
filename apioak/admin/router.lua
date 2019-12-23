@@ -1,23 +1,18 @@
 local pdk      = require("apioak.pdk")
 local ipairs   = ipairs
-local tostring = tostring
 local etcd_key
 local uri_params
 
-local ENV_DEV    = "dev"
-local ENV_BETA   = "beta"
-local ENV_PROD   = "prod"
-local ENV_MASTER = "master"
+local ENV_DEV    = pdk.admin.ENV_DEV
+local ENV_BETA   = pdk.admin.ENV_BETA
+local ENV_PROD   = pdk.admin.ENV_PROD
+local ENV_MASTER = pdk.admin.ENV_MASTER
 local env_names  = { ENV_PROD, ENV_BETA, ENV_DEV }
 
 local _M = {}
 
 local function create_etcd_key(env, service_id, router_id)
-    if not router_id then
-        etcd_key = "/services/X" .. tostring(service_id) .. "/" .. env .. "/routers"
-    else
-        etcd_key = "/services/X" .. tostring(service_id) .. "/" .. env .. "/routers/" .. tostring(router_id)
-    end
+    etcd_key = pdk.admin.get_router_etcd_key(env, service_id, router_id)
 end
 
 local function get_service_id()

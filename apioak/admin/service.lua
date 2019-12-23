@@ -1,15 +1,10 @@
-local pdk      = require("apioak.pdk")
-local tostring = tostring
+local pdk = require("apioak.pdk")
 
 local etcd_key
 local uri_params
 
 local function create_etcd_key(service_id)
-    if service_id then
-        etcd_key = "/services/" .. tostring(service_id)
-    else
-        etcd_key = "/services"
-    end
+    etcd_key = pdk.admin.get_service_etcd_key(service_id)
 end
 
 local function get_uri_param(key)
