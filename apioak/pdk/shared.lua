@@ -1,54 +1,25 @@
-local type       = type
-local ngx_shared = ngx.shared
-local cJson      = require("cjson.safe")
+local ngx           = ngx
+local type          = type
+local cJson         = require("cjson.safe")
+local apioak_shared = ngx.shared.apioak
 
-local function new(block)
+local _M = {}
 
-    local _SHARED = {}
-
-
-    function _SHARED._valid(key)
-        if not ngx_shared[block] then
-            error("[pdk.shared] dict [" .. block .. "] invalid")
-        end
-
-        if not key and type(key) ~= "string" then
-            error("[pdk.shared] key [" .. key .. "] invalid")
-        end
+function _M.set(key, value, ttl)
+    ttl = ttl or 0
+    if type(value) == "table" then
+        value = cJson.encode(value)
     end
-
-
-    function _SHARED.get(key)
-
-        _SHARED._valid(key)
-
-        local response = ngx_shared[block]:get(key)
-
-        if response then
-            response = cJson.decode(response)
-        end
-
-        return response
-    end
-
-
-    function _SHARED.set(key, value, ttl)
-
-        _SHARED._valid(key)
-
-        ttl = ttl or 0
-
-        if type(value) == "table" then
-            value = cJson.encode(value)
-        end
-
-        return ngx_shared[block]:set(key, value, ttl)
-    end
-
-
-    return _SHARED
+    return apioak_shared:set(key, value, ttl)
 end
 
-return {
-    new = new
-}
+function _M.get(key)
+    local response = apioak_shared:get(key)
+    if response then
+        return cJson.decode(response), nil
+    else
+        return nil, "\"key\" value not found"
+    end
+end
+
+return _M

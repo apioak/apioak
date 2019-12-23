@@ -39,29 +39,47 @@ function APIOAK.init_worker()
     sys.balancer.init_worker()
 end
 
-function APIOAK.http_rewrite()
+function APIOAK.http_variable()
     local ngx_ctx = ngx.ctx
     local oak_ctx = ngx_ctx.oak_ctx
     if not oak_ctx then
-        ngx_ctx.oak_ctx = {}
+        oak_ctx = pdk.pool.fetch("oak_ctx", 0, 32)
+        ngx_ctx.oak_ctx = oak_ctx
     end
+
+    local env = pdk.request.header("APIOAK-ENV")
+    if env then
+        env = pdk.string.lower(env)
+    else
+        env = pdk.admin.ENV_MASTER
+    end
+
+    local routers = sys.router.get()
+    local match_ok = routers:dispatch("/" .. env .. ngx.var.uri, ngx.req.get_method(), oak_ctx)
+    if not match_ok then
+        pdk.response.exit(404, "\"URI\" not found")
+    end
+end
+
+function APIOAK.http_rewrite()
+    local ngx_ctx = ngx.ctx
+    local oak_ctx = ngx_ctx.oak_ctx
+
     run_plugin("http_rewrite", oak_ctx)
 end
 
 function APIOAK.http_access()
     local ngx_ctx = ngx.ctx
     local oak_ctx = ngx_ctx.oak_ctx
-    local routers = sys.router.get()
-    local match_ok = routers:dispatch(ngx.var.uri, ngx.req.get_method(), oak_ctx)
-    if not match_ok then
-        pdk.response.exit({ code = 404 })
-    end
-    ngx.var.upstream_uri = ngx.var.uri
+    pdk.response.exit(200, oak_ctx)
+
     run_plugin("http_access", oak_ctx)
 end
 
 function APIOAK.http_balancer()
-    sys.balancer.go()
+    local ngx_ctx = ngx.ctx
+    local oak_ctx = ngx_ctx.oak_ctx
+    sys.balancer.go(oak_ctx)
 end
 
 function APIOAK.http_header_filter()
@@ -82,16 +100,11 @@ function APIOAK.http_log()
     run_plugin("http_log", oak_ctx)
 end
 
-do
-    local admin_routers
-    function APIOAK.http_admin()
-        if not admin_routers then
-            admin_routers = sys.admin.routers()
-        end
-        local ok = admin_routers:dispatch(ngx.var.uri, ngx.req.get_method())
-        if not ok then
-            ngx.exit(404)
-        end
+function APIOAK.http_admin()
+    local admin_routers = sys.admin.routers()
+    local ok = admin_routers:dispatch(ngx.var.uri, ngx.req.get_method())
+    if not ok then
+        ngx.exit(404)
     end
 end
 

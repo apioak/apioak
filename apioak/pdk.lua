@@ -11,4 +11,6 @@ return {
     response = require("apioak.pdk.response"),
     schema   = require("apioak.pdk.schema"),
     plugin   = require("apioak.pdk.plugin"),
+    admin    = require("apioak.pdk.admin"),
+    pool     = require("apioak.pdk.tablepool"),
 }
