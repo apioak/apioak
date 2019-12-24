@@ -32,6 +32,11 @@ yum -y install etcd
 systemctl start etcd
 ```
 
+### 安装项目依赖
+```shell
+make dev
+```
+
 ### 初始化项目
 ```shell
 ./bin/apioak init
