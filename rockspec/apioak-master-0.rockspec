@@ -28,6 +28,7 @@ dependencies = {
     "luafilesystem = 1.7.0-2",
     "lua-tinyyaml = 0.1",
     "multipart = 0.5.5-1",
+    "penlight = 1.5.4-1",
 }
 
 build = {
