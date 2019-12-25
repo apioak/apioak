@@ -1,7 +1,7 @@
 local limit_req = require "resty.limit.req"
 local ngx_var = ngx.var
 
-local limit, err = limit_req.new("plug_limit_req", 200, 100)
+local limit, err = limit_req.new("plugin_limit_req", 200, 100)
 if not limit then
     ngx.log(ngx.ERR, "failed to instantiate a resty.limit.req object: ", err)
     return ngx.exit(500)
