@@ -34,8 +34,6 @@ function APIOAK.init_worker()
 
     sys.plugin.init_worker()
 
-    sys.upstream.init_worker()
-
     sys.balancer.init_worker()
 end
 
