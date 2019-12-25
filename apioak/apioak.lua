@@ -39,7 +39,7 @@ function APIOAK.init_worker()
     sys.balancer.init_worker()
 end
 
-function APIOAK.http_variable()
+function APIOAK.http_access()
     local ngx_ctx = ngx.ctx
     local oak_ctx = ngx_ctx.oak_ctx
     if not oak_ctx then
@@ -59,19 +59,6 @@ function APIOAK.http_variable()
     if not match_ok then
         pdk.response.exit(404, "\"URI\" not found")
     end
-end
-
-function APIOAK.http_rewrite()
-    local ngx_ctx = ngx.ctx
-    local oak_ctx = ngx_ctx.oak_ctx
-
-    run_plugin("http_rewrite", oak_ctx)
-end
-
-function APIOAK.http_access()
-    local ngx_ctx = ngx.ctx
-    local oak_ctx = ngx_ctx.oak_ctx
-    pdk.response.exit(200, oak_ctx)
 
     run_plugin("http_access", oak_ctx)
 end
