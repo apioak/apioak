@@ -6,7 +6,7 @@ local sys    = require("apioak.sys")
 local function run_plugin(phase, oak_ctx)
     local plugins = pdk.plugin.loading()
     for _, plugin in ipairs(plugins) do
-        if plugin and plugin[phase] then
+        if plugin[phase] then
             plugin[phase](oak_ctx)
         end
     end
@@ -24,10 +24,10 @@ function APIOAK.init()
     require("jit.opt").start("minstitch=2", "maxtrace=4000",
             "maxrecord=8000", "sizemcode=64",
             "maxmcode=4000", "maxirconst=1000")
-
 end
 
 function APIOAK.init_worker()
+
     sys.admin.init_worker()
 
     sys.router.init_worker()
@@ -35,17 +35,6 @@ function APIOAK.init_worker()
     sys.plugin.init_worker()
 
     sys.balancer.init_worker()
-end
-
-function APIOAK.http_variable()
-
-end
-
-function APIOAK.http_rewrite()
-    local ngx_ctx = ngx.ctx
-    local oak_ctx = ngx_ctx.oak_ctx
-
-    run_plugin("http_rewrite", oak_ctx)
 end
 
 function APIOAK.http_access()
@@ -68,7 +57,6 @@ function APIOAK.http_access()
     if not match_ok then
         pdk.response.exit(404, "\"URI\" not found")
     end
-    pdk.response.exit(200, oak_ctx)
 
     run_plugin("http_access", oak_ctx)
 end
