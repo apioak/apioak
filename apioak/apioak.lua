@@ -5,9 +5,14 @@ local sys    = require("apioak.sys")
 
 local function run_plugin(phase, oak_ctx)
     local plugins = pdk.plugin.loading()
+    local res, err
     for _, plugin in ipairs(plugins) do
         if plugin[phase] then
-            plugin[phase](oak_ctx)
+            res, err = plugin[phase](oak_ctx)
+            if err then
+                pdk.log.error(err)
+                ngx.exit(res)
+            end
         end
     end
 end
