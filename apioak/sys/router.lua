@@ -99,6 +99,104 @@ function _M.init_worker()
     end)
 end
 
+local function format_params(params, request_params, matched)
+
+    if string.upper(request_params.position) == "QUERY" then
+        if pdk.request.query(request_params.name) then
+            params[request_params.service_name] = pdk.request.query(request_params.name)
+        end
+    elseif string.upper(request_params.position) == "PATH" then
+        if matched.params[request_params.name] then
+            params[request_params.service_name] = matched.params[request_params.name]
+        end
+    elseif string.upper(request_params.position) == "HEADER" then
+        if pdk.request.header(request_params.name) then
+            params[request_params.service_name] = pdk.request.header(request_params.name)
+        end
+    end
+
+    return params, nil
+end
+
+local function get_backend_uri(backend, matched, constants)
+
+    local backend_uri = ""
+    if not backend then
+        return nil, "\"backend\" is null"
+    end
+
+    if backend.request_params then
+
+        local path_params = {}
+        local query_params = {}
+        local header_params = {}
+        local tmp_query_params = {}
+
+        for _, request_params in pairs(backend.request_params) do
+            if string.upper(request_params.service_position) == "QUERY" then
+                tmp_query_params = format_params(tmp_query_params, request_params, matched)
+            elseif string.upper(request_params.service_position) == "PATH" then
+                path_params = format_params(path_params, request_params, matched)
+            elseif string.upper(request_params.service_position) == "HEADER" then
+                header_params = format_params(header_params, request_params, matched)
+            end
+        end
+
+        if constants then
+            for _, constant in pairs(constants) do
+                if constant.name and constant.value and constant.position then
+                    if string.upper(constant.position) == "QUERY" then
+                        tmp_query_params[constant.name] = constant.value
+                    elseif string.upper(constant.position) == "PATH" then
+                        path_params[constant.name] = constant.value
+                    elseif string.upper(constant.position) == "HEADER" then
+                        header_params[constant.name] = constant.value
+                    end
+                end
+            end
+        end
+
+        if tmp_query_params then
+            for path_name, path_value in pairs(tmp_query_params) do
+                table.insert(query_params, path_name .. "=" .. path_value)
+            end
+        end
+
+        backend_uri = backend.uri
+        if header_params then
+            for header_name, header_value in pairs(header_params) do
+                ngx.req.set_header(header_name, header_value)
+            end
+        end
+        if path_params then
+            for path_name, path_value in pairs(path_params) do
+                backend_uri = string.gsub(backend_uri, "{" .. path_name .. "}", path_value)
+            end
+        end
+        if query_params then
+            backend_uri = backend_uri .. "?" .. table.concat(query_params, "&")
+        end
+    end
+
+    return backend_uri, nil
+end
+
+function _M.analysis_uri(oak_ctx)
+    if (not oak_ctx.backend) or (not oak_ctx.backend.uri) then
+        pdk.log.error("backend uri service is empty")
+        return
+    end
+
+    local uri, err = get_backend_uri(oak_ctx.backend, oak_ctx.matched, oak_ctx.backend.constant_params)
+    if not uri then
+        pdk.log.error(err)
+        return
+    end
+
+    oak_ctx.backend.uri = uri
+    return
+end
+
 function _M.get()
     if not router then
         _M.create_r3_routes()
