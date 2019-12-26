@@ -5,14 +5,9 @@ local sys    = require("apioak.sys")
 
 local function run_plugin(phase, oak_ctx)
     local plugins = pdk.plugin.loading()
-    local res, err
     for _, plugin in ipairs(plugins) do
         if plugin[phase] then
-            res, err = plugin[phase](oak_ctx)
-            if err then
-                pdk.log.error(err)
-                ngx.exit(res)
-            end
+            plugin[phase](oak_ctx)
         end
     end
 end
@@ -60,7 +55,7 @@ function APIOAK.http_access()
     local routers = sys.router.get()
     local match_ok = routers:dispatch("/" .. env .. ngx.var.uri, ngx.req.get_method(), oak_ctx)
     if not match_ok then
-        pdk.response.exit(404, "\"URI\" not found")
+        pdk.response.exit(404, { err_message = "\"URI\" not found" })
     end
 
     run_plugin("http_access", oak_ctx)

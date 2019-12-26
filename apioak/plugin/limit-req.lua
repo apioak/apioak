@@ -59,22 +59,23 @@ function _M.http_access(oak_ctx)
 
     local limit, err = create_limit_obj(plugin_conf)
     if not limit then
-        return 500, "failed to instantiate a resty.limit.req object: " .. err
+        pdk.response.exit(500,
+                { err_message =  "failed to instantiate a resty.limit.req object: " .. err })
     end
 
     local key = ngx_var[plugin_conf.key] or "0.0.0.0"
     local delay, err = limit:incoming(key, true)
     if not delay then
         if err == "rejected" then
-            return 503, err
+            pdk.response.exit(503, { err_message = err })
+        else
+            pdk.response.exit(500, { err_message = err })
         end
-        return 500, err
     end
 
     if delay >= 0.001 then
         ngx.sleep(delay)
     end
-    return
 end
 
 return _M
