@@ -55,7 +55,7 @@ function APIOAK.http_access()
     local routers = sys.router.get()
     local match_ok = routers:dispatch("/" .. env .. ngx.var.uri, ngx.req.get_method(), oak_ctx)
     if not match_ok then
-        pdk.response.exit(404, "\"URI\" not found")
+        pdk.response.exit(404, { err_message = "\"URI\" not found" })
     end
 
     run_plugin("http_access", oak_ctx)

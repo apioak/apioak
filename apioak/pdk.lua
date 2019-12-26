@@ -13,4 +13,5 @@ return {
     plugin   = require("apioak.pdk.plugin"),
     admin    = require("apioak.pdk.admin"),
     pool     = require("apioak.pdk.tablepool"),
+    const    = require("apioak.pdk.const"),
 }
