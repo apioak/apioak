@@ -62,7 +62,7 @@ function _M.http_access(oak_ctx)
 
     local limit, err = create_limit_obj(plugin_conf)
     if not limit then
-        return 500, "failed to instantiate a resty.limit.conn object: " .. err
+        pdk.response.exit(500, { err_message = "failed to instantiate a resty.limit.conn object: " .. err })
     end
     _M.conf = plugin_conf
 
@@ -70,9 +70,10 @@ function _M.http_access(oak_ctx)
     local delay, err = limit:incoming(key, true)
     if not delay then
         if err == "rejected" then
-            return 503, err
+            pdk.response.exit(503, { err_message = err })
+        else
+            pdk.response.exit(500, { err_message = err })
         end
-        return 500, err
     end
 
     if limit:is_committed() then
@@ -83,7 +84,6 @@ function _M.http_access(oak_ctx)
     if delay >= 0.001 then
         ngx.sleep(delay)
     end
-    return ;
 end
 
 function _M.http_log(oak_ctx)
@@ -102,7 +102,6 @@ function _M.http_log(oak_ctx)
             pdk.log.error("failed to record the connection leaving ", "request: ", err)
         end
     end
-    return ;
 end
 
 return _M

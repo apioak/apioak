@@ -58,7 +58,8 @@ function _M.http_access(oak_ctx)
 
     local limit, err = create_limit_obj(plugin_conf)
     if not limit then
-        return 500, "failed to instantiate a resty.limit.count object: ", err
+        pdk.response.exit(500,
+                { err_message = "failed to instantiate a resty.limit.count object: " ..  err })
     end
 
     local key = ngx_var[plugin_conf.key] or "0.0.0.0"
@@ -67,14 +68,14 @@ function _M.http_access(oak_ctx)
         if err == "rejected" then
             ngx.header["X-RateLimit-Limit"] = plugin_conf.rate
             ngx.header["X-RateLimit-Remaining"] = 0
-            return 503, "rejected"
+            pdk.response.exit(503, { err_message =  err })
+        else
+            pdk.response.exit(500, { err_message =  err })
         end
-        return 500, err
     end
 
     ngx.header["X-RateLimit-Limit"] = plugin_conf.rate
     ngx.header["X-RateLimit-Remaining"] = err
-    return 200, nil;
 end
 
 return _M

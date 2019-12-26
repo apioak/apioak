@@ -83,6 +83,9 @@ function _M.init_worker()
                                         oak_ctx.upstream = router_upstream
                                         oak_ctx.plugins  = router_plugins
 
+                                        oak_ctx.request = {}
+                                        oak_ctx.request.client_ip = ngx.var.remote_addr
+
                                         oak_ctx.matched = {}
                                         oak_ctx.matched.params = params or {}
                                     end

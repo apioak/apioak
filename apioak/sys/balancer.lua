@@ -1,53 +1,45 @@
-local balancer = require "ngx.balancer"
-local pdk = require("apioak.pdk")
-local resty_chash = require('resty.chash')
-local resty_roundrobin = require('resty.roundrobin')
+local pdk              = require("apioak.pdk")
+local ipairs           = ipairs
+local tostring         = tostring
+local tonumber         = tonumber
+local balancer         = require("ngx.balancer")
+local balancer_chash   = require('resty.chash')
+local balancer_round   = require('resty.roundrobin')
 local set_current_peer = balancer.set_current_peer
-local string = string
 
 local _M = {}
 
-function _M.init_worker()
-
-end
-
 function _M.go(oak_ctx)
-
-    local upstream = oak_ctx.upstream or {}
-
-    if next(upstream) == nil then
-        pdk.log.error('upstream init is nil')
+    local upstream = oak_ctx.upstream or nil
+    if not upstream or not upstream.nodes then
+        pdk.log.error("[sys.balancer] upstream nodes not found")
+        pdk.response.exit(500)
     end
 
     local nodes = upstream.nodes
-    local server_list = {}
-    local server = ''
-    for _, serv in pairs(nodes) do
-        local key = serv.ip .. ':' .. serv.port
-        server_list[key] = serv.weight
+    local servers = {}
+    for _, server in ipairs(nodes) do
+        servers[server.ip .. ":" .. tostring(server.port)] = server.weight
     end
 
-    if upstream.type == 'roundrobin' then
-        local rr_up = resty_roundrobin:new(server_list)
-        server = rr_up:find()
-        assert(set_current_peer(server))
+    local server
+    local upstream_type = upstream.type or pdk.const.BALANCER_ROUNDROBIN
+    if upstream_type == pdk.const.BALANCER_CHASH then
+        local hash = balancer_chash:new(servers)
+        server = hash:find(oak_ctx.request.client_ip or pdk.const.LOCAL_IP)
     end
 
-    if upstream.type == 'chash' then
-        local arg_key = oak_ctx.remote_addr or '0.0.0.1'
-        local servers, nodes_list = {}, {}
-        local str_null = string.char(0)
-        for serv, weight in pairs(server_list) do
-            local id = string.gsub(serv, ':', str_null)
-            servers[id] = serv
-            nodes_list[id] = weight
-        end
-        local chash_up = resty_chash:new(nodes_list)
-        local id = chash_up:find(arg_key)
-        server = servers[id]
-        assert(set_current_peer(server))
+    if upstream_type == pdk.const.BALANCER_ROUNDROBIN then
+        local round = balancer_round:new(servers)
+        server = round:find()
     end
-    pdk.log.error('balancer init errer')
+
+    local server_info = pdk.string.split(server, ":")
+    local ok, err = set_current_peer(server_info[1], tonumber(server_info[2]))
+    if not ok then
+        pdk.log.error("[sys.balancer] " .. server .. "error, " .. err)
+        pdk.response.exit(500)
+    end
 end
 
 return _M

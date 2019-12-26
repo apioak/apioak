@@ -1,22 +1,14 @@
-local get_headers = ngx.req.get_headers
-local pdk = require("apioak.pdk")
+local pdk      = require("apioak.pdk")
 local ipairs   = ipairs
+local tostring = tostring
 
 local _M = {
-    type = 'Authentication',
-    name = "Key Auth",
-    desc = "Add a key authentication to your APIs.",
-    key = "key-auth",
+    type  = 'Authentication',
+    name  = "Key Auth",
+    desc  = "Add a key authentication to your APIs.",
+    key   = "key-auth",
     order = 1201
 }
-
---get headers
-local function headers_key(oak_ctx, name)
-    if not oak_ctx.headers then
-        oak_ctx.headers = get_headers()
-    end
-    return oak_ctx.headers[name]
-end
 
 --check key exist
 local function key_exist(keys, key)
@@ -43,9 +35,9 @@ function _M.http_access(oak_ctx)
         return false, nil
     end
     --get key
-    local key = headers_key(oak_ctx, "apikey")
+    local key = pdk.request.header('apikey')
     if not key then
-        return 401, "Missing API key found in request"
+        pdk.response.exit(401, { err_message = "Missing API key found in request" })
     end
 
     --get etcd keys
@@ -53,14 +45,14 @@ function _M.http_access(oak_ctx)
     local keys_etcd = etcd_cli.get(_M.name)
     local keys_body = keys_etcd.body
     if (not keys_body.node) or (not keys_body.node.value) then
-        return 401, "API key no set"
+        pdk.response.exit(401, { err_message = "API key no set" })
     end
     local keys = pdk.json.decode(keys_body.node.value)
 
     --check key exist
     local exist = key_exist(keys, key)
     if not exist then
-        return 401, "Invalid API key in request"
+        pdk.response.exit(401, { err_message = "Invalid API key in request" })
     end
 end
 
