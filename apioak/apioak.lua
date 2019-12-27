@@ -58,6 +58,10 @@ function APIOAK.http_access()
         pdk.response.exit(404, { err_message = "\"URI\" not found" })
     end
 
+    if env == pdk.admin.ENV_MASTER then
+        pdk.response.exit(200, oak_ctx.response.success_content)
+    end
+
     run_plugin("http_access", oak_ctx)
 end
 
