@@ -34,7 +34,6 @@ function APIOAK.init_worker()
 
     sys.plugin.init_worker()
 
-    sys.balancer.init_worker()
 end
 
 function APIOAK.http_access()
