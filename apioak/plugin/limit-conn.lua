@@ -87,7 +87,7 @@ function _M.http_access(oak_ctx)
 end
 
 function _M.http_log(oak_ctx)
-    if not _M.conf then
+    if next(_M.conf) == nil then
         return
     end
     local limit, err = create_limit_obj(_M.conf)
