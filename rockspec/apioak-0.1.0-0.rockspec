@@ -1,14 +1,14 @@
 package = "apioak"
-version = "master-0"
-supported_platforms = {"linux", "macosx"}
+version = "0.1.0-0"
+supported_platforms = {"linux"}
 
 source = {
     url = "git://github.com/apioak/apioak",
-    branch = "master",
+    branch = "v0.1.0",
 }
 
 description = {
-    summary = "OpenResty/Nginx Gateway for API Monitoring and Management.",
+    summary = "APIOAK provides full life cycle management of API release, management, and operation and maintenance.",
     homepage = "https://github.com/apioak/apioak",
     license = "Apache License 2.0",
     maintainer = "JinChao Shuai <shuaijinchao@gmail.com>"

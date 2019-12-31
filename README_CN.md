@@ -5,43 +5,46 @@
  
 APIOAK 提供API发布、管理、运维的全生命周期管理。辅助用户简单、快速、低成本、低风险的实现微服务聚合、前后端分离、系统集成，向合作伙伴、开发者开放功能和数据。
 
-# 为什么选择APIOAK
 
-如果你正在构建网站、APP应用，那么你可能需要使用API网关来处理接口流量。
+## 为什么选择APIOAK
 
-APIOAK适用于中小企业的API管理，无需开发，开箱即用。
+APIOAK 可以帮你隔离内外部流量，通过插件机制提供动态负载平衡，身份验证，速率限制等，并支持您自己的自定义插件。
 
-![flow chart](doc/images/flow_chart.jpg)
+![APIOAK](doc/images/APIOAK-process.jpeg)
 
-# 功能
 
- - **运行环境**：Openresty。
- - **热更新和热插件**：无需重启服务，就可以持续更新配置和插件。
- - **动态负载均衡**：动态支持 round-robin / hash 负载均衡。
- - **代理请求重写**：支持重写请求上游的headers、query、path信息。
- - **限制速率**
- - **限制请求数**
- - **限制并发**
- - **自定义插件**: 允许挂载常见阶段，例如`rewrite`,`access`,`header filter`, `body filter` 和 `log`
- - **CLI**: 使用命令行启动、关闭和重启APIOAK
- - **可扩展**: 简单易用的插件机制方便扩展
- - **REST API**
- 
-# 安装
+## 功能
 
-[安装文档](doc/dev-manual-cn.md)
+- **动态轮询 `round` 负载均衡：** 动态支持有权重的 `round-robin` 负载平衡。
+- **动态一致性 `hash` 负载均衡：** 动态支持一致性 `hash` 的负载均衡。
+- **多环境部署发布：** 提供多种发布环境`prod`，`beta`和`dev`，满足不同场景使用需求。
+- **插件热更新和热插拔：** 所有插件均支持热更新和动态插拔。
+- **高扩展性：** 自定义插件可以挂载任意 `Openresty` 执行阶段，用于不同需求场景。
+- **Mock请求：** 支持通过预设数据响应客户端，加速前后端分离开发过程。
+- **分布式部署：** 通过 `etcd` 进行数据存储、服务发现、配置共享。
 
-# 文档
 
- 1. 后台API文档
-   - [service](doc/service-cn.md)
-   - [router](doc/router-cn.md)
-   - [plugin](doc/plugin-cn.md)
-   
- 2. 插件文档
-   - 正在更新...
-    
+## 安装
+
+在不同的操作系统上安装 `APIOAK` 所必需的系统依赖（`openresty`、`resty-cli`、`luarocks`等），请参见：[依赖安装文档](doc/install-dependencies.md)。
+
+> 通过 LuaRocks 安装
+
+```bash
+sudo luarocks install apioak
+```
+
+
+## 快速开始
+
+> 启动 APIOAK
+
+```bash
+sudo apioak start
+```
+
+
 ## 致谢
-![Kong](doc/images/logo-kong.jpg)
-![APISIX](doc/images/logo-apisix.jpg)
-![Orange](doc/images/logo-orange.jpg)
+![Kong](doc/images/KONG-logo.jpg)
+![APISIX](doc/images/APISIX-logo.jpg)
+![Orange](doc/images/ORANGE-logo.jpg)
