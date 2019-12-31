@@ -37,7 +37,7 @@ sudo luarocks install apioak
 
 ## Quickstart
 
-> Launch APIOAK Server
+> Launch APIOAK
 
 ```bash
 sudo apioak start

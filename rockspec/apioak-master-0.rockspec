@@ -1,10 +1,10 @@
 package = "apioak"
-version = "0.1.0-1"
+version = "master-0"
 supported_platforms = {"linux"}
 
 source = {
     url = "git://github.com/apioak/apioak",
-    branch = "v0.1.0",
+    branch = "master",
 }
 
 description = {
