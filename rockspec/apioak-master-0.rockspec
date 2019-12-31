@@ -11,7 +11,7 @@ description = {
     summary = "APIOAK provides full life cycle management of API release, management, and operation and maintenance.",
     homepage = "https://github.com/apioak/apioak",
     license = "Apache License 2.0",
-    maintainer = "JinChao Shuai <shuaijinchao@gmail.com>"
+    maintainer = "Janko <shuaijinchao@gmail.com>"
 }
 
 dependencies = {

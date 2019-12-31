@@ -65,10 +65,10 @@ install:
 	$(INSTALL) conf/nginx.conf               $(INST_OAK_PRODIR)/conf/nginx.conf
 	$(INSTALL) bin/apioak                    $(INST_OAK_PRODIR)/bin/apioak
 	$(INSTALL) bin/apioak                    $(INST_OAK_BINDIR)/apioak
-	$(INSTALL) README.md 					 $(INST_OAK_PRODIR)/README.md
+	$(INSTALL) README.md                     $(INST_OAK_PRODIR)/README.md
 
 
-.PHONY: remove
-remove:
+.PHONY: uninstall
+uninstall:
 	$(REMOVE) $(INST_OAK_PRODIR)
 	$(REMOVE) $(INST_OAK_BINDIR)/apioak
