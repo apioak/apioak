@@ -66,6 +66,7 @@ install:
 	$(INSTALL) bin/apioak                    $(INST_OAK_PRODIR)/bin/apioak
 	$(INSTALL) bin/apioak                    $(INST_OAK_BINDIR)/apioak
 	$(INSTALL) README.md                     $(INST_OAK_PRODIR)/README.md
+	$(INSTALL) COPYRIGHT                     $(INST_OAK_PRODIR)/COPYRIGHT
 
 
 .PHONY: uninstall
