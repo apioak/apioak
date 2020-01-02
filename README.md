@@ -6,7 +6,7 @@
 APIOAK provides full life cycle management of API release, management, and operation and maintenance. Assist users in simple, fast, low-cost, low-risk implementation of microservice aggregation, front-end and back-end separation, system integration, and open functions and data to partners and developers.
 
 
-## Way APIOAK
+## Why APIOAK
 
 APIOAK can help you isolate internal and external traffic, provide dynamic load balancing, authentication, rate limiting, etc. through plugin mechanisms, and support your own custom plugins.
 
