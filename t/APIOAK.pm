@@ -38,7 +38,7 @@ _EOC_
     my $http_config = $block->http_config;
     $http_config .= <<_EOC_;
 
-    lua_package_path  "$pwd/deps/share/lua/5.1/?.lua;$pwd/deps/share/lua/5.1/apioak/?.lua;$pwd/?.lua;/usr/share/lua/5.1/?.lua;/usr/local/lor/?.lua;;";
+    lua_package_path  "$pwd/t/?.lua;$pwd/deps/share/lua/5.1/?.lua;$pwd/deps/share/lua/5.1/apioak/?.lua;$pwd/?.lua;/usr/share/lua/5.1/?.lua;/usr/local/lor/?.lua;;";
     lua_package_cpath "$pwd/deps/lib64/lua/5.1/?.so;$pwd/deps/lib/lua/5.1/?.so;/usr/lib64/lua/5.1/?.so;/usr/lib/lua/5.1/?.so;;";
     lua_code_cache on;
 
