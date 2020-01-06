@@ -44,6 +44,11 @@ sudo apioak start
 ```
 
 
+## 如何贡献
+
+请参阅 [贡献](CONTRIBUTING_CN.md) 文档。
+
+
 ## 致谢
 ![Kong](doc/images/KONG-logo.jpg)
 ![APISIX](doc/images/APISIX-logo.jpg)
