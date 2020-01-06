@@ -44,6 +44,11 @@ sudo apioak start
 ```
 
 
+## Contributing
+
+See the [CONTRIBUTING](CONTRIBUTING.md) document.
+
+
 ## Thanks
 ![Kong](doc/images/KONG-logo.jpg)
 ![APISIX](doc/images/APISIX-logo.jpg)
