@@ -187,8 +187,53 @@ OK
 200
 
 
+=== TEST 5: add plugin for service (id: 1001)
+--- config
+location /t {
+    content_by_lua_block {
+        local t = require("tools.request").test
+        local code, message = t('/apioak/admin/service/1001/plugin', ngx.HTTP_POST, {
+            key = "limit-conn",
+            config = {
+                rate = 200,
+                burst = 100,
+                key = "http_x_real_ip",
+                default_conn_delay = 1
+            }
+        })
+        ngx.status = code
+        ngx.say(message)
+    }
+}
+--- request
+GET /t
+--- response_body
+OK
+--- error_code chomp
+200
 
-=== TEST 3: remove service (id:1001)
+
+
+=== TEST 6: del plugin for service (id: 1001; plugin_key: limit-conn)
+--- config
+location /t {
+    content_by_lua_block {
+        local t = require("tools.request").test
+        local code, message = t('/apioak/admin/service/1001/plugin/limit-conn', ngx.HTTP_DELETE)
+        ngx.status = code
+        ngx.say(message)
+    }
+}
+--- request
+GET /t
+--- response_body
+OK
+--- error_code chomp
+200
+
+
+
+=== TEST 7: remove service (id:1001)
 --- config
 location /t {
     content_by_lua_block {
