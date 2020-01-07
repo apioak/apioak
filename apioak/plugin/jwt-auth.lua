@@ -62,7 +62,7 @@ function _M.http_access(oak_ctx)
     local is_success = is_authorized(plugin_conf.secret, header_credential, query_credential)
 
     if not is_success then
-        pdk.response.exit(401, { err_message = "Authorization Required" })
+        pdk.response.exit(403, { err_message = "Authorization Required" })
     end
 end
 
