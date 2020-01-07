@@ -207,7 +207,7 @@ function _M.analysis_uri(oak_ctx)
     end
 
     oak_ctx.backend.uri = uri
-    return
+    ngx.var.upstream_uri = uri
 end
 
 function _M.get()
