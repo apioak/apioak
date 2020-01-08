@@ -8,3 +8,4 @@ plugins:
   - limit-count
   - limit-conn
   - key-auth
+  - jwt-auth
