@@ -1,7 +1,6 @@
 local jwt      = require("resty.jwt")
 local pdk      = require("apioak.pdk")
 local plstring = require("pl.stringx")
-local ipairs   = ipairs
 
 local _M = {
     type  = 'Authentication',
@@ -30,16 +29,16 @@ end
 
 local function is_authorized(secret, header_credential, query_credential)
     if not secret then return false end
-    local is_auth = false
+    local authorized = false
     if (not header_credential) and (not query_credential) then
-        return is_auth
+        return authorized
     end
     if header_credential then
-        is_auth = jwt_auth(secret, plstring.split(header_credential, " ")[2])
+        authorized = jwt_auth(secret, plstring.split(header_credential, " ")[2])
     elseif query_credential then
-        is_auth = jwt_auth(secret, query_credential)
+        authorized = jwt_auth(secret, query_credential)
     end
-    return is_auth
+    return authorized
 end
 
 function _M.http_access(oak_ctx)
