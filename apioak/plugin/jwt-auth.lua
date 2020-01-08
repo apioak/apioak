@@ -2,9 +2,9 @@ local jwt      = require("resty.jwt")
 local pdk      = require("apioak.pdk")
 
 local _M = {
-    type  = 'Traffic Control',
+    type  = 'Authentication',
     name  = "Jwt Auth",
-    desc  = "Add a Jwt authentication to your APIs.",
+    desc  = "Add a jwt authentication to your APIs.",
     key   = "jwt-auth",
     order = 1301
 }
