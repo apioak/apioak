@@ -61,6 +61,8 @@ function APIOAK.http_access()
         pdk.response.exit(200, oak_ctx.response.success_content)
     end
 
+    sys.router.analysis_uri(oak_ctx)
+
     run_plugin("http_access", oak_ctx)
 end
 
