@@ -1,6 +1,5 @@
 local jwt      = require("resty.jwt")
 local pdk      = require("apioak.pdk")
-local plstring = require("pl.stringx")
 
 local _M = {
     type  = 'Authentication',
@@ -34,7 +33,7 @@ local function is_authorized(secret, header_credential, query_credential)
         return authorized
     end
     if header_credential then
-        authorized = jwt_auth(secret, plstring.split(header_credential, " ")[2])
+        authorized = jwt_auth(secret, pdk.string.split(header_credential, " ")[2])
     elseif query_credential then
         authorized = jwt_auth(secret, query_credential)
     end
