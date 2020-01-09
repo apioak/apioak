@@ -18,25 +18,24 @@ local schema = {
     },
     required = { "secret" }
 }
-
-local function is_credential_in_header(secret, header_credential)
-    local res = jwt.verify(_M.key, secret, header_credential)
-    return res.verified
-end
-
-local function is_credential_in_query(secret, query_credential)
-    local res = jwt.verify(_M.key, secret, query_credential)
-    return res.verified
+local function jwt_auth(secret, credential)
+    local obj = jwt.verify(_M.key, secret, credential)
+    if obj.verified then
+        return true
+    end
+    return false
 end
 
 local function is_authorized(secret, header_credential, query_credential)
     if not secret then return false end
     local authorized = false
-
-    if is_credential_in_header(secret, header_credential) then
-        authorized = true
-    elseif is_credential_in_query(secret, query_credential) then
-        authorized = true
+    if (not header_credential) and (not query_credential) then
+        return authorized
+    end
+    if header_credential then
+        authorized = jwt_auth(secret, pdk.string.split(header_credential, " ")[2])
+    elseif query_credential then
+        authorized = jwt_auth(secret, query_credential)
     end
     return authorized
 end
@@ -60,7 +59,6 @@ function _M.http_access(oak_ctx)
     local query_credential = pdk.request.query('token')
 
     local is_success = is_authorized(plugin_conf.secret, header_credential, query_credential)
-
     if not is_success then
         pdk.response.exit(403, { err_message = "Authorization Required" })
     end
