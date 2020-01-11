@@ -11,7 +11,7 @@ location /t {
         local t       = require("apioak.plugin.limit-count")
         local config = {
            plugins = {
-               limit_count = {
+               ["limit-count"] = {
                    rate = 100,
                    burst = 200,
                    key = "remote_addr",
