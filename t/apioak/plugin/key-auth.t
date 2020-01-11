@@ -371,7 +371,3 @@ GET /t
 OK
 --- error_code chomp
 200
-
-
-
-
