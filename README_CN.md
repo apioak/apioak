@@ -30,8 +30,22 @@ APIOAK 可以帮你隔离内外部流量，通过插件机制提供动态负载�
 
 > 通过 LuaRocks 安装
 
-```bash
+```shell
 sudo luarocks install apioak
+```
+
+请在 [发行列表](https://github.com/apioak/apioak/releases) 中获得相应版本的 `RPM` 或 `DEB` 安装包。
+
+> 通过 PRM 安装 (CentOS 7)
+
+```shell
+sudo yum -y install aoioak-{VERSION}-1.el7.x86_64.rpm
+```
+
+> 通过 DEB 安装 (Ubuntu 18)
+
+```shell
+sudo dpkg -i apioak-{VERSION}-1_amd64.deb
 ```
 
 
