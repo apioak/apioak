@@ -1,3 +1,48 @@
+## 0.2.0
+> Released on 2020.01.12
+
+#### Feature
+
+- Added `JWT` plugin.
+- Added CentOS `RPM` install package.
+- Added Ubuntu `DEB` install package.
+- Added test case basic request module.
+- Added upstream `uri` rewrite function.
+- Added `admin.plugin` test case.
+- Added `admin.router` test case.
+- Added `admin.service` test case.
+- Added `pdk.admin` test case.
+- Added `pdk.config` test case.
+- Added `pdk.const` test case.
+- Added `pdk.etcd` test case.
+- Added `pdk.json` test case.
+- Added `pdk.log` test case.
+- Added `pdk.table` test case.
+- Added `plugin.jwt-auth` test case.
+- Added `plugin.key-auth` test case.
+- Added `plugin.limit-conn` test case.
+- Added `plugin.limit-count` test case.
+- Added `plugin.limit-req` test case.
+
+
+#### FIX
+
+- Fixed `key-auth` authentication plugin logic error.
+- Fixed `README.md` spelling error.
+
+
+#### Change
+
+- Changed `key-auth` authentication plugin configuration to read from` etcd` to `oak_ctx`.
+- Updated sponsored links.
+
+
+#### Document
+
+- Added `How to participate in contributing` documentation.
+
+
+
 ## 0.1.0
 > Released on 2020.01.01
 
@@ -5,7 +50,6 @@
 
 - Added Basic framework.
 - Added `service`,`router`,`plugin` and `upstream` management functions.
-- Added `service`,`router` and `plugin` management document.
 - Added Dynamic Load Balancing functions.
 - Added Hash-based Load Balancing functions.
 - Added Multi-environment routing publishing functions.
@@ -17,7 +61,14 @@
 - Added `limit-conn` Traffic Control plugin.
 - Added `limit-count` Traffic Control plugin.
 - Added `limit-req` Traffic Control plugin.
-- Added system dependencies document.
 - Added `PDKs` Development Kit.
 - Added request rewrite and parameter conversion functions.
 - Added API verification parameter framework `JSON-SCHEMA`.
+
+
+#### Document
+
+- Added `service` management document.
+- Added `router` management document.
+- Added `plugin` management document.
+- Added `system dependencies` document.
