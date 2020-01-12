@@ -30,10 +30,23 @@ System dependencies (`openresty`, `resty-cli`, `luarocks`, etc.) necessary to in
 
 > Installation via LuaRocks
 
-```bash
+```shell
 sudo luarocks install apioak
 ```
 
+Please get corresponding version of `RPM` or `DEB` package in [Releases](https://github.com/apioak/apioak/releases).
+
+> Installation via RPM Package (CentOS 7)
+
+```shell
+sudo yum -y install aoioak-{VERSION}-1.el7.x86_64.rpm
+```
+
+> Installation via DEB Package (Ubuntu 18)
+
+```shell
+sudo dpkg -i apioak-{VERSION}-1_amd64.deb
+```
 
 ## Quickstart
 
