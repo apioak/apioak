@@ -11,11 +11,11 @@ location /t {
         local t       = require("apioak.plugin.limit-conn")
         local res, err = t.http_access({
             plugins = {
-                ["limit-req"] = {
-                    rate = 10,
-                    burst = 10,
+                ["limit-conn"] = {
+                    rate = 200,
+                    burst = 100,
                     key = "remote_addr",
-                    default_conn_delay = 2
+                    default_conn_delay = 1
                 }
             }
         })

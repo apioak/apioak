@@ -12,10 +12,9 @@ location /t {
         local config = {
            plugins = {
                ["limit-count"] = {
-                   rate = 100,
-                   burst = 200,
-                   key = "remote_addr",
-                   default_conn_delay = 1
+                   count = 100,
+                   time_window = 10,
+                   key = "remote_addr"
                }
            }
         }

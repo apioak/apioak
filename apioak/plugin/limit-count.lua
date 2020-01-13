@@ -29,11 +29,11 @@ local _M = {
 local schema = {
     type = "object",
     properties = {
-        rate = {
+        count = {
             type = "integer",
             minLength = 1
         },
-        seconds = {
+        time_window = {
             type = "integer",
             minLength = 1
         },
@@ -41,7 +41,7 @@ local schema = {
             type = "string",
         }
     },
-    required = { "rate", "seconds", "key" }
+    required = { "count", "time_window", "key" }
 }
 
 local function create_limit_obj(conf)
