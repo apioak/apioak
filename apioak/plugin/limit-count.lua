@@ -50,7 +50,7 @@ local function create_limit_obj(conf)
         return limit, nil
     end
 
-    limit, err = limit_count_new("plugin_limit_count", conf.rate, conf.seconds)
+    limit, err = limit_count_new("plugin_limit_count", conf.count, conf.time_window)
     if not limit then
         return nil, err
     end
