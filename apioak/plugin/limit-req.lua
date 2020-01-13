@@ -5,9 +5,25 @@ local pdk = require("apioak.pdk")
 local _M = {
     type = "Traffic Control",
     name = "Limit Req",
-    desc = "Add a limit req to your APIs.",
+    desc = "Lua module for limiting request rate.",
     key = "limit-req",
     order = 1103,
+    parameter = {
+        rate = {
+            type = "number",
+            minimum = 1,
+            maximum = 0,
+            default = 200,
+            desc = "the specified request rate (number per second) threshold."
+        },
+        burst = {
+            type = "number",
+            minimum = 1,
+            maximum = 0,
+            default = 3600,
+            desc = "the number of excessive requests per second allowed to be delayed."
+        }
+    }
 }
 
 local schema = {

@@ -4,9 +4,18 @@ local pdk      = require("apioak.pdk")
 local _M = {
     type  = 'Authentication',
     name  = "Jwt Auth",
-    desc  = "Add a jwt authentication to your APIs.",
+    desc  = "Lua module for JWT Authentication.",
     key   = "jwt-auth",
-    order = 1301
+    order = 1301,
+    parameter = {
+        secret = {
+            type = "string",
+            default = "A65001FB250D8F2E87E3B5821B2C48C7",
+            minLength = 10,
+            maxLength = 32,
+            desc = "signature secret key.",
+        }
+    },
 }
 
 local schema = {
