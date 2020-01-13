@@ -3,9 +3,18 @@ local pdk      = require("apioak.pdk")
 local _M = {
     type  = 'Authentication',
     name  = "Key Auth",
-    desc  = "Add a key authentication to your APIs.",
+    desc  = "Lua module for Key Authentication.",
     key   = "key-auth",
-    order = 1201
+    order = 1201,
+    parameter = {
+        secret = {
+            type = "string",
+            default = "A65001FB250D8F2E87E3B5821B2C48C7",
+            minLength = 10,
+            maxLength = 32,
+            desc = "signature secret key.",
+        }
+    },
 }
 
 local function key_verify(secret_key, secret)
