@@ -8,4 +8,16 @@ _M.BALANCER_CHASH      = "chash"
 
 _M.BALANCER_ROUNDROBIN = "roundrobin"
 
+_M.BALANCER_COMMECT_TIMEOUT = 60
+
+_M.BALANCER_SEND_TIMEOUT    = 60
+
+_M.BALANCER_READ_TIMEOUT    = 10
+
+_M.TRY_MAX_NUMBER           = 1
+
+_M.TRY_DEFAULT_NUMBER       = 0
+
+_M.TRY_INC_NUMBER           = 1
+
 return _M
