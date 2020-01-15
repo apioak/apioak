@@ -10,11 +10,12 @@ function _M.list()
     local plugins = pdk.plugin.loading()
     for _, plugin in ipairs(plugins) do
         pdk.table.insert(responses, {
-            name  = plugin.name,
-            type  = plugin.type,
-            desc  = plugin.desc,
-            key   = plugin.key,
-            order = plugin.order,
+            name      = plugin.name,
+            type      = plugin.type,
+            desc      = plugin.desc,
+            key       = plugin.key,
+            order     = plugin.order,
+            parameter = plugin.parameter,
         })
     end
     pdk.response.exit(200, responses)

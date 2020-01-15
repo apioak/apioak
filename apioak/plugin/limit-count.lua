@@ -5,19 +5,35 @@ local pdk = require("apioak.pdk")
 local _M = {
     type = "Traffic Control",
     name = "Limit Count",
-    desc = "Add a limit count to your APIs.",
+    desc = "Lua module for limiting request counts.",
     key = "limit-count",
-    order = 1102
+    order = 1102,
+    parameter = {
+        count = {
+            type = "number",
+            minimum = 1,
+            maximum = 0,
+            default = 5000,
+            desc = "the specified number of requests threshold.",
+        },
+        time_window = {
+            type = "number",
+            minimum = 1,
+            maximum = 0,
+            default = 3600,
+            desc = "the time window in seconds before the request count is reset.",
+        }
+    }
 }
 
 local schema = {
     type = "object",
     properties = {
-        rate = {
+        count = {
             type = "integer",
             minLength = 1
         },
-        seconds = {
+        time_window = {
             type = "integer",
             minLength = 1
         },
@@ -25,7 +41,7 @@ local schema = {
             type = "string",
         }
     },
-    required = { "rate", "seconds", "key" }
+    required = { "count", "time_window", "key" }
 }
 
 local function create_limit_obj(conf)
@@ -34,7 +50,7 @@ local function create_limit_obj(conf)
         return limit, nil
     end
 
-    limit, err = limit_count_new("plugin_limit_count", conf.rate, conf.seconds)
+    limit, err = limit_count_new("plugin_limit_count", conf.count, conf.time_window)
     if not limit then
         return nil, err
     end
