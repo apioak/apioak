@@ -6,7 +6,7 @@ __DATA__
 
 === TEST 1: add foo service (id:1001)
 --- config
-location /t {
+location = /t {
     content_by_lua_block {
         local t = require("tools.request").test
         local code, message = t('/apioak/admin/service/1001', ngx.HTTP_PUT, {
@@ -74,7 +74,7 @@ GET /t
 OK
 --- error_code chomp
 200
-
+--- ONLY
 
 === TEST 2: add foo router (id:100101)
 --- config
