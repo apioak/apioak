@@ -1,0 +1,4 @@
+[submodule "apioak-dashboard-built"]
+	path = apioak-dashboard-built
+	url = https://github.com/apioak/apioak-dashboard-built.git
+	branch = v0.3.0
