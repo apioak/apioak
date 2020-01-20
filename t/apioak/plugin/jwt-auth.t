@@ -4,6 +4,7 @@ run_tests();
 
 __DATA__
 
+
 === TEST 1: add foo service (id:1001)
 --- config
 location /t {
@@ -84,11 +85,11 @@ location /t {
         local request_header = {}
         request_header["APIOAK-SERVICE-ID"] = 1001
         local code, message = t('/apioak/admin/router/100101', ngx.HTTP_PUT, {
-            name = "test service plugin",
+            name = "test router",
             path = "/foo/router",
             method = "GET",
             enable_cors = true,
-            desc = "test api",
+            desc = "test router",
             request_params = {
                 {
                     name = "time",
@@ -129,11 +130,6 @@ location /t {
                     msg = "OK",
                     desc = ""
                 }
-            },
-            plugin = {
-                jwt-auth = {
-                    secret = "test-secret"
-                }
             }
         }, request_header)
 
@@ -148,8 +144,54 @@ OK
 --- error_code chomp
 200
 
+=== TEST 3: add plugin for service (id: 1001)
+--- config
+location /t {
+    content_by_lua_block {
+        local t = require("tools.request").test
+        local code, message = t('/apioak/admin/service/1001/plugin', ngx.HTTP_POST, {
+            key = "key-auth",
+            config = {
+                secret = "service-key-auth-plugin-test"
+            }
+        })
+        ngx.status = code
+        ngx.say(message)
+    }
+}
+--- request
+GET /t
+--- response_body
+OK
+--- error_code chomp
+200
 
-=== TEST 3: verify auth in header
+=== TEST 4: add plugin for router (service_id:1001 router_id:100101)
+--- config
+location /t {
+    content_by_lua_block {
+        local t = require("tools.request").test
+        local request_header = {}
+        request_header["APIOAK-SERVICE-ID"] = 1001
+        local code, message = t('/apioak/admin/router/100101/plugin', ngx.HTTP_POST, {
+            key = "jwt-auth",
+            config = {
+                secret = "router-key-auth-plugin-test"
+            }
+        }, request_header)
+        ngx.status = code
+        ngx.say(message)
+    }
+}
+--- request
+GET /t
+--- response_body
+OK
+--- error_code chomp
+200
+
+
+=== TEST 5: verify auth in header
 --- config
 location /t {
     content_by_lua_block {
@@ -169,7 +211,7 @@ OK
 200
 
 
-=== TEST 4: verify auth in query
+=== TEST 6: verify auth in query
 --- config
 location /t {
     content_by_lua_block {
