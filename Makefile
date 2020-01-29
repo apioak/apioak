@@ -1,6 +1,8 @@
 UNAME            ?= $(shell uname)
 INSTALL          ?= install
 REMOVE           ?= rm -rf
+COPY             ?= cp -rf
+CHMOD            ?= chmod -R
 INST_OAK_PRODIR  ?= /usr/local/apioak
 INST_OAK_BINDIR  ?= /usr/bin
 LUTJIT_DIR       ?= $(shell ${OR_EXEC} -V 2>&1 | grep prefix | grep -Eo 'prefix=(.*?)/nginx' | grep -Eo '/.*/')luajit
@@ -31,7 +33,8 @@ install:
 	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/plugin
 
 	git submodule update --init --recursive && \
-	cp -rf dashboard/* $(INST_OAK_PRODIR)/dashboard
+	$(COPY) dashboard/* $(INST_OAK_PRODIR)/dashboard && \
+	$(CHMOD) 775 $(INST_OAK_PRODIR)/dashboard
 
 	$(INSTALL) apioak/apioak.lua             $(INST_OAK_PRODIR)/apioak/apioak.lua
 	$(INSTALL) apioak/admin.lua              $(INST_OAK_PRODIR)/apioak/admin.lua
