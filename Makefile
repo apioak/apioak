@@ -31,7 +31,7 @@ install:
 	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/plugin
 
 	git submodule update --init --recursive && \
-	cp -r dashboard/* $(INST_OAK_PRODIR)/dashboard
+	cp -rf dashboard/* $(INST_OAK_PRODIR)/dashboard
 
 	$(INSTALL) apioak/apioak.lua             $(INST_OAK_PRODIR)/apioak/apioak.lua
 	$(INSTALL) apioak/admin.lua              $(INST_OAK_PRODIR)/apioak/admin.lua
