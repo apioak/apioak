@@ -1,3 +1,30 @@
+## 0.3.0 
+> Released on 2020.01.29
+
+#### Feature
+
+- Added management `Dashboard` panel.
+- Added `Balancer` health check.
+- Added `Jwt Auth` plugin parameter validation structure.
+- Added `Key Auth` plugin parameter validation structure.
+- Added `Limit Conn` plugin parameter validation structure.
+- Added `Limit Count` plugin parameter validation structure.
+- Added `Limit Req` plugin parameter validation structure.
+
+
+#### FIX
+
+- Fixed `Jwt Auth` unit test bug.
+
+
+#### Change
+
+- Changed `Limit Count` plugin config field.
+- Changed plugin list api parameter descriptive information.
+- Remove redundant test files.
+
+
+
 ## 0.2.0
 > Released on 2020.01.12
 
