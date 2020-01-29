@@ -14,7 +14,7 @@
 
 #### FIX
 
-- Fixed `Jwt Auth` unit test bug.
+- Fixed `Jwt Auth` plugin unit test bug.
 
 
 #### Change
