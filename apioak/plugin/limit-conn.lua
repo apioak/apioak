@@ -3,32 +3,30 @@ local ngx_var = ngx.var
 local pdk = require("apioak.pdk")
 
 local _M = {
-    type = "Traffic Control",
-    name = "Limit Conn",
-    desc = "Lua module for limiting request concurrency (or concurrent connections).",
-    key = "limit-conn",
-    order = 1101,
-    parameter = {
+    name        = "limit-conn",
+    type        = "Traffic Control",
+    description = "Lua module for limiting request concurrency (or concurrent connections).",
+    config = {
         rate = {
-            type = "number",
-            minimum = 1,
-            maximum = 0,
-            default = 200,
-            desc = "the maximum number of concurrent requests allowed."
+            type        = "number",
+            minimum     = 1,
+            maximum     = 0,
+            default     = 200,
+            description = "the maximum number of concurrent requests allowed."
         },
         burst = {
-            type = "number",
-            minimum = 1,
-            maximum = 0,
-            default = 100,
-            desc = "the number of excessive concurrent requests (or connections) allowed to be delayed."
+            type        = "number",
+            minimum     = 1,
+            maximum     = 0,
+            default     = 100,
+            description = "the number of excessive concurrent requests (or connections) allowed to be delayed."
         },
         default_conn_delay = {
-            type = "number",
-            minimum = 1,
-            maximum = 60,
-            default = 1,
-            desc = "the default processing latency of a typical connection (or request)."
+            type        = "number",
+            minimum     = 1,
+            maximum     = 60,
+            default     = 1,
+            description = "the default processing latency of a typical connection (or request)."
         }
     },
     conf = {}
