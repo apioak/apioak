@@ -8,6 +8,12 @@ _M.BALANCER_CHASH      = "chash"
 
 _M.BALANCER_ROUNDROBIN = "roundrobin"
 
+_M.CONTENT_TYPE_JSON   = "application/json"
+
+_M.CONTENT_TYPE_HTML   = "text/html"
+
+_M.CONTENT_TYPE_XML    = "text/xml"
+
 _M.BALANCER_COMMECT_TIMEOUT = 60
 
 _M.BALANCER_SEND_TIMEOUT    = 60
