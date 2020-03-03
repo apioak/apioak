@@ -2,6 +2,7 @@ return {
     log      = require("apioak.pdk.log"),
     ctx      = require("apioak.pdk.ctx"),
     json     = require("apioak.pdk.json"),
+    time     = require("apioak.pdk.time"),
     etcd     = require("apioak.pdk.etcd"),
     config   = require("apioak.pdk.config"),
     shared   = require("apioak.pdk.shared"),
@@ -14,4 +15,5 @@ return {
     admin    = require("apioak.pdk.admin"),
     pool     = require("apioak.pdk.tablepool"),
     const    = require("apioak.pdk.const"),
+    mysql    = require("apioak.pdk.mysql"),
 }
