@@ -3,25 +3,23 @@ local ngx_var = ngx.var
 local pdk = require("apioak.pdk")
 
 local _M = {
-    type = "Traffic Control",
-    name = "Limit Count",
-    desc = "Lua module for limiting request counts.",
-    key = "limit-count",
-    order = 1102,
-    parameter = {
+    name        = "limit-count",
+    type        = "Traffic Control",
+    description = "Lua module for limiting request counts.",
+    config = {
         count = {
-            type = "number",
-            minimum = 1,
-            maximum = 0,
-            default = 5000,
-            desc = "the specified number of requests threshold.",
+            type        = "number",
+            minimum     = 1,
+            maximum     = 0,
+            default     = 5000,
+            description = "the specified number of requests threshold.",
         },
         time_window = {
-            type = "number",
-            minimum = 1,
-            maximum = 0,
-            default = 3600,
-            desc = "the time window in seconds before the request count is reset.",
+            type        = "number",
+            minimum     = 1,
+            maximum     = 0,
+            default     = 3600,
+            description = "the time window in seconds before the request count is reset.",
         }
     }
 }
