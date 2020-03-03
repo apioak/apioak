@@ -3,25 +3,23 @@ local ngx_var = ngx.var
 local pdk = require("apioak.pdk")
 
 local _M = {
-    type = "Traffic Control",
-    name = "Limit Req",
-    desc = "Lua module for limiting request rate.",
-    key = "limit-req",
-    order = 1103,
-    parameter = {
+    name        = "limit-req",
+    type        = "Traffic Control",
+    description = "Lua module for limiting request rate.",
+    config = {
         rate = {
-            type = "number",
-            minimum = 1,
-            maximum = 0,
-            default = 200,
-            desc = "the specified request rate (number per second) threshold."
+            type        = "number",
+            minimum     = 1,
+            maximum     = 0,
+            default     = 200,
+            description = "the specified request rate (number per second) threshold."
         },
         burst = {
-            type = "number",
-            minimum = 1,
-            maximum = 0,
-            default = 3600,
-            desc = "the number of excessive requests per second allowed to be delayed."
+            type        = "number",
+            minimum     = 1,
+            maximum     = 0,
+            default     = 3600,
+            description = "the number of excessive requests per second allowed to be delayed."
         }
     }
 }
