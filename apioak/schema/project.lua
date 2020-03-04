@@ -142,11 +142,11 @@ _M.updated = {
                     },
                     type = {
                         type = "string",
-                        enum = { "chash", "roundrobin" }
+                        enum = { "CHASH", "ROUNDROBIN" }
                     },
                     env = {
                         type = "string",
-                        enum = { "prod", "beta", "test" }
+                        enum = { "PROD", "BETA", "TEST" }
                     },
                     nodes = {
                         type = "array",
@@ -226,11 +226,11 @@ _M.created = {
                     },
                     type = {
                         type = "string",
-                        enum = { "chash", "roundrobin" }
+                        enum = { "CHASH", "ROUNDROBIN" }
                     },
                     env = {
                         type = "string",
-                        enum = { "prod", "beta", "test" }
+                        enum = { "PROD", "BETA", "TEST" }
                     },
                     nodes = {
                         type = "array",
