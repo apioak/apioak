@@ -76,4 +76,6 @@ end
 
 _M.header = _header
 
+_M.add_header = ngx.req.set_header
+
 return _M
