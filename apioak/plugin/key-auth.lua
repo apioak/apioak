@@ -25,9 +25,9 @@ end
 
 function _M.http_access(oak_ctx)
 
-    if oak_ctx['plugins'] and oak_ctx.plugins[_M.key] then
+    if oak_ctx.plugins and oak_ctx.plugins[_M.name] then
 
-        local plugin_conf = oak_ctx.plugins[_M.key]
+        local plugin_conf = oak_ctx.plugins[_M.name]
 
         if plugin_conf.secret then
             local secret_key = pdk.request.header('Authentication')
@@ -44,6 +44,3 @@ function _M.http_access(oak_ctx)
 end
 
 return _M
-
-
-
