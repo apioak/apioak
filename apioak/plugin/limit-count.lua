@@ -10,14 +10,14 @@ local _M = {
         count = {
             type        = "number",
             minimum     = 1,
-            maximum     = 0,
+            maximum     = 100000000,
             default     = 5000,
             description = "the specified number of requests threshold.",
         },
         time_window = {
             type        = "number",
             minimum     = 1,
-            maximum     = 0,
+            maximum     = 86400,
             default     = 3600,
             description = "the time window in seconds before the request count is reset.",
         }
@@ -57,14 +57,11 @@ local function create_limit_obj(conf)
 end
 
 function _M.http_access(oak_ctx)
-    if not oak_ctx['plugins'] then
+    if not oak_ctx.plugins or not oak_ctx.plugins[_M.name] then
         return false, nil
     end
 
-    if not oak_ctx.plugins[_M.key] then
-        return false, nil
-    end
-    local plugin_conf = oak_ctx.plugins[_M.key]
+    local plugin_conf = oak_ctx.plugins[_M.name]
     local _, err = pdk.schema.check(schema, plugin_conf)
     if err then
         return false, nil
