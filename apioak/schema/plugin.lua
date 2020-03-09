@@ -8,7 +8,7 @@ _M.project_list = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -27,7 +27,7 @@ _M.project_created = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -65,7 +65,7 @@ _M.project_updated = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -78,7 +78,7 @@ _M.project_updated = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -116,7 +116,7 @@ _M.project_deleted = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -129,7 +129,7 @@ _M.project_deleted = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -148,7 +148,7 @@ _M.router_list = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -167,7 +167,7 @@ _M.router_created = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -205,7 +205,7 @@ _M.router_updated = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -218,7 +218,7 @@ _M.router_updated = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -256,7 +256,7 @@ _M.router_deleted = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -269,7 +269,7 @@ _M.router_deleted = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
