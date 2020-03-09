@@ -49,14 +49,11 @@ end
 
 function _M.http_access(oak_ctx)
 
-    if not oak_ctx['plugins'] then
-        return false, nil
-    end
-    if not oak_ctx.plugins[_M.key] then
+    if not oak_ctx.plugins or not oak_ctx.plugins[_M.name] then
         return false, nil
     end
 
-    local plugin_conf = oak_ctx.plugins[_M.key]
+    local plugin_conf = oak_ctx.plugins[_M.name]
     local _, err = pdk.schema.check(schema, plugin_conf)
     if err then
         return false, nil
@@ -74,6 +71,3 @@ end
 
 
 return _M
-
-
-
