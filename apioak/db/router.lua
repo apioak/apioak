@@ -1,31 +1,42 @@
 local pdk = require("apioak.pdk")
 
-local PROD_TABLE_FIELD = "PROD"
-local BETA_TABLE_FIELD = "BETA"
-local TEST_TABLE_FIELD = "TEST"
-
-local table_env_fields = {}
-table_env_fields[PROD_TABLE_FIELD] = "env_prod_config"
-table_env_fields[BETA_TABLE_FIELD] = "env_beta_config"
-table_env_fields[TEST_TABLE_FIELD] = "env_test_config"
-
 local table_name = "oak_routers"
 
 local _M = {}
 
 _M.table_name = table_name
 
-_M.PROD_TABLE_FIELD = PROD_TABLE_FIELD
-_M.BETA_TABLE_FIELD = BETA_TABLE_FIELD
-_M.TEST_TABLE_FIELD = TEST_TABLE_FIELD
-
 function _M.query_by_pid(project_id)
-    local sql = "SELECT id, name, enable_cors, description, request_path, request_method FROM %s WHERE project_id = %s"
+    local sql = "SELECT id, name, enable_cors, description, request_path, request_method, env_prod_config, " ..
+            "env_beta_config, env_test_config FROM %s WHERE project_id = %s"
     sql = pdk.string.format(sql, table_name, project_id)
     local res, err = pdk.mysql.execute(sql)
 
     if err then
         return nil, err
+    end
+
+    for i = 1, #res do
+        if res[i].env_prod_config == pdk.string.null then
+            res[i].env_prod_publish = 0
+        else
+            res[i].env_prod_publish = 1
+        end
+        res[i].env_prod_config = nil
+
+        if res[i].env_beta_config == pdk.string.null then
+            res[i].env_beta_publish = 0
+        else
+            res[i].env_beta_publish = 1
+        end
+        res[i].env_beta_config = nil
+
+        if res[i].env_test_config == pdk.string.null then
+            res[i].env_test_publish = 0
+        else
+            res[i].env_test_publish = 1
+        end
+        res[i].env_test_config = nil
     end
 
     return res, nil
@@ -34,10 +45,8 @@ end
 function _M.query(router_id)
     local sql = "SELECT id, name, enable_cors, description, request_path, request_method, request_params, " ..
             "backend_path, backend_method, backend_timeout, backend_params, constant_params, response_type, " ..
-            "response_success, response_failure, response_codes, response_schema, " ..
-            "IF(env_prod_config = NULL, 0, 1) AS env_prod_config, " ..
-            "IF(env_beta_config = NULL, 0, 1) AS env_beta_config, " ..
-            "IF(env_test_config = NULL, 0, 1) AS env_test_config, project_id FROM %s WHERE id = %s";
+            "response_success, response_failure, response_codes, response_schema, env_prod_config, env_beta_config, " ..
+            "env_test_config, project_id FROM %s WHERE id = %s";
     sql = pdk.string.format(sql, table_name, router_id)
     local res, err = pdk.mysql.execute(sql)
 
@@ -51,6 +60,27 @@ function _M.query(router_id)
         res[i].constant_params = pdk.json.decode(res[i].constant_params)
         res[i].response_codes  = pdk.json.decode(res[i].response_codes)
         res[i].response_schema = pdk.json.decode(res[i].response_schema)
+
+        if res[i].env_prod_config == pdk.string.null then
+            res[i].env_prod_publish = 0
+        else
+            res[i].env_prod_publish = 1
+        end
+        res[i].env_prod_config = nil
+
+        if res[i].env_beta_config == pdk.string.null then
+            res[i].env_beta_publish = 0
+        else
+            res[i].env_beta_publish = 1
+        end
+        res[i].env_beta_config = nil
+
+        if res[i].env_test_config == pdk.string.null then
+            res[i].env_test_publish = 0
+        else
+            res[i].env_test_publish = 1
+        end
+        res[i].env_test_config = nil
     end
 
     return res, nil
@@ -105,10 +135,9 @@ function _M.deleted(router_id)
 end
 
 function _M.online(router_id, env, router_info)
-    local table_field = table_env_fields[env]
     router_info = pdk.json.encode(router_info)
-    local sql = pdk.string.format("UPDATE %s SET %s = '%s' WHERE id = %s",
-            table_name, table_field, router_info, router_id)
+    local sql = pdk.string.format("UPDATE %s SET env_%s_config = '%s' WHERE id = %s",
+            table_name, pdk.string.lower(env), router_info, router_id)
     local res, err = pdk.mysql.execute(sql)
 
     if err then
@@ -118,14 +147,31 @@ function _M.online(router_id, env, router_info)
 end
 
 function _M.offline(router_id, env)
-    local table_field = table_env_fields[env]
-    local sql = pdk.string.format("UPDATE %s SET %s = NULL WHERE id = %s",
-            table_name, table_field, router_id)
+    local sql = pdk.string.format("UPDATE %s SET env_%s_config = NULL WHERE id = %s",
+            table_name, pdk.string.lower(env), router_id)
     local res, err = pdk.mysql.execute(sql)
 
     if err then
         return nil, err
     end
+    return res, nil
+end
+
+function _M.query_env_by_pid(project_id)
+    local sql = "SELECT id, request_method, request_path, response_type, response_success, env_prod_config, " ..
+            "env_beta_config, env_test_config FROM %s WHERE project_id = %s"
+    sql = pdk.string.format(sql, table_name, project_id)
+    local res, err = pdk.mysql.execute(sql)
+    if err then
+        return nil, err
+    end
+
+    for i = 1, #res do
+        res[i].env_prod_config = pdk.json.decode(res[i].env_prod_config)
+        res[i].env_beta_config = pdk.json.decode(res[i].env_beta_config)
+        res[i].env_test_config = pdk.json.decode(res[i].env_test_config)
+    end
+
     return res, nil
 end
 
