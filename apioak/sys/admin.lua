@@ -78,7 +78,7 @@ function _M.init_worker()
     router:insert_route("/apioak/admin/group/{group_id}/project/{project_id}", admin.project.update,
             { method = { "PUT" } })
 
-    router:insert_route("/apioak/admin/group/{group_id}/project/{project_id}", admin.project.update,
+    router:insert_route("/apioak/admin/group/{group_id}/project/{project_id}", admin.project.delete,
             { method = { "DELETE" } })
 
 
@@ -99,10 +99,10 @@ function _M.init_worker()
             { method = { "DELETE" } })
 
     -- Router Publish Manager URI
-    router:insert_route("/apioak/admin/router/{router_id}/publish/{env}", admin.router.online,
+    router:insert_route("/apioak/admin/router/{router_id}/online/{env}", admin.router.online,
             { method = { "POST" } })
 
-    router:insert_route("/apioak/admin/router/{router_id}/publish/{env}", admin.router.offline,
+    router:insert_route("/apioak/admin/router/{router_id}/offline/{env}", admin.router.offline,
             { method = { "DELETE" } })
 
     -- Account Manager API
