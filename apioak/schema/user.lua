@@ -66,7 +66,7 @@ _M.created = {
         },
         is_enable = {
             type = "number",
-            minimum = 0
+            enum = { 0, 1 }
         }
     },
     required = { "name", "password", "valid_password", "email", "is_enable" }
@@ -80,7 +80,7 @@ _M.updated_password = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -109,7 +109,7 @@ _M.updated_status = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -119,7 +119,7 @@ _M.updated_status = {
         },
         is_enable = {
             type = 'number',
-            minimum = 0
+            enum = { 0, 1 }
         }
     }
 
@@ -133,7 +133,7 @@ _M.deleted = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
