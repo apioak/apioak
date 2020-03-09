@@ -127,15 +127,13 @@ function router_controller.online(params)
         router.response_failure = pdk.json.decode(router.response_failure)
     end
 
+    local plugins = {}
     res, err = db.plugin.query_by_res(db.plugin.RESOURCES_TYPE_ROUTER, params.router_id)
     if err then
         pdk.response.exit(500, { err_message = err })
     end
-
-    local plugins = {}
-    for i = 1, #res do
-        local plugin         = res[i]
-        plugins[plugin.name] = plugin
+    for q = 1, #res do
+        plugins[res[q].name] = res[q]
     end
     router.plugins = plugins
 
