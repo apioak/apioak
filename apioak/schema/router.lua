@@ -8,7 +8,7 @@ _M.list = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -65,14 +65,18 @@ _M.created = {
                         enum = { "BOOLEAN", "INTEGER", "FLOAT", "STRING" }
                     },
                     default_value = {
-                        type = "string"
+                        type = "string",
+                        minLength = 0,
+                        maxLength = 50
                     },
                     required = {
                         type = "number",
                         enum = { 0, 1 }
                     },
                     description = {
-                        type = "string"
+                        type = "string",
+                        minLength = 0,
+                        maxLength = 100
                     }
                 },
                 required = { "name", "position", "type", "required" }
@@ -119,8 +123,19 @@ _M.created = {
                         type = "string",
                         enum = { "BOOLEAN", "INTEGER", "FLOAT", "STRING" }
                     },
+                    request_param_required = {
+                        type = "number",
+                        enum = { 0, 1 }
+                    },
+                    request_param_default_val = {
+                        type = "string",
+                        minLength = 0,
+                        maxLength = 50
+                    },
                     request_param_description = {
-                        type = "string"
+                        type = "string",
+                        minLength = 0,
+                        maxLength = 100
                     }
                 },
                 required = { "name", "position", "request_param_name", "request_param_position", "request_param_type", "request_param_description" }
@@ -201,7 +216,7 @@ _M.created = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -261,14 +276,18 @@ _M.updated = {
                         enum = { "BOOLEAN", "INTEGER", "FLOAT", "STRING" }
                     },
                     default_value = {
-                        type = "string"
+                        type = "string",
+                        minLength = 0,
+                        maxLength = 50
                     },
                     required = {
                         type = "number",
                         enum = { 0, 1 }
                     },
                     description = {
-                        type = "string"
+                        type = "string",
+                        minLength = 0,
+                        maxLength = 100
                     }
                 },
                 required = { "name", "position", "type", "required" }
@@ -315,8 +334,19 @@ _M.updated = {
                         type = "string",
                         enum = { "BOOLEAN", "INTEGER", "FLOAT", "STRING" }
                     },
+                    request_param_required = {
+                        type = "number",
+                        enum = { 0, 1 }
+                    },
+                    request_param_default_val = {
+                        type = "string",
+                        minLength = 0,
+                        maxLength = 50
+                    },
                     request_param_description = {
-                        type = "string"
+                        type = "string",
+                        minLength = 0,
+                        maxLength = 100
                     }
                 },
                 required = { "name", "position", "request_param_name", "request_param_position", "request_param_type", "request_param_description" }
@@ -397,7 +427,7 @@ _M.updated = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -410,7 +440,7 @@ _M.updated = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -432,7 +462,7 @@ _M.deleted = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -445,7 +475,7 @@ _M.deleted = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -464,7 +494,7 @@ _M.query = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -477,7 +507,7 @@ _M.query = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -496,7 +526,7 @@ _M.online = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -523,7 +553,7 @@ _M.offline = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
