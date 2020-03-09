@@ -25,7 +25,7 @@ _M.updated = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -55,7 +55,7 @@ _M.deleted = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -74,7 +74,7 @@ _M.query = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -93,7 +93,7 @@ _M.user_list = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -112,7 +112,7 @@ _M.user_created = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -125,7 +125,7 @@ _M.user_created = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -135,7 +135,7 @@ _M.user_created = {
         },
         is_admin = {
             type = "number",
-            minimum = 0
+            enum = { 0, 1 }
         }
     },
     required = { "group_id", "user_id", "is_admin" }
@@ -149,7 +149,7 @@ _M.user_deleted = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -162,7 +162,7 @@ _M.user_deleted = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -181,7 +181,7 @@ _M.user_updated = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -194,7 +194,7 @@ _M.user_updated = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -204,7 +204,7 @@ _M.user_updated = {
         },
         is_admin = {
             type = "number",
-            minimum = 0
+            enum = { 0, 1 }
         }
     },
     required = { "group_id", "user_id", "is_admin" }
