@@ -10,14 +10,14 @@ local _M = {
         rate = {
             type        = "number",
             minimum     = 1,
-            maximum     = 0,
+            maximum     = 100000,
             default     = 200,
             description = "the maximum number of concurrent requests allowed."
         },
         burst = {
             type        = "number",
             minimum     = 1,
-            maximum     = 0,
+            maximum     = 50000,
             default     = 100,
             description = "the number of excessive concurrent requests (or connections) allowed to be delayed."
         },
@@ -68,14 +68,11 @@ local function create_limit_obj(conf)
 end
 
 function _M.http_access(oak_ctx)
-    if not oak_ctx['plugins'] then
+    if not oak_ctx.plugins or not oak_ctx.plugins[_M.name] then
         return false, nil
     end
 
-    if not oak_ctx.plugins[_M.key] then
-        return false, nil
-    end
-    local plugin_conf = oak_ctx.plugins[_M.key]
+    local plugin_conf = oak_ctx.plugins[_M.name]
     local _, err = pdk.schema.check(schema, plugin_conf)
     if err then
         return false, nil
