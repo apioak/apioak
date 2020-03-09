@@ -9,7 +9,7 @@ _M.list = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -28,7 +28,7 @@ _M.deleted = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -41,7 +41,7 @@ _M.deleted = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -60,7 +60,7 @@ _M.query = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -73,7 +73,7 @@ _M.query = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -92,7 +92,7 @@ _M.updated = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -128,7 +128,7 @@ _M.updated = {
                             {
                                 type = "string",
                                 minLength = 1,
-                                pattern = [[^[1-9]+$]]
+                                pattern = [[^[0-9]+$]]
                             },
                             {
                                 type = "number",
@@ -189,7 +189,7 @@ _M.created = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -273,7 +273,7 @@ _M.plugin_list = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -292,7 +292,7 @@ _M.plugin_created = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -330,7 +330,7 @@ _M.plugin_updated = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -343,7 +343,7 @@ _M.plugin_updated = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -381,7 +381,7 @@ _M.plugin_deleted = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
@@ -394,7 +394,7 @@ _M.plugin_deleted = {
                 {
                     type = "string",
                     minLength = 1,
-                    pattern = [[^[1-9]+$]]
+                    pattern = [[^[0-9]+$]]
                 },
                 {
                     type = "number",
