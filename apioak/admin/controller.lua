@@ -5,15 +5,13 @@ local controller = function(name)
 
     local cls = {}
 
-    cls.__class = name
+    cls.__class  = name
 
-    cls.header_token_key = "APIOAK-ADMIN-TOKEN"
+    cls.uid      = nil
 
-    cls.uid            = nil
+    cls.token    = nil
 
-    cls.token          = nil
-
-    cls.is_owner       = nil
+    cls.is_owner = nil
 
     cls.get_body = function(key)
         local body, err = pdk.request.body()
@@ -41,7 +39,7 @@ local controller = function(name)
 
 
     cls.get_header_token = function()
-        local token = cls.get_header(cls.header_token_key)
+        local token = cls.get_header(pdk.const.REQUEST_ADMIN_TOKEN_KEY)
         if not token then
             pdk.response.exit(401, { err_message = pdk.string.format(
                     "property header \"%s\" is required", cls.header_token_key) })
