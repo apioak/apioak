@@ -91,10 +91,6 @@ _M.created = {
             type = "string",
             enum = { "GET", "HEAD", "POST", "OPTIONS", "PUT", "DELETE", "TRACE", "CONNECT" }
         },
-        backend_timeout = {
-            type = "number",
-            minimum = 0
-        },
         backend_params = {
             type = "array",
             uniqueItems = true,
@@ -226,7 +222,7 @@ _M.created = {
         }
     },
     required = { "name", "enable_cors", "description", "request_path", "request_method", "request_params", "backend_path",
-                 "backend_method", "backend_timeout", "backend_params", "constant_params", "response_type",
+                 "backend_method", "backend_params", "constant_params", "response_type",
                  "response_success", "response_failure", "response_codes", "response_schema", "project_id" }
 }
 
@@ -301,10 +297,6 @@ _M.updated = {
         backend_method = {
             type = "string",
             enum = { "GET", "HEAD", "POST", "OPTIONS", "PUT", "DELETE", "TRACE", "CONNECT" }
-        },
-        backend_timeout = {
-            type = "number",
-            minimum = 0
         },
         backend_params = {
             type = "array",
@@ -450,7 +442,7 @@ _M.updated = {
         }
     },
     required = { "name", "enable_cors", "description", "request_path", "request_method", "request_params", "backend_path",
-                 "backend_method", "backend_timeout", "backend_params", "constant_params", "response_type",
+                 "backend_method", "backend_params", "constant_params", "response_type",
                  "response_success", "response_failure", "response_codes", "response_schema", "project_id", "router_id" }
 }
 

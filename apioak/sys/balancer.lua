@@ -12,8 +12,6 @@ local _M = {}
 function _M.go(oak_ctx)
     local router   = oak_ctx.router
     local upstream = router.upstream
-    -- default enable tries
-    upstream.enable_tries = 1
 
     if not upstream then
         pdk.log.error("[sys.balancer] upstream undefined")
@@ -43,14 +41,14 @@ function _M.go(oak_ctx)
         pdk.response.exit(500)
     end
 
-    upstream.tries = #nodes - 1
-    if upstream.enable_tries == 0 or upstream.tries <= 1 then
-        upstream.tries = 0
+    upstream.count_retries = #nodes - 1
+    if upstream.enable_retries == 0 or upstream.count_retries <= 1 then
+        upstream.count_retries = 0
     end
 
-    set_more_tries(upstream.tries)
+    set_more_tries(upstream.count_retries)
 
-    local timeout = upstream.timeout
+    local timeout = upstream.timeouts
     if timeout then
         local ok, err = set_timeouts(timeout.connect, timeout.send, timeout.read)
         if not ok then
