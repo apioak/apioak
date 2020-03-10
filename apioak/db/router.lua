@@ -44,7 +44,7 @@ end
 
 function _M.query(router_id)
     local sql = "SELECT id, name, enable_cors, description, request_path, request_method, request_params, " ..
-            "backend_path, backend_method, backend_timeout, backend_params, constant_params, response_type, " ..
+            "backend_path, backend_method, backend_params, constant_params, response_type, " ..
             "response_success, response_failure, response_codes, response_schema, env_prod_config, env_beta_config, " ..
             "env_test_config, project_id FROM %s WHERE id = %s";
     sql = pdk.string.format(sql, table_name, router_id)
@@ -88,13 +88,13 @@ end
 
 function _M.created(params)
     local sql = "INSERT INTO %s (name, enable_cors, description, request_path, request_method, request_params, " ..
-            "backend_path, backend_method, backend_timeout, backend_params, constant_params, response_type, " ..
+            "backend_path, backend_method, backend_params, constant_params, response_type, " ..
             "response_success, response_failure, response_codes, response_schema, project_id, user_id) " ..
             "VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', " ..
             "'%s', '%s', '%s')"
     sql = pdk.string.format(sql, table_name, params.name, params.enable_cors, params.description, params.request_path,
             params.request_method, pdk.json.encode(params.request_params), params.backend_path, params.backend_method,
-            params.backend_timeout, pdk.json.encode(params.backend_params), pdk.json.encode(params.constant_params),
+            pdk.json.encode(params.backend_params), pdk.json.encode(params.constant_params),
             params.response_type, params.response_success, params.response_failure, pdk.json.encode(params.response_codes),
             pdk.json.encode(params.response_schema), params.project_id, params.user_id)
     local res, err = pdk.mysql.execute(sql)
@@ -108,12 +108,12 @@ end
 function _M.updated(router_id, params)
     local sql = "UPDATE %s SET name = '%s', enable_cors = '%s', description = '%s', request_path = '%s', " ..
             "request_method = '%s', request_params = '%s', backend_path = '%s', backend_method = '%s', " ..
-            "backend_timeout = '%s', backend_params = '%s', constant_params = '%s', response_type = '%s', " ..
+            "backend_params = '%s', constant_params = '%s', response_type = '%s', " ..
             "response_success = '%s', response_failure = '%s', response_codes = '%s', response_schema = '%s' "..
             "WHERE id = '%s'"
     sql = pdk.string.format(sql, table_name, params.name, params.enable_cors, params.description, params.request_path,
             params.request_method, pdk.json.encode(params.request_params), params.backend_path, params.backend_method,
-            params.backend_timeout, pdk.json.encode(params.backend_params), pdk.json.encode(params.constant_params),
+            pdk.json.encode(params.backend_params), pdk.json.encode(params.constant_params),
             params.response_type, params.response_success, params.response_failure, pdk.json.encode(params.response_codes),
             pdk.json.encode(params.response_schema), router_id)
     local res, err = pdk.mysql.execute(sql)
