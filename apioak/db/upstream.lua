@@ -7,8 +7,8 @@ local _M = {}
 _M.table_name = table_name
 
 function _M.create(params)
-    local sql = pdk.string.format("INSERT INTO %s (env, host, type, project_id, nodes) VALUES ('%s', '%s', '%s', '%s', '%s')",
-            table_name, params.env, params.host, params.type, params.project_id, pdk.json.encode(params.nodes))
+    local sql = pdk.string.format("INSERT INTO %s (env, host, type, project_id, enable_retries, timeouts, nodes) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+            table_name, params.env, params.host, params.type, params.project_id, params.enable_retries, pdk.json.encode(params.timeouts), pdk.json.encode(params.nodes))
     local res, err = pdk.mysql.execute(sql)
 
     if err then
@@ -18,8 +18,8 @@ function _M.create(params)
 end
 
 function _M.update(upstream_id, params)
-    local sql = pdk.string.format("UPDATE %s SET env = '%s', host = '%s', type = '%s', project_id = '%s', nodes = '%s' WHERE id = %s",
-            table_name, params.env, params.host, params.type, params.project_id, pdk.json.encode(params.nodes), upstream_id)
+    local sql = pdk.string.format("UPDATE %s SET env = '%s', host = '%s', type = '%s', project_id = '%s', enable_retries = '%s', timeouts = '%s', nodes = '%s' WHERE id = %s",
+            table_name, params.env, params.host, params.type, params.project_id, params.enable_retries, pdk.json.encode(params.timeouts), pdk.json.encode(params.nodes), upstream_id)
     local res, err = pdk.mysql.execute(sql)
 
     if err then
@@ -47,7 +47,8 @@ function _M.query_by_pid(project_id)
     end
 
     for i = 1, #res do
-        res[i].nodes = pdk.json.decode(res[i].nodes)
+        res[i].nodes    = pdk.json.decode(res[i].nodes)
+        res[i].timeouts = pdk.json.decode(res[i].timeouts)
     end
 
     return res, nil
