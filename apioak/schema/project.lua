@@ -1,4 +1,3 @@
-
 local _M = {}
 
 _M.list = {
@@ -148,6 +147,30 @@ _M.updated = {
                         type = "string",
                         enum = { "PROD", "BETA", "TEST" }
                     },
+                    enable_retries = {
+                        type = "number",
+                        enum = { 0, 1 }
+                    },
+                    timeouts = {
+                        type = "object",
+                        properties = {
+                            connect = {
+                                type = "number",
+                                minimum = 0,
+                                maximum = 60000,
+                            },
+                            send = {
+                                type = "number",
+                                minimum = 0,
+                                maximum = 60000,
+                            },
+                            read = {
+                                type = "number",
+                                minimum = 0,
+                                maximum = 60000,
+                            }
+                        }
+                    },
                     nodes = {
                         type = "array",
                         minItems = 1,
@@ -174,7 +197,7 @@ _M.updated = {
                         }
                     }
                 },
-                required = { "id", "host", "type", "env", "nodes" }
+                required = { "id", "host", "type", "env", "enable_retries", "timeouts", "nodes" }
             },
         }
     },
@@ -232,6 +255,30 @@ _M.created = {
                         type = "string",
                         enum = { "PROD", "BETA", "TEST" }
                     },
+                    enable_retries = {
+                        type = "number",
+                        enum = { 0, 1 }
+                    },
+                    timeouts = {
+                        type = "object",
+                        properties = {
+                            connect = {
+                                type = "number",
+                                minimum = 0,
+                                maximum = 60000,
+                            },
+                            send = {
+                                type = "number",
+                                minimum = 0,
+                                maximum = 60000,
+                            },
+                            read = {
+                                type = "number",
+                                minimum = 0,
+                                maximum = 60000,
+                            }
+                        }
+                    },
                     nodes = {
                         type = "array",
                         minItems = 1,
@@ -258,7 +305,7 @@ _M.created = {
                         }
                     }
                 },
-                required = { "host", "type", "env", "nodes" }
+                required = { "host", "type", "env", "enable_retries", "timeouts", "nodes" }
             },
         }
     },
