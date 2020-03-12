@@ -5,17 +5,17 @@ local controller = require("apioak.admin.controller")
 
 local project_controller = controller.new("project")
 
-function project_controller.list(params)
-
-    project_controller.check_schema(schema.project.list, params)
+function project_controller.list()
 
     project_controller.user_authenticate()
 
-    if not project_controller.is_owner then
-        project_controller.group_authenticate(params.group_id, project_controller.uid)
+    local res, err
+    if project_controller.is_owner then
+        res, err = db.project.all(true)
+    else
+        res, err = db.project.query_by_uid(project_controller.uid)
     end
 
-    local res, err = db.project.query_by_gid(params.group_id)
     if err then
         pdk.response.exit(500, { err_message = err })
     end
@@ -23,31 +23,23 @@ function project_controller.list(params)
     pdk.response.exit(200, { err_message = "OK", projects = res })
 end
 
-function project_controller.create(params)
+
+function project_controller.created()
 
     local body = project_controller.get_body()
-    body.group_id = params.group_id
 
     project_controller.check_schema(schema.project.created, body)
 
     project_controller.user_authenticate()
-    body.user_id  = project_controller.uid
 
-    if not project_controller.is_owner then
-        local user_group = project_controller.group_authenticate(params.group_id, project_controller.uid)
-        if user_group.is_admin ~= 1 then
-            pdk.response.exit(401, { err_message = "no permission to create group member" })
-        end
-    end
-
-    local  res, err = db.project.create(body)
+    local  res, err = db.project.created(body)
     if err then
         pdk.response.exit(500, { err_message = err })
     end
     local project_id = res.insert_id
 
     for i = 1, #body.upstreams do
-        local upstream = body.upstreams[i]
+        local upstream      = body.upstreams[i]
         upstream.project_id = project_id
         res, err = db.upstream.create(upstream)
         if err then
@@ -55,26 +47,32 @@ function project_controller.create(params)
         end
     end
 
+    res, err = db.role.create(project_id, project_controller.uid, 1)
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+
     pdk.response.exit(200, { err_message = "OK" })
 end
 
-function project_controller.update(params)
 
-    local body = project_controller.get_body()
-    body.id = params.project_id
+function project_controller.updated(params)
+
+    local body      = project_controller.get_body()
+    body.project_id = params.project_id
 
     project_controller.check_schema(schema.project.updated, body)
 
     project_controller.user_authenticate()
 
     if not project_controller.is_owner then
-        local user_group = project_controller.group_authenticate(params.group_id, project_controller.uid)
-        if user_group.is_admin ~= 1 then
-            pdk.response.exit(401, { err_message = "no permission to create group member" })
+        local role = project_controller.project_authenticate(params.project_id, project_controller.uid)
+        if role.is_admin ~= 1 then
+            pdk.response.exit(401, { err_message = "no permission to update project" })
         end
     end
 
-    local  res, err = db.project.update(params.project_id, body)
+    local  res, err = db.project.updated(params.project_id, body)
     if err then
         pdk.response.exit(500, { err_message = err })
     end
@@ -90,6 +88,7 @@ function project_controller.update(params)
 
     pdk.response.exit(200, { err_message = "OK" })
 end
+
 
 function project_controller.query(params)
 
@@ -120,16 +119,17 @@ function project_controller.query(params)
     pdk.response.exit(200, { err_message = "OK", project = project })
 end
 
-function project_controller.delete(params)
+
+function project_controller.deleted(params)
 
     project_controller.check_schema(schema.project.deleted, params)
 
     project_controller.user_authenticate()
 
     if not project_controller.is_owner then
-        local user_group = project_controller.group_authenticate(params.group_id, project_controller.uid)
-        if user_group.is_admin ~= 1 then
-            pdk.response.exit(401, { err_message = "no permission to create group member" })
+        local role = project_controller.project_authenticate(params.project_id, project_controller.uid)
+        if role.is_admin ~= 1 then
+            pdk.response.exit(401, { err_message = "no permission to delete project" })
         end
     end
 
@@ -139,7 +139,7 @@ function project_controller.delete(params)
     end
 
     if #res > 0 then
-        pdk.response.exit(500, { err_message = "routers in project were not deleted" })
+        pdk.response.exit(401, { err_message = "routers in project were not deleted" })
     end
 
     res, err = db.plugin.delete_by_res(db.plugin.RESOURCES_TYPE_PROJECT, params.project_id)
@@ -152,6 +152,11 @@ function project_controller.delete(params)
         pdk.response.exit(500, { err_message = err })
     end
 
+    res, err = db.role.delete_by_pid(params.project_id)
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+
     res, err = db.project.delete(params.project_id)
     if err then
         pdk.response.exit(500, { err_message = err })
@@ -159,5 +164,106 @@ function project_controller.delete(params)
 
     pdk.response.exit(200, { err_message = "OK" })
 end
+
+
+function project_controller.members(params)
+
+    project_controller.check_schema(schema.project.members, params)
+
+    project_controller.user_authenticate()
+
+    if not project_controller.is_owner then
+        project_controller.project_authenticate(params.project_id, project_controller.uid)
+    end
+
+    local res, err = db.user.query_by_pid(params.project_id)
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+
+    pdk.response.exit(200, { err_message = "OK", users = res })
+end
+
+
+function project_controller.member_created(params)
+
+    local body      = project_controller.get_body()
+    body.project_id = params.project_id
+
+    project_controller.check_schema(schema.project.member_created, body)
+
+    project_controller.user_authenticate()
+
+    if not project_controller.is_owner then
+        local role = project_controller.project_authenticate(params.project_id, project_controller.uid)
+        if role.is_admin ~= 1 then
+            pdk.response.exit(401, { err_message = "no permission to create project member" })
+        end
+    end
+
+    local _, err = db.role.create(body.project_id, body.user_id, body.is_admin)
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+
+    pdk.response.exit(200, { err_message = "OK" })
+end
+
+
+function project_controller.member_deleted(params)
+
+    project_controller.check_schema(schema.project.member_deleted, params)
+
+    project_controller.user_authenticate()
+
+    if not project_controller.is_owner then
+        local user_group = project_controller.project_authenticate(params.project_id, project_controller.uid)
+        if user_group.is_admin ~= 1 then
+            pdk.response.exit(401, { err_message = "no permission to delete group member" })
+        end
+    end
+
+    if pdk.string.tonumber(params.user_id) == project_controller.uid then
+        pdk.response.exit(401, { err_message = "no permission to delete this member" })
+    end
+
+    local _, err = db.role.delete(params.project_id, params.user_id)
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+
+    pdk.response.exit(200, { err_message = "OK" })
+end
+
+
+function project_controller.member_updated(params)
+
+    local body      = project_controller.get_body()
+    body.user_id    = params.user_id
+    body.project_id = params.project_id
+
+    project_controller.check_schema(schema.project.member_updated, body)
+
+    project_controller.user_authenticate()
+
+    if not project_controller.is_owner then
+        local role = project_controller.project_authenticate(params.project_id, project_controller.uid)
+        if role.is_admin ~= 1 then
+            pdk.response.exit(401, { err_message = "no permission to add project member admin" })
+        end
+    end
+
+    if pdk.string.tonumber(params.user_id) == project_controller.uid then
+        pdk.response.exit(401, { err_message = "no permission to add project member admin" })
+    end
+
+    local _, err = db.role.update(params.project_id, params.user_id, body.is_admin)
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+
+    pdk.response.exit(200, { err_message = "OK" })
+end
+
 
 return project_controller
