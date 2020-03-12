@@ -1,40 +1,8 @@
 local _M = {}
 
-_M.list = {
-    type = "object",
-    properties = {
-        group_id = {
-            anyOf = {
-                {
-                    type = "string",
-                    minLength = 1,
-                    pattern = [[^[0-9]+$]]
-                },
-                {
-                    type = "number",
-                    minimum = 1
-                }
-            }
-        }
-    }
-}
-
 _M.deleted = {
     type = "object",
     properties = {
-        group_id = {
-            anyOf = {
-                {
-                    type = "string",
-                    minLength = 1,
-                    pattern = [[^[0-9]+$]]
-                },
-                {
-                    type = "number",
-                    minimum = 1
-                }
-            }
-        },
         project_id = {
             anyOf = {
                 {
@@ -54,19 +22,6 @@ _M.deleted = {
 _M.query = {
     type = "object",
     properties = {
-        group_id = {
-            anyOf = {
-                {
-                    type = "string",
-                    minLength = 1,
-                    pattern = [[^[0-9]+$]]
-                },
-                {
-                    type = "number",
-                    minimum = 1
-                }
-            }
-        },
         project_id = {
             anyOf = {
                 {
@@ -86,7 +41,7 @@ _M.query = {
 _M.updated = {
     type = "object",
     properties = {
-        id = {
+        project_id = {
             anyOf = {
                 {
                     type = "string",
@@ -201,25 +156,12 @@ _M.updated = {
             },
         }
     },
-    required = { "id", "name", "path", "upstreams", "description" }
+    required = { "project_id", "name", "path", "upstreams", "description" }
 }
 
 _M.created = {
     type = "object",
     properties = {
-        group_id = {
-            anyOf = {
-                {
-                    type = "string",
-                    minLength = 1,
-                    pattern = [[^[0-9]+$]]
-                },
-                {
-                    type = "number",
-                    minimum = 1
-                }
-            }
-        },
         name = {
             type = 'string',
             minLength = 1,
@@ -309,7 +251,7 @@ _M.created = {
             },
         }
     },
-    required = { "group_id", "name", "path", "upstreams", "description" }
+    required = { "name", "path", "upstreams", "description" }
 }
 
 _M.plugin_list = {
@@ -450,6 +392,133 @@ _M.plugin_deleted = {
             }
         },
     }
+}
+
+_M.members = {
+    type = "object",
+    properties = {
+        project_id = {
+            anyOf = {
+                {
+                    type = "string",
+                    minLength = 1,
+                    pattern = [[^[0-9]+$]]
+                },
+                {
+                    type = "number",
+                    minimum = 1
+                }
+            }
+        }
+    },
+    required = { "project_id" }
+}
+
+_M.member_created = {
+    type = "object",
+    properties = {
+        project_id = {
+            anyOf = {
+                {
+                    type = "string",
+                    minLength = 1,
+                    pattern = [[^[0-9]+$]]
+                },
+                {
+                    type = "number",
+                    minimum = 1
+                }
+            }
+        },
+        user_id = {
+            anyOf = {
+                {
+                    type = "string",
+                    minLength = 1,
+                    pattern = [[^[0-9]+$]]
+                },
+                {
+                    type = "number",
+                    minimum = 1
+                }
+            }
+        },
+        is_admin = {
+            type = "number",
+            enum = { 0, 1 }
+        }
+    },
+    required = { "project_id", "user_id", "is_admin" }
+}
+
+_M.member_deleted = {
+    type = "object",
+    properties = {
+        project_id = {
+            anyOf = {
+                {
+                    type = "string",
+                    minLength = 1,
+                    pattern = [[^[0-9]+$]]
+                },
+                {
+                    type = "number",
+                    minimum = 1
+                }
+            }
+        },
+        user_id = {
+            anyOf = {
+                {
+                    type = "string",
+                    minLength = 1,
+                    pattern = [[^[0-9]+$]]
+                },
+                {
+                    type = "number",
+                    minimum = 1
+                }
+            }
+        }
+    },
+    required = { "project_id", "user_id" }
+}
+
+_M.member_updated = {
+    type = "object",
+    properties = {
+        project_id = {
+            anyOf = {
+                {
+                    type = "string",
+                    minLength = 1,
+                    pattern = [[^[0-9]+$]]
+                },
+                {
+                    type = "number",
+                    minimum = 1
+                }
+            }
+        },
+        user_id = {
+            anyOf = {
+                {
+                    type = "string",
+                    minLength = 1,
+                    pattern = [[^[0-9]+$]]
+                },
+                {
+                    type = "number",
+                    minimum = 1
+                }
+            }
+        },
+        is_admin = {
+            type = "number",
+            enum = { 0, 1 }
+        }
+    },
+    required = { "project_id", "user_id", "is_admin" }
 }
 
 return _M
