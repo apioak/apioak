@@ -97,28 +97,17 @@ local controller = function(name)
         end
     end
 
-    cls.group_authenticate = function(group_id, user_id)
-        local res, err = db.role.query(group_id, user_id)
-        if err then
-            pdk.response.exit(500, { err_message = err })
-        end
-        if #res == 0 then
-            pdk.response.exit(401, { err_message = "no permission to operate on this group" })
-        end
-        return res[1]
-    end
-
     cls.project_authenticate = function(project_id, user_id)
-        local res, err = db.project.query(project_id)
+        local res, err = db.role.query(project_id, user_id)
         if err then
             pdk.response.exit(500, { err_message = err })
         end
 
         if #res == 0 then
-            pdk.response.exit(500, { err_message = "project: " .. project_id .. " not exists" })
+            pdk.response.exit(401, { err_message = "no permission to operate on this project" })
         end
 
-        return cls.group_authenticate(res[1].group_id, user_id)
+        return res[1]
     end
 
     cls.router_authenticate = function(router_id, user_id)
