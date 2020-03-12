@@ -72,7 +72,7 @@ _M.created = {
     required = { "name", "password", "valid_password", "email", "is_enable" }
 }
 
-_M.updated_password = {
+_M.password = {
     type = "object",
     properties = {
         user_id = {
@@ -101,7 +101,7 @@ _M.updated_password = {
     }
 }
 
-_M.updated_status = {
+_M.enable = {
     type = "object",
     properties = {
         user_id = {
@@ -116,13 +116,27 @@ _M.updated_status = {
                     minimum = 1
                 }
             }
-        },
-        is_enable = {
-            type = 'number',
-            enum = { 0, 1 }
         }
     }
+}
 
+_M.disable = {
+    type = "object",
+    properties = {
+        user_id = {
+            anyOf = {
+                {
+                    type = "string",
+                    minLength = 1,
+                    pattern = [[^[0-9]+$]]
+                },
+                {
+                    type = "number",
+                    minimum = 1
+                }
+            }
+        }
+    }
 }
 
 _M.deleted = {
