@@ -12,6 +12,8 @@ _M.find     = string.find
 
 _M.len      = string.len
 
+_M.char     = string.char
+
 _M.split    = plstring.split
 
 _M.replace  = plstring.replace
