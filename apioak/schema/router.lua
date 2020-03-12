@@ -414,19 +414,6 @@ _M.updated = {
         response_schema = {
             type = "array",
         },
-        project_id = {
-            anyOf = {
-                {
-                    type = "string",
-                    minLength = 1,
-                    pattern = [[^[0-9]+$]]
-                },
-                {
-                    type = "number",
-                    minimum = 1
-                }
-            }
-        },
         router_id = {
             anyOf = {
                 {
@@ -443,7 +430,7 @@ _M.updated = {
     },
     required = { "name", "enable_cors", "description", "request_path", "request_method", "request_params", "backend_path",
                  "backend_method", "backend_params", "constant_params", "response_type",
-                 "response_success", "response_failure", "response_codes", "response_schema", "project_id", "router_id" }
+                 "response_success", "response_failure", "response_codes", "response_schema", "router_id" }
 }
 
 _M.deleted = {
@@ -532,6 +519,9 @@ _M.online = {
                 "PROD",
                 "BETA",
                 "TEST",
+                "prod",
+                "beta",
+                "test",
             }
         }
     }
@@ -559,6 +549,9 @@ _M.offline = {
                 "PROD",
                 "BETA",
                 "TEST",
+                "prod",
+                "beta",
+                "test",
             }
         }
     }
