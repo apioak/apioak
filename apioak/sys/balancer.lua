@@ -50,7 +50,10 @@ function _M.go(oak_ctx)
 
     local timeout = upstream.timeouts
     if timeout then
-        local ok, err = set_timeouts(timeout.connect, timeout.send, timeout.read)
+        local connect_timout = timeout.connect or 0
+        local send_timeout   = timeout.send or 0
+        local read_timeout   = timeout.read or 0
+        local ok, err = set_timeouts(connect_timout / 1000, send_timeout / 1000, read_timeout / 1000)
         if not ok then
             pdk.log.error("[sys.balancer] could not set upstream timeouts: ", err)
         end
