@@ -92,10 +92,11 @@ function _M.init_worker()
             return
         end
 
-        while not ngx_worker_exiting() do
-            loading_routers()
-            ngx_sleep(30)
-        end
+         while not ngx_worker_exiting() do
+             loading_routers()
+             -- automatically update configuration once every 30s
+             ngx_sleep(30)
+         end
 
     end)
 end
