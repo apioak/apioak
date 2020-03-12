@@ -10,6 +10,8 @@ _M.upper    = string.upper
 
 _M.find     = string.find
 
+_M.len      = string.len
+
 _M.split    = plstring.split
 
 _M.replace  = plstring.replace
