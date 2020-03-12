@@ -85,8 +85,7 @@ function _M.continue_by_token(token)
 end
 
 function _M.expire_by_token(token)
-    local sql = pdk.string.format("UPDATE %s SET expired_at = '%s' WHERE token = '%s'", table_name,
-            pdk.string.null, token)
+    local sql = pdk.string.format("UPDATE %s SET expired_at = NULL WHERE token = '%s'", table_name, token)
     local res, err = pdk.mysql.execute(sql)
 
     if err then
