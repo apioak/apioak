@@ -31,10 +31,7 @@ function plugin_controller.project_list(params)
     plugin_controller.user_authenticate()
 
     if not plugin_controller.is_owner then
-        local role = plugin_controller.project_authenticate(params.project_id, plugin_controller.uid)
-        if role.is_admin ~= 1 then
-            pdk.response.exit(401, { err_message = "no permission to create group member" })
-        end
+        plugin_controller.project_authenticate(params.project_id, plugin_controller.uid)
     end
 
     local res, err = db.plugin.query_by_res(db.plugin.RESOURCES_TYPE_PROJECT, params.project_id)
@@ -57,7 +54,7 @@ function plugin_controller.project_created(params)
     if not plugin_controller.is_owner then
         local role = plugin_controller.project_authenticate(params.project_id, plugin_controller.uid)
         if role.is_admin ~= 1 then
-            pdk.response.exit(401, { err_message = "no permission to create group member" })
+            pdk.response.exit(401, { err_message = "no permission to create project plugin" })
         end
     end
 
@@ -82,7 +79,7 @@ function plugin_controller.project_updated(params)
     if not plugin_controller.is_owner then
         local role = plugin_controller.project_authenticate(params.project_id, plugin_controller.uid)
         if role.is_admin ~= 1 then
-            pdk.response.exit(401, { err_message = "no permission to create group member" })
+            pdk.response.exit(401, { err_message = "no permission to update project plugin" })
         end
     end
 
@@ -103,7 +100,7 @@ function plugin_controller.project_deleted(params)
     if not plugin_controller.is_owner then
         local role = plugin_controller.project_authenticate(params.project_id, plugin_controller.uid)
         if role.is_admin ~= 1 then
-            pdk.response.exit(401, { err_message = "no permission to create group member" })
+            pdk.response.exit(401, { err_message = "no permission to delete project plugin" })
         end
     end
 
