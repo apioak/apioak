@@ -78,4 +78,6 @@ _M.header = _header
 
 _M.add_header = ngx.req.set_header
 
+_M.method     = ngx.req.get_method
+
 return _M
