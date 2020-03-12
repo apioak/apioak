@@ -23,19 +23,17 @@ function router_controller.list(params)
     pdk.response.exit(200, { err_message = "OK", routers = res })
 end
 
-function router_controller.created(params)
+function router_controller.created()
 
-    local body      = router_controller.get_body()
-    body.project_id = params.project_id
+    local body = router_controller.get_body()
 
     router_controller.check_schema(schema.router.created, body)
 
     router_controller.user_authenticate()
 
     if not router_controller.is_owner then
-        router_controller.project_authenticate(params.project_id, router_controller.uid)
+        router_controller.project_authenticate(body.project_id, router_controller.uid)
     end
-    body.user_id = router_controller.uid
 
     local _, err = db.router.created(body)
     if err then
@@ -70,7 +68,6 @@ end
 function router_controller.updated(params)
 
     local body      = router_controller.get_body()
-    body.project_id = params.project_id
     body.router_id  = params.router_id
 
     router_controller.check_schema(schema.router.updated, body)
@@ -78,7 +75,7 @@ function router_controller.updated(params)
     router_controller.user_authenticate()
 
     if not router_controller.is_owner then
-        router_controller.project_authenticate(params.project_id, router_controller.uid)
+        router_controller.router_authenticate(params.router_id, router_controller.uid)
     end
 
     local _, err = db.router.updated(params.router_id, body)
@@ -96,7 +93,7 @@ function router_controller.deleted(params)
     router_controller.user_authenticate()
 
     if not router_controller.is_owner then
-        router_controller.project_authenticate(params.project_id, router_controller.uid)
+        router_controller.router_authenticate(params.router_id, router_controller.uid)
     end
 
     local _, err = db.router.deleted(params.router_id)
@@ -107,7 +104,7 @@ function router_controller.deleted(params)
     pdk.response.exit(200, { err_message = "OK" })
 end
 
-function router_controller.online(params)
+function router_controller.env_push(params)
 
     router_controller.check_schema(schema.router.online, params)
 
@@ -137,7 +134,7 @@ function router_controller.online(params)
     end
     router.plugins = plugins
 
-    res, err = db.router.online(params.router_id, params.env, router)
+    res, err = db.router.online(params.router_id, pdk.string.upper(params.env), router)
     if err then
         pdk.response.exit(500, { err_message = err })
     end
@@ -145,7 +142,7 @@ function router_controller.online(params)
     pdk.response.exit(200, { err_message = "OK" })
 end
 
-function router_controller.offline(params)
+function router_controller.env_pull(params)
 
     router_controller.check_schema(schema.router.offline, params)
 
@@ -154,7 +151,7 @@ function router_controller.offline(params)
         router_controller.router_authenticate(params.router_id, router_controller.uid)
     end
 
-    local _, err = db.router.offline(params.router_id, params.env)
+    local _, err = db.router.offline(params.router_id, pdk.string.upper(params.env))
     if err then
         pdk.response.exit(500, { err_message = err })
     end
