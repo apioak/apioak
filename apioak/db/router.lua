@@ -89,19 +89,20 @@ end
 function _M.created(params)
     local sql = "INSERT INTO %s (name, enable_cors, description, request_path, request_method, request_params, " ..
             "backend_path, backend_method, backend_params, constant_params, response_type, " ..
-            "response_success, response_failure, response_codes, response_schema, project_id, user_id) " ..
+            "response_success, response_failure, response_codes, response_schema, project_id) " ..
             "VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', " ..
-            "'%s', '%s', '%s')"
+            "'%s')"
     sql = pdk.string.format(sql, table_name, params.name, params.enable_cors, params.description, params.request_path,
             params.request_method, pdk.json.encode(params.request_params), params.backend_path, params.backend_method,
             pdk.json.encode(params.backend_params), pdk.json.encode(params.constant_params),
             params.response_type, params.response_success, params.response_failure, pdk.json.encode(params.response_codes),
-            pdk.json.encode(params.response_schema), params.project_id, params.user_id)
+            pdk.json.encode(params.response_schema), params.project_id)
     local res, err = pdk.mysql.execute(sql)
 
     if err then
         return nil, err
     end
+
     return res, nil
 end
 
@@ -121,6 +122,7 @@ function _M.updated(router_id, params)
     if err then
         return nil, err
     end
+
     return res, nil
 end
 
