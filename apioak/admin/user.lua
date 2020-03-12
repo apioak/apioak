@@ -17,7 +17,7 @@ function user_controller.register()
     end
 
     if #res == 0 then
-        body.is_owner = 1
+        body.is_owner  = 1
         body.is_enable = 1
     end
 
@@ -28,24 +28,6 @@ function user_controller.register()
     res, err = db.user.create(body)
     if err then
         pdk.response.exit(500, { err_message = err })
-    end
-
-    if body.is_owner == 1 then
-        local user_id = res.insert_id
-        res, err = db.group.create({
-            name = "Default Group",
-            description = "default project group",
-            user_id    = user_id
-        })
-        if err then
-            pdk.response.exit(500, { err_message = err })
-        end
-
-        local group_id = res.insert_id
-        res, err = db.role.create(group_id, user_id, true)
-        if err then
-            pdk.response.exit(500, { err_message = err })
-        end
     end
 
     pdk.response.exit(200, { err_message = "OK" })
@@ -59,7 +41,7 @@ function user_controller.login()
 
     local res, err = db.user.query_by_email(body.email)
     if err then
-        pdk.response.exit(401, { err_message = err })
+        pdk.response.exit(500, { err_message = err })
     end
 
     if #res == 0 then
@@ -80,7 +62,7 @@ function user_controller.login()
 
     res, err = db.token.query_by_uid(user.id)
     if err then
-        pdk.response.exit(401, { err_message = err })
+        pdk.response.exit(500, { err_message = err })
     end
 
     if #res == 0 then
@@ -90,26 +72,15 @@ function user_controller.login()
     end
 
     if err then
-        pdk.response.exit(401, { err_message = err })
+        pdk.response.exit(500, { err_message = err })
     end
     user.token = res.token
-
-    if user.is_owner then
-        res, err = db.group.all(true)
-    else
-        res, err = db.group.query_by_uid(user.id)
-    end
-
-    if err then
-        pdk.response.exit(401, { err_message = err })
-    end
 
     pdk.response.exit(200, { err_message = "OK" , user = {
         id       = user.id,
         name     = user.name,
         token    = user.token,
-        is_owner = user.is_owner,
-        groups   = res
+        is_owner = user.is_owner
     }})
 end
 
@@ -162,17 +133,63 @@ function user_controller.created()
 end
 
 
-function user_controller.updated_password(params)
+function user_controller.enable(params)
+
+    user_controller.check_schema(schema.user.enable, params)
 
     user_controller.user_authenticate()
+
+    if not user_controller.is_owner then
+        pdk.response.exit(401, { err_message = "no permission to enable user" })
+    end
+
+    if pdk.string.tonumber(params.user_id) == user_controller.uid then
+        pdk.response.exit(401, { err_message = "no permission to enable user" })
+    end
+
+    local _, err = db.user.update_status(params.user_id, 1)
+
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+
+    pdk.response.exit(200, { err_message = "OK" })
+end
+
+function user_controller.disable(params)
+
+    user_controller.check_schema(schema.user.disable, params)
+
+    user_controller.user_authenticate()
+
+    if not user_controller.is_owner then
+        pdk.response.exit(401, { err_message = "no permission to disable user" })
+    end
+
+    if pdk.string.tonumber(params.user_id) == user_controller.uid then
+        pdk.response.exit(401, { err_message = "no permission to disable user" })
+    end
+
+    local _, err = db.user.update_status(params.user_id, 0)
+
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+
+    pdk.response.exit(200, { err_message = "OK" })
+end
+
+function user_controller.password(params)
 
     local body   = user_controller.get_body()
     body.user_id = params.user_id
 
-    user_controller.check_schema(schema.user.updated_password, body)
+    user_controller.check_schema(schema.user.password, body)
+
+    user_controller.user_authenticate()
 
     if not user_controller.is_owner and params.user_id ~= user_controller.uid then
-        pdk.response.exit(401, { err_message = "no permission to create user" })
+        pdk.response.exit(401, { err_message = "no permission to update user password" })
     end
 
     if body.password ~= body.valid_password then
@@ -184,53 +201,34 @@ function user_controller.updated_password(params)
     if err then
         pdk.response.exit(500, { err_message = err })
     end
-    pdk.response.exit(200, { err_message = "OK" })
-end
 
-function user_controller.updated_status(params)
-
-    user_controller.user_authenticate()
-
-    local body   = user_controller.get_body()
-    body.user_id = params.user_id
-
-    user_controller.check_schema(schema.user.updated_status, body)
-
-    if not user_controller.is_owner then
-        pdk.response.exit(401, { err_message = "no permission to create user" })
-    end
-
-    local _, err = db.user.update_status(params.user_id, body.is_enable)
-
-    if err then
-        pdk.response.exit(500, { err_message = err })
-    end
     pdk.response.exit(200, { err_message = "OK" })
 end
 
 function user_controller.deleted(params)
 
+    user_controller.check_schema(schema.user.deleted, params)
+
     user_controller.user_authenticate()
 
     if not user_controller.is_owner then
         pdk.response.exit(401, { err_message = "no permission to delete user" })
     end
 
-    if params.user_id == user_controller.uid then
+    if pdk.string.tonumber(params.user_id) == user_controller.uid then
         pdk.response.exit(401, { err_message = "no permission to delete user" })
     end
-
-    user_controller.check_schema(schema.user.updated, params)
 
     local res, err = db.role.delete_by_uid(params.user_id)
     if err then
         pdk.response.exit(500, { err_message = err })
     end
 
-    res, err = db.user.create(params.user_id)
+    res, err = db.user.delete(params.user_id)
     if err then
         pdk.response.exit(500, { err_message = err })
     end
+
     pdk.response.exit(200, { err_message = "OK" })
 end
 
