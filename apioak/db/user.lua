@@ -8,7 +8,7 @@ local table_name = "oak_users"
 _M.table_name = table_name
 
 function _M.all()
-    local sql = pdk.string.format("SELECT id, name, email, is_enable FROM %s", table_name)
+    local sql = pdk.string.format("SELECT id, name, email FROM %s WHERE is_enable = 1", table_name)
     local res, err = pdk.mysql.execute(sql)
     if err then
         return nil, err
@@ -91,9 +91,9 @@ function _M.query_by_id(uid)
     return res, err
 end
 
-function _M.query_by_gid(gid)
+function _M.query_by_pid(gid)
    local sql = pdk.string.format(
-           "SELECT users.id, users.name, users.email, roles.is_admin FROM %s AS roles LEFT JOIN %s AS users ON roles.user_id = users.id WHERE roles.group_id = %s",
+           "SELECT users.id, users.name, users.email, roles.is_admin FROM %s AS roles LEFT JOIN %s AS users ON roles.user_id = users.id WHERE roles.project_id = %s",
            role.table_name, table_name, gid)
     local res, err = pdk.mysql.execute(sql)
 
