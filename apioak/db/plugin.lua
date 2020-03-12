@@ -11,7 +11,7 @@ _M.RESOURCES_TYPE_ROUTER = "ROUTER"
 _M.RESOURCES_TYPE_PROJECT = "PROJECT"
 
 function _M.query_by_res(res_type, res_id)
-    local sql = pdk.string.format("SELECT * FROM %s WHERE res_type = '%s' AND res_id = %s",
+    local sql = pdk.string.format("SELECT id, name, type, description, config  FROM %s WHERE res_type = '%s' AND res_id = %s",
             table_name, res_type, res_id)
     local res, err = pdk.mysql.execute(sql)
 
