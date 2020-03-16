@@ -9,15 +9,39 @@ local _M = {}
 
 _M.table_name = table_name
 
-function _M.all(is_owner)
+function _M.all(project_name)
     local sql
-    if is_owner then
-        sql = pdk.string.format("SELECT *, 1 AS is_admin FROM %s", table_name)
+    if project_name and pdk.string.len(project_name) >= 1 then
+        sql = pdk.string.format([[
+            SELECT
+                id,
+                name,
+                path,
+                description
+            FROM
+                %s
+            WHERE
+                name LIKE '%%%s%%'
+            ORDER BY
+                id
+            DESC
+        ]], table_name, project_name)
     else
-        sql = pdk.string.format("SELECT * FROM %s", table_name)
+        sql = pdk.string.format([[
+            SELECT
+                id,
+                name,
+                path,
+                description
+            FROM
+                %s
+            ORDER BY
+                id
+            DESC
+        ]], table_name)
     end
-    local res, err = pdk.mysql.execute(sql)
 
+    local res, err = pdk.mysql.execute(sql)
     if err then
         return nil, err
     end
@@ -25,10 +49,49 @@ function _M.all(is_owner)
     return res, nil
 end
 
-function _M.query_by_uid(user_id)
-    local sql = pdk.string.format(
-            "SELECT projects.*, roles.is_admin FROM %s as roles, %s AS projects WHERE roles.project_id = projects.id AND roles.user_id = %s",
-            role.table_name, table_name, user_id)
+function _M.query_by_uid(user_id, project_name)
+    local sql
+    if project_name and pdk.string.len(project_name) >= 1 then
+        sql = pdk.string.format([[
+            SELECT
+                projects.id,
+                projects.name,
+                projects.path,
+                projects.description,
+                roles.is_admin
+            FROM
+                %s AS projects
+            LEFT JOIN
+                %s AS roles
+            ON
+                projects.id = roles.project_id
+            WHERE
+                roles.user_id = %s AND projects.name LIKE '%%%s%%'
+            ORDER BY
+                projects.id
+            DESC
+        ]], table_name, role.table_name, user_id, project_name)
+    else
+        sql = pdk.string.format([[
+            SELECT
+                projects.id,
+                projects.name,
+                projects.path,
+                projects.description,
+                roles.is_admin
+            FROM
+                %s AS projects
+            LEFT JOIN
+                %s AS roles
+            ON
+                projects.id = roles.project_id
+            WHERE
+                roles.user_id = %s
+            ORDER BY
+                projects.id
+            DESC
+        ]], table_name, role.table_name, user_id)
+    end
 
     local res, err = pdk.mysql.execute(sql)
     if err then
@@ -119,6 +182,21 @@ function _M.query_env_all()
     end
 
     return projects, nil
+end
+
+function _M.query_last_updated_hid()
+    local sql = pdk.string.format(
+            "SELECT MD5(updated_at) AS hash_id FROM %s ORDER BY updated_at DESC LIMIT 1", table_name)
+    local res, err = pdk.mysql.execute(sql)
+    if err then
+        return nil, err
+    end
+
+    if #res == 0 then
+        return res, nil
+    end
+
+    return res[1], nil
 end
 
 return _M
