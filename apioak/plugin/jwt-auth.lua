@@ -25,6 +25,7 @@ local schema = {
     },
     required = { "secret" }
 }
+
 local function jwt_auth(secret, credential)
     local obj = jwt.verify(_M.key, secret, credential)
     if obj.verified then
@@ -67,7 +68,5 @@ function _M.http_access(oak_ctx)
         pdk.response.exit(403, { err_message = "Authorization Required" })
     end
 end
-
-
 
 return _M
