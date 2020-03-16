@@ -1,23 +1,26 @@
-local pcall         = pcall
-local ipairs        = ipairs
-local config        = require("apioak.pdk.config")
-local table_insert  = table.insert
-local string_format = string.format
+local pcall   = pcall
+local config  = require("apioak.sys.config")
+local stringx = require("apioak.pdk.string")
+local tablex  = require("apioak.pdk.table")
 
 local _M = {}
 
 function _M.loading()
-    local config_all = config.all()
-    local config_plugins = config_all.plugins
+    local res, err = config.query("plugins")
+    if err then
+        return nil, err
+    end
+
     local plugins = {}
-    for _, config_plugin in ipairs(config_plugins) do
-        local plugin_path = string_format("apioak.plugin.%s", config_plugin)
+    for i = 1, #res do
+        local plugin_path = stringx.format("apioak.plugin.%s", res[i])
         local ok, plugin = pcall(require, plugin_path)
         if ok then
-            table_insert(plugins, plugin)
+            tablex.insert(plugins, plugin)
         end
     end
-    return plugins
+
+    return plugins, nil
 end
 
 return _M
