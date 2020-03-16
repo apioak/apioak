@@ -26,17 +26,6 @@ function _M.query_by_res(res_type, res_id)
     return res, nil
 end
 
-function _M.delete_by_res(res_type, res_id)
-    local sql = pdk.string.format("DELETE FROM %s WHERE res_type = '%s' AND res_id = %s",
-            table_name, res_type, res_id)
-    local res, err = pdk.mysql.execute(sql)
-
-    if err then
-        return nil, err
-    end
-    return res, nil
-end
-
 function _M.create_by_res(res_type, res_id, params)
     local sql = pdk.string.format("INSERT INTO %s (name, type, description, config, res_type, res_id) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')",
             table_name, params.name, params.type, params.description, pdk.json.encode(params.config), res_type, res_id)
@@ -48,20 +37,53 @@ function _M.create_by_res(res_type, res_id, params)
     return res, nil
 end
 
-function _M.delete(plugin_id)
-    local sql = pdk.string.format("DELETE FROM %s WHERE id = %s",
-            table_name, plugin_id)
-    local res, err = pdk.mysql.execute(sql)
+function _M.delete_by_res(res_type, res_id, plugin_id)
+    local sql
+    if plugin_id then
+        sql = pdk.string.format([[
+            DELETE
+            FROM
+                %s
+            WHERE
+                id = %s AND res_id = %s AND res_type = '%s'
+        ]], table_name, plugin_id, res_id, res_type)
+    else
+        sql = pdk.string.format([[
+            DELETE
+            FROM
+                %s
+            WHERE
+                res_id = %s AND res_type = '%s'
+        ]], table_name, res_id, res_type)
+    end
 
+    local res, err = pdk.mysql.execute(sql)
     if err then
         return nil, err
     end
+
     return res, nil
 end
 
-function _M.update(plugin_id, params)
-    local sql = pdk.string.format("UPDATE %s SET name = '%s', type = '%s', description = '%s', config = '%s' WHERE id = %s",
-            table_name, params.name, params.type, params.description, pdk.json.encode(params.config), plugin_id)
+function _M.update_by_res(res_type, res_id, plugin_id, params)
+    local sql = pdk.string.format([[
+        UPDATE
+            %s
+        SET
+            name= '%s',
+            type = '%s',
+            description = '%s',
+            config = '%s'
+        WHERE
+            id = %s AND res_id = %s AND res_type = '%s'
+    ]], table_name,
+        params.name,
+        params.type,
+        params.description,
+        pdk.json.encode(params.config),
+        plugin_id,
+        res_id,
+        res_type)
     local res, err = pdk.mysql.execute(sql)
 
     if err then
