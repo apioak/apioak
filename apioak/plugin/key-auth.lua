@@ -32,12 +32,12 @@ function _M.http_access(oak_ctx)
         if plugin_conf.secret then
             local secret_key = pdk.request.header('Authentication')
             if not secret_key then
-                pdk.response.exit(401, { err_message = "Missing Authentication found in request" })
+                pdk.response.exit(403, { err_message = "Missing Authentication found in request" })
             end
 
             local verify = key_verify(secret_key, plugin_conf.secret)
             if not verify then
-                pdk.response.exit(401, { err_message = "Invalid Authentication in request" })
+                pdk.response.exit(403, { err_message = "Invalid Authentication in request" })
             end
         end
     end
