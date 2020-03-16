@@ -16,8 +16,7 @@ description = {
 
 dependencies = {
     "lua-resty-balancer = 0.02rc5",
-    "lua-resty-ngxvar = 0.4",
-    "lua-resty-jit-uuid = 0.0.7",
+    "lua-resty-ngxvar = 0.5",
     "lua-resty-jwt = 0.2.0",
     "lua-resty-libr3 = 1.2-0",
     "lua-resty-http = 0.15-0",
