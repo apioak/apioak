@@ -102,10 +102,6 @@ _M.updated = {
                         type = "string",
                         enum = { "PROD", "BETA", "TEST" }
                     },
-                    enable_retries = {
-                        type = "number",
-                        enum = { 0, 1 }
-                    },
                     timeouts = {
                         type = "object",
                         properties = {
@@ -152,7 +148,7 @@ _M.updated = {
                         }
                     }
                 },
-                required = { "id", "host", "type", "env", "enable_retries", "timeouts", "nodes" }
+                required = { "id", "host", "type", "env", "timeouts", "nodes" }
             },
         }
     },
@@ -197,10 +193,6 @@ _M.created = {
                         type = "string",
                         enum = { "PROD", "BETA", "TEST" }
                     },
-                    enable_retries = {
-                        type = "number",
-                        enum = { 0, 1 }
-                    },
                     timeouts = {
                         type = "object",
                         properties = {
@@ -247,14 +239,14 @@ _M.created = {
                         }
                     }
                 },
-                required = { "host", "type", "env", "enable_retries", "timeouts", "nodes" }
+                required = { "host", "type", "env", "timeouts", "nodes" }
             },
         }
     },
     required = { "name", "path", "upstreams", "description" }
 }
 
-_M.plugin_list = {
+_M.plugins = {
     type = "object",
     properties = {
         project_id = {
@@ -519,6 +511,25 @@ _M.member_updated = {
         }
     },
     required = { "project_id", "user_id", "is_admin" }
+}
+
+_M.routers = {
+    type = "object",
+    properties = {
+        project_id = {
+            anyOf = {
+                {
+                    type = "string",
+                    minLength = 1,
+                    pattern = [[^[0-9]+$]]
+                },
+                {
+                    type = "number",
+                    minimum = 1
+                }
+            }
+        }
+    }
 }
 
 return _M
