@@ -24,11 +24,9 @@ local controller = function(name)
         return body
     end
 
-
     cls.get_header = function(key)
         return pdk.request.header(key)
     end
-
 
     cls.check_schema = function(schema, body)
         local _, err = pdk.schema.check(schema, body)
@@ -37,64 +35,55 @@ local controller = function(name)
         end
     end
 
-
-    cls.get_header_token = function()
+    cls.user_authenticate = function()
         local token = cls.get_header(pdk.const.REQUEST_ADMIN_TOKEN_KEY)
         if not token then
-            pdk.response.exit(401, { err_message = pdk.string.format(
-                    "property header \"%s\" is required", cls.header_token_key) })
+            pdk.response.exit(401, { err_message = "[account.authenticate] property header \"" ..
+                    pdk.const.REQUEST_ADMIN_TOKEN_KEY .. "\" is required" })
         end
-        return token
-    end
 
-    cls.get_account_token = function(token)
         local res, err = db.token.query_by_token(token)
         if err then
             pdk.response.exit(500, { err_message = err })
         end
 
         if #res == 0 then
-            pdk.response.exit(401, { err_message = "login account token invalid" })
+            pdk.response.exit(401, { err_message = "[account.authenticate] token \"" ..
+                    token .. "\" invalid" })
         end
 
-        return res[1]
-    end
+        local exp_at = pdk.time.strtotime(res[1].expired_at)
+        local now_at = pdk.time.time()
+        if exp_at < now_at then
+            pdk.response.exit(401, { err_message = "[account.authenticate] token \"" ..
+                    token .. "\" expired" })
+        end
 
-    cls.get_account_info = function(uid)
-        local res, err = db.user.query_by_id(uid)
+        if (exp_at - now_at) < 3600 then
+            db.token.continue_by_token(token)
+        end
+
+        res, err = db.user.query_by_id(res[1].user_id)
         if err then
             pdk.response.exit(500, { err_message = err })
         end
 
         if #res == 0 then
-            pdk.response.exit(401, { err_message = "login account not exists" })
+            pdk.response.exit(401, { err_message = "[account.authenticate] account not exists" })
         end
 
-        return res[1]
-    end
+        local user = res[1]
 
-    cls.user_authenticate = function()
-        local header_token  = cls.get_header_token()
-        local account_token = cls.get_account_token(header_token)
+        cls.uid   = user.id
+        cls.token = token
 
-        local expired  = pdk.time.strtotime(account_token.expired_at)
-        local now_time = pdk.time.time()
-        if expired < now_time then
-            pdk.response.exit(401, { err_message = "login status expired" })
-        end
-
-        local diff_time = expired - now_time
-        if diff_time < 3600 then
-            db.token.continue_by_token(cls.token)
-        end
-
-        local account_info  = cls.get_account_info(account_token.user_id)
-        cls.uid         = account_info.id
-        cls.token       = header_token
-
-        if account_info.is_owner == 1 then
+        if user.is_owner == 1 then
             cls.is_owner = true
+        else
+            cls.is_owner = false
         end
+
+        return user
     end
 
     cls.project_authenticate = function(project_id, user_id)
@@ -104,7 +93,7 @@ local controller = function(name)
         end
 
         if #res == 0 then
-            pdk.response.exit(401, { err_message = "no permission to operate on this project" })
+            pdk.response.exit(403, { err_message = "[project.authenticate] no project permissions" })
         end
 
         return res[1]
@@ -117,7 +106,7 @@ local controller = function(name)
         end
 
         if #res == 0 then
-            pdk.response.exit(500, { err_message = "router: " .. router_id .. " not exists" })
+            pdk.response.exit(403, { err_message = "[router.authenticate] no router permissions" })
         end
 
         return cls.project_authenticate(res[1].project_id, user_id)
