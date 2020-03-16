@@ -1,35 +1,36 @@
-local config = require("apioak.pdk.config")
+local config = require("apioak.sys.config")
 local mysql  = require("resty.mysql")
-
-local oak_conf = config.all()
-local my_conf = oak_conf.mysql
 
 local _M = {}
 
 function _M.new()
-    local db
-    local ok
-    local err
-
-    db, err = mysql:new()
-    if not db then
+    local res, err = mysql:new()
+    if not res then
         return nil, err
     end
+    local db = res
 
-    db:set_timeout(my_conf.timeout or 1000)
+    res, err = config.query("mysql")
+    if err then
+        return nil, err
+    end
+    local conf = res
 
-    ok, err = db:connect({
-        host     = my_conf.host     or "127.0.0.1",
-        port     = my_conf.port     or 3306,
-        database = my_conf.database or "apioak",
-        user     = my_conf.user     or "apioak",
-        password = my_conf.password or ""
+    db:set_timeout(conf.timeout or 1000)
+
+    res, err = db:connect({
+        host     = conf.host     or "127.0.0.1",
+        port     = conf.port     or 3306,
+        database = conf.database or "apioak",
+        user     = conf.user     or "apioak",
+        password = conf.password or ""
     })
 
-    if not ok then
+    if not res then
         return nil, err
     end
 
+    db.conf  = conf
     db.close = close
     return db, nil
 end
@@ -42,7 +43,7 @@ function close(self)
     if self.subscribed then
         return nil, "subscribed state"
     end
-    return sock:setkeepalive(my_conf.max_idle_timeout, my_conf.pool_size)
+    return sock:setkeepalive(self.conf.max_idle_timeout, self.conf.pool_size)
 end
 
 
