@@ -1,12 +1,15 @@
-local pdk      = require("apioak.pdk")
-local db       = require("apioak.db")
-local pairs    = pairs
-local r3route  = require("resty.r3")
+local pdk = require("apioak.pdk")
+local db  = require("apioak.db")
+local pairs               = pairs
+local r3route             = require("resty.r3")
+local ngx_var             = require("resty.ngxvar")
 local ngx_sleep           = ngx.sleep
 local ngx_timer_at        = ngx.timer.at
 local ngx_worker_exiting  = ngx.worker.exiting
 
 local router_objects
+local router_latest_hash_id
+local router_cached_hash_id
 
 local _M = {}
 
@@ -38,14 +41,8 @@ local create_routers = function(project, router, env_router, environment)
         path    = env_router.request_path,
         method  = env_router.request_method,
         handler = function(params, oak_ctx)
-            oak_ctx.router  = env_router
-            oak_ctx.matched = {}
-            oak_ctx.matched.path     = params
-            oak_ctx.matched.query    = pdk.request.query()
-            oak_ctx.matched.header   = pdk.request.header()
-            oak_ctx.matched.variable = {
-                remote_addr = ngx.var.remote_addr
-            }
+            oak_ctx.router       = env_router
+            oak_ctx.matched.path = params
         end
     }
 end
@@ -86,19 +83,43 @@ local loading_routers = function()
     router_objects:compile()
 end
 
-function _M.init_worker()
-    ngx_timer_at(0, function (premature)
-        if premature then
-            return
+local function automatic_sync_hash_id(premature)
+    if premature then
+        return
+    end
+
+    local i = 0
+    while not ngx_worker_exiting() and i <= 10 do
+        i = i + 1
+
+        local res, err = db.router.query_last_updated_hid()
+        if err then
+            pdk.log.error("[sys.router] automatic sync routers last updated timestamp reading failure, ", err)
+            break
+        end
+        local router_hash_id = res.hash_id
+
+        res, err = db.project.query_last_updated_hid()
+        if err then
+            pdk.log.error("[sys.router] automatic sync projects last updated timestamp reading failure, ", err)
+            break
+        end
+        local project_hash_id = res.hash_id
+
+        if router_hash_id and project_hash_id then
+            router_latest_hash_id = pdk.string.md5(router_hash_id .. project_hash_id)
         end
 
-         while not ngx_worker_exiting() do
-             loading_routers()
-             -- automatically update configuration once every 30s
-             ngx_sleep(30)
-         end
+        ngx_sleep(10)
+    end
 
-    end)
+    if not ngx_worker_exiting() then
+        ngx_timer_at(0, automatic_sync_hash_id)
+    end
+end
+
+function _M.init_worker()
+    ngx_timer_at(0, automatic_sync_hash_id)
 end
 
 local checked_request_params = function(rule, params)
@@ -116,48 +137,84 @@ local checked_request_params = function(rule, params)
     return query_val, nil
 end
 
-function _M.init_request(oak_ctx)
-    local router = oak_ctx.router
-    local params = router.backend_params
-    for i = 1, #params do
-        local param = params[i]
-        local backend_params_position = pdk.string.lower(param.position)
-        local request_param_position  = pdk.string.lower(param.request_param_position)
+function _M.parameter(oak_ctx)
+    local env = pdk.request.header(pdk.const.REQUEST_API_ENV_KEY)
+    if env then
+        env = pdk.string.upper(env)
+    else
+        env = pdk.const.ENVIRONMENT_PROD
+    end
 
-        if backend_params_position == request_param_position then
+    oak_ctx.matched = {}
+    oak_ctx.matched.query    = pdk.request.query()
+    oak_ctx.matched.header   = pdk.request.header()
+
+    oak_ctx.matched.header[pdk.const.REQUEST_API_ENV_KEY] = env
+end
+
+function _M.matched(oak_ctx)
+    if not router_cached_hash_id or router_cached_hash_id ~= router_latest_hash_id then
+        loading_routers()
+        router_cached_hash_id = router_latest_hash_id
+    end
+
+    local match_uri = pdk.string.format("/%s%s", oak_ctx.matched.header[pdk.const.REQUEST_API_ENV_KEY],
+            ngx_var.fetch("uri"))
+    local match_ok = router_objects:dispatch(match_uri, pdk.request.method(), oak_ctx)
+    if not match_ok then
+        return false
+    end
+    return true
+end
+
+function _M.mapping(oak_ctx)
+    local router = oak_ctx.router
+    local backend_param_rules = router.backend_params
+    for b = 1, #backend_param_rules do
+        local backend_param_rule     = backend_param_rules[b]
+        local backend_param_position = pdk.string.lower(backend_param_rule.position)
+        local request_param_position = pdk.string.lower(backend_param_rule.request_param_position)
+
+        if backend_param_position == request_param_position then
             local request_params = oak_ctx.matched[request_param_position]
 
-            local request_value, err = checked_request_params(param, request_params)
+            local request_value, err = checked_request_params(backend_param_rule, request_params)
             if err then
-                pdk.response.exit(401, { err_message = err })
+                pdk.response.exit(403, { err_message = err })
             end
 
-            if param.name ~= param.request_param_name then
-                request_params[param.request_param_name] = nil
-                request_params[param.name]               = request_value
+            if backend_param_rule.name ~= backend_param_rule.request_param_name then
+                request_params[backend_param_rule.request_param_name] = nil
+                request_params[backend_param_rule.name]               = request_value
             end
 
             oak_ctx.matched[request_param_position] = request_params
         else
             local request_params = oak_ctx.matched[request_param_position]
-            local backend_params = oak_ctx.matched[backend_params_position]
+            local backend_params = oak_ctx.matched[backend_param_position]
 
-            local request_value, err = checked_request_params(param, request_params)
+            local request_value, err = checked_request_params(backend_param_rule, request_params)
             if err then
-                pdk.response.exit(401, { err_message = err })
+                pdk.response.exit(403, { err_message = err })
             end
 
-            request_params[param.request_param_name] = nil
-            backend_params[param.name]               = request_value
+            request_params[backend_param_rule.request_param_name] = nil
+            backend_params[backend_param_rule.name]               = request_value
 
-            oak_ctx.matched[request_param_position]  = request_params
-            oak_ctx.matched[backend_params_position] = backend_params
+            oak_ctx.matched[request_param_position] = request_params
+            oak_ctx.matched[backend_param_position] = backend_params
         end
     end
-end
 
-function _M.get()
-    return router_objects
+    local constant_param_rules = router.constant_params
+    for c = 1, #constant_param_rules do
+        local constant_param_rule     = constant_param_rules[c]
+        local constant_param_position = pdk.string.lower(constant_param_rule.position)
+        local constant_param_value    = constant_param_rule.value
+        local constant_param_name     = constant_param_rule.name
+
+        oak_ctx.matched[constant_param_position][constant_param_name] = constant_param_value
+    end
 end
 
 return _M
