@@ -1,19 +1,3 @@
-DROP TABLE IF EXISTS `oak_groups`;
-
-CREATE TABLE `oak_groups`
-(
-  `id`          int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `name`        varchar(50)               DEFAULT NULL COMMENT '组名称',
-  `description` text COMMENT '组描述',
-  `created_at`  timestamp        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at`  timestamp        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UNIQ_NAME` (`name`)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4 COMMENT ='项目组表';
-
-
-
 DROP TABLE IF EXISTS `oak_plugins`;
 
 CREATE TABLE `oak_plugins`
