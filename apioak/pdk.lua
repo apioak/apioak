@@ -3,7 +3,6 @@ return {
     ctx      = require("apioak.pdk.ctx"),
     json     = require("apioak.pdk.json"),
     time     = require("apioak.pdk.time"),
-    config   = require("apioak.pdk.config"),
     shared   = require("apioak.pdk.shared"),
     table    = require("apioak.pdk.table"),
     string   = require("apioak.pdk.string"),
