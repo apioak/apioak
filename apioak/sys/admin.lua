@@ -9,43 +9,60 @@ function _M.init_worker()
     router = r3route.new()
 
     -- Common Service Related APIs
-    router:insert_route("/apioak/admin/plugins", admin.plugin.plugin_list,
+    router:insert_route("/apioak/admin/plugins", admin.common.plugins,
             { method = { "GET" } })
 
-    router:insert_route("/apioak/admin/users", admin.user.list,
+    router:insert_route("/apioak/admin/users", admin.common.users,
+            { method = { "GET" } })
+
+    router:insert_route("/apioak/admin/projects", admin.common.projects,
+            { method = { "GET" } })
+
+    router:insert_route("/apioak/admin/routers", admin.common.routers,
+            { method = { "GET" } })
+
+
+    -- Account Related APIs
+    router:insert_route("/apioak/admin/account/register", admin.account.register,
+            { method = { "POST" } })
+
+    router:insert_route("/apioak/admin/account/login", admin.account.login,
+            { method = { "PUT" } })
+
+    router:insert_route("/apioak/admin/account/logout", admin.account.logout,
+            { method = { "DELETE" } })
+
+    router:insert_route("/apioak/admin/account/status", admin.account.status,
             { method = { "GET" } })
 
 
     -- Project Related APIs
-    router:insert_route("/apioak/admin/projects", admin.project.list,
-            { method = { "GET" } })
-
     router:insert_route("/apioak/admin/project", admin.project.created,
             { method = { "POST" } })
 
     router:insert_route("/apioak/admin/project/{project_id}", admin.project.updated,
             { method = { "PUT" } })
 
-    router:insert_route("/apioak/admin/project/{project_id}", admin.project.query,
+    router:insert_route("/apioak/admin/project/{project_id}", admin.project.selected,
             { method = { "GET" } })
 
     router:insert_route("/apioak/admin/project/{project_id}", admin.project.deleted,
             { method = { "DELETE" } })
 
-    router:insert_route("/apioak/admin/project/{project_id}/plugins", admin.plugin.project_list,
+    router:insert_route("/apioak/admin/project/{project_id}/routers", admin.project.routers,
             { method = { "GET" } })
 
-    router:insert_route("/apioak/admin/project/{project_id}/plugin", admin.plugin.project_created,
+    router:insert_route("/apioak/admin/project/{project_id}/plugins", admin.project.plugins,
+            { method = { "GET" } })
+
+    router:insert_route("/apioak/admin/project/{project_id}/plugin", admin.project.plugin_created,
             { method = { "POST" } })
 
-    router:insert_route("/apioak/admin/project/{project_id}/plugin/{plugin_id}", admin.plugin.project_updated,
+    router:insert_route("/apioak/admin/project/{project_id}/plugin/{plugin_id}", admin.project.plugin_updated,
             { method = { "PUT" } })
 
-    router:insert_route("/apioak/admin/project/{project_id}/plugin/{plugin_id}", admin.plugin.project_deleted,
+    router:insert_route("/apioak/admin/project/{project_id}/plugin/{plugin_id}", admin.project.plugin_deleted,
             { method = { "DELETE" } })
-
-    router:insert_route("/apioak/admin/project/{project_id}/routers", admin.router.list,
-            { method = { "GET" } })
 
     router:insert_route("/apioak/admin/project/{project_id}/members", admin.project.members,
             { method = { "GET" } })
@@ -73,16 +90,16 @@ function _M.init_worker()
     router:insert_route("/apioak/admin/router/{router_id}", admin.router.deleted,
             { method = { "DELETE" } })
 
-    router:insert_route("/apioak/admin/router/{router_id}/plugins", admin.plugin.router_list,
+    router:insert_route("/apioak/admin/router/{router_id}/plugins", admin.router.plugins,
             { method = { "GET" } })
 
-    router:insert_route("/apioak/admin/router/{router_id}/plugin", admin.plugin.router_created,
+    router:insert_route("/apioak/admin/router/{router_id}/plugin", admin.router.plugin_created,
             { method = { "POST" } })
 
-    router:insert_route("/apioak/admin/router/{router_id}/plugin/{plugin_id}", admin.plugin.router_updated,
+    router:insert_route("/apioak/admin/router/{router_id}/plugin/{plugin_id}", admin.router.plugin_updated,
             { method = { "PUT" } })
 
-    router:insert_route("/apioak/admin/router/{router_id}/plugin/{plugin_id}", admin.plugin.router_deleted,
+    router:insert_route("/apioak/admin/router/{router_id}/plugin/{plugin_id}", admin.router.plugin_deleted,
             { method = { "DELETE" } })
 
     router:insert_route("/apioak/admin/router/{router_id}/env/{env}", admin.router.env_push,
@@ -91,16 +108,6 @@ function _M.init_worker()
     router:insert_route("/apioak/admin/router/{router_id}/env/{env}", admin.router.env_pull,
             { method = { "DELETE" } })
 
-
-    -- Account Manager API
-    router:insert_route("/apioak/admin/account/register", admin.user.register,
-            { method = { "POST" } })
-
-    router:insert_route("/apioak/admin/account/login", admin.user.login,
-            { method = { "POST" } })
-
-    router:insert_route("/apioak/admin/account/logout", admin.user.logout,
-            { method = { "GET" } })
 
     -- User Manager API
     router:insert_route("/apioak/admin/user", admin.user.created,
