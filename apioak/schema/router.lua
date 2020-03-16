@@ -1,24 +1,5 @@
 local _M = {}
 
-_M.list = {
-    type = "object",
-    properties = {
-        project_id = {
-            anyOf = {
-                {
-                    type = "string",
-                    minLength = 1,
-                    pattern = [[^[0-9]+$]]
-                },
-                {
-                    type = "number",
-                    minimum = 1
-                }
-            }
-        }
-    }
-}
-
 _M.created = {
     type = "object",
     properties = {
@@ -497,7 +478,7 @@ _M.query = {
     }
 }
 
-_M.online = {
+_M.env_push = {
     type = "object",
     properties = {
         router_id = {
@@ -527,7 +508,7 @@ _M.online = {
     }
 }
 
-_M.offline = {
+_M.env_pull = {
     type = "object",
     properties = {
         router_id = {
@@ -554,6 +535,146 @@ _M.offline = {
                 "test",
             }
         }
+    }
+}
+
+_M.plugins = {
+    type = "object",
+    properties = {
+        router_id = {
+            anyOf = {
+                {
+                    type = "string",
+                    minLength = 1,
+                    pattern = [[^[0-9]+$]]
+                },
+                {
+                    type = "number",
+                    minimum = 1
+                }
+            }
+        }
+    }
+}
+
+_M.plugin_created = {
+    type = "object",
+    properties = {
+        router_id = {
+            anyOf = {
+                {
+                    type = "string",
+                    minLength = 1,
+                    pattern = [[^[0-9]+$]]
+                },
+                {
+                    type = "number",
+                    minimum = 1
+                }
+            }
+        },
+        name = {
+            type = "string",
+            minLength = 5,
+            maxLength = 20,
+        },
+        type = {
+            type = "string",
+            minLength = 5,
+            maxLength = 20,
+        },
+        description = {
+            type = "string",
+            minLength = 5,
+            maxLength = 100,
+        },
+        config = {
+            type = "object"
+        }
+    },
+    required = { "router_id", "name", "type", "config", "description" }
+}
+
+_M.plugin_updated = {
+    type = "object",
+    properties = {
+        plugin_id = {
+            anyOf = {
+                {
+                    type = "string",
+                    minLength = 1,
+                    pattern = [[^[0-9]+$]]
+                },
+                {
+                    type = "number",
+                    minimum = 1
+                }
+            }
+        },
+        router_id = {
+            anyOf = {
+                {
+                    type = "string",
+                    minLength = 1,
+                    pattern = [[^[0-9]+$]]
+                },
+                {
+                    type = "number",
+                    minimum = 1
+                }
+            }
+        },
+        name = {
+            type = "string",
+            minLength = 5,
+            maxLength = 20,
+        },
+        type = {
+            type = "string",
+            minLength = 5,
+            maxLength = 20,
+        },
+        description = {
+            type = "string",
+            minLength = 5,
+            maxLength = 100,
+        },
+        config = {
+            type = "object"
+        }
+    },
+    required = { "plugin_id", "name", "type", "config", "description" }
+}
+
+_M.plugin_deleted = {
+    type = "object",
+    properties = {
+        router_id = {
+            anyOf = {
+                {
+                    type = "string",
+                    minLength = 1,
+                    pattern = [[^[0-9]+$]]
+                },
+                {
+                    type = "number",
+                    minimum = 1
+                }
+            }
+        },
+        plugin_id = {
+            anyOf = {
+                {
+                    type = "string",
+                    minLength = 1,
+                    pattern = [[^[0-9]+$]]
+                },
+                {
+                    type = "number",
+                    minimum = 1
+                }
+            }
+        },
     }
 }
 
