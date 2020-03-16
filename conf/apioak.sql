@@ -42,12 +42,12 @@ CREATE TABLE `oak_projects`
   `name`        varchar(50)               DEFAULT NULL COMMENT '项目名称',
   `description` text COMMENT '项目描述',
   `path`        varchar(50)               DEFAULT NULL COMMENT '项目前缀',
-  `user_id`     int(10) unsigned NOT NULL DEFAULT '0' COMMENT '用户ID',
-  `group_id`    int(10) unsigned NOT NULL DEFAULT '0' COMMENT '项目组ID',
   `created_at`  timestamp        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at`  timestamp        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UNIQ_PATH` (`path`) USING BTREE
+  UNIQUE KEY `UNIQ_PATH` (`path`) USING BTREE,
+  KEY `IDX_NAME` (`name`),
+  KEY `IDX_UPDATED_AT` (`updated_at`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='项目表';
 
@@ -58,13 +58,13 @@ DROP TABLE IF EXISTS `oak_roles`;
 CREATE TABLE `oak_roles`
 (
   `id`         int(10) unsigned    NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `group_id`   int(10) unsigned    NOT NULL DEFAULT '0' COMMENT '组ID',
+  `project_id` int(10) unsigned    NOT NULL DEFAULT '0' COMMENT '项目ID',
   `user_id`    int(10) unsigned    NOT NULL DEFAULT '0' COMMENT '用户ID',
   `is_admin`   tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '组管理员',
   `created_at` timestamp           NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` timestamp           NULL     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UNIQ_GROUP_USER` (`group_id`, `user_id`)
+  UNIQUE KEY `UNIQ_PROJECT_USER` (`project_id`, `user_id`) USING BTREE
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='角色表';
 
@@ -94,12 +94,12 @@ CREATE TABLE `oak_routers`
   `env_beta_config`  json                         DEFAULT NULL COMMENT '预发环境配置',
   `env_test_config`  json                         DEFAULT NULL COMMENT '测试环境配置',
   `project_id`       int(10) unsigned    NOT NULL DEFAULT '0' COMMENT '项目ID',
-  `user_id`          int(10) unsigned    NOT NULL DEFAULT '0' COMMENT '用户ID',
   `created_at`       timestamp           NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at`       timestamp           NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UNIQ_REQUEST_PATH` (`request_path`),
-  UNIQUE KEY `UNIQ_NAME` (`name`)
+  UNIQUE KEY `UNIQ_REQUEST_PATH` (`request_path`, `project_id`) USING BTREE,
+  KEY `IDX_UPDATED_AT` (`updated_at`),
+  KEY `IDX_NAME` (`name`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='路由表';
 
@@ -126,18 +126,18 @@ DROP TABLE IF EXISTS `oak_upstreams`;
 
 CREATE TABLE `oak_upstreams`
 (
-  `id`             int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `env`            varchar(10)               DEFAULT NULL COMMENT '发布环境',
-  `host`           varchar(50)               DEFAULT NULL COMMENT '主机地址',
-  `enable_retries` tinyint(3) unsigned       DEFAULT '0' COMMENT '开启重试',
-  `type`           varchar(10)               DEFAULT NULL COMMENT '负载均衡算法',
-  `timeouts`       json                      DEFAULT NULL COMMENT '超时时间',
-  `nodes`          json                      DEFAULT NULL COMMENT '服务节点',
-  `project_id`     int(10) unsigned NOT NULL DEFAULT '0' COMMENT '项目ID',
-  `created_at`     timestamp        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at`     timestamp        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `id`         int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `env`        varchar(10)               DEFAULT NULL COMMENT '发布环境',
+  `host`       varchar(50)               DEFAULT NULL COMMENT '主机地址',
+  `type`       varchar(10)               DEFAULT NULL COMMENT '负载均衡算法',
+  `timeouts`   json                      DEFAULT NULL COMMENT '超时时间',
+  `nodes`      json                      DEFAULT NULL COMMENT '服务节点',
+  `project_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '项目ID',
+  `created_at` timestamp        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` timestamp        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UNIQ_ENV_PROJECT` (`env`, `project_id`)
+  UNIQUE KEY `UNIQ_ENV_PROJECT` (`env`, `project_id`),
+  KEY `IDX_UPDATED_AT` (`updated_at`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='服务节点表';
 
