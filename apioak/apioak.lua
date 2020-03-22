@@ -19,7 +19,7 @@ local function run_plugin(phase, oak_ctx)
 end
 
 local function options_request_handle()
-    if pdk.request.method() == "OPTIONS" then
+    if pdk.request.get_method() == "OPTIONS" then
         pdk.response.exit(200, {
             err_message = "Welcome to APIOAK"
         })
@@ -57,6 +57,7 @@ function APIOAK.init_worker()
 
     sys.balancer.init_worker()
 
+    sys.cache.init_worker()
 end
 
 function APIOAK.http_access()
@@ -107,6 +108,8 @@ function APIOAK.http_access()
     if #query_args > 0 then
         upstream_uri = upstream_uri .. "?" .. pdk.table.concat(query_args, "&")
     end
+
+    pdk.request.set_method(router.backend_method)
 
     ngx.var.upstream_uri = upstream_uri
 
