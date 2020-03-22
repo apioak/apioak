@@ -66,7 +66,7 @@ _M.updated = {
         },
         description = {
             type = 'string',
-            minLength = 5,
+            minLength = 0,
             maxLength = 100
         },
         upstreams = {
@@ -170,7 +170,7 @@ _M.created = {
         },
         description = {
             type = 'string',
-            minLength = 5,
+            minLength = 0,
             maxLength = 100
         },
         upstreams = {

@@ -14,7 +14,7 @@ _M.created = {
         },
         description = {
             type = 'string',
-            minLength = 5,
+            minLength = 0,
             maxLength = 100
         },
         request_path = {
@@ -221,7 +221,7 @@ _M.updated = {
         },
         description = {
             type = 'string',
-            minLength = 5,
+            minLength = 0,
             maxLength = 100
         },
         request_path = {
