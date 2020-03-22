@@ -20,7 +20,7 @@ function project_controller.created()
 
     local project_id = res.insert_id
     if project_id == 0 then
-        pdk.response.exit(200, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     end
 
     for i = 1, #body.upstreams do
@@ -47,7 +47,7 @@ function project_controller.created()
     end
 
     if res.insert_id == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
@@ -65,7 +65,7 @@ function project_controller.updated(params)
     if not project_controller.is_owner then
         local role = project_controller.project_authenticate(params.project_id, project_controller.uid)
         if role.is_admin ~= 1 then
-            pdk.response.exit(403, { err_message = "[project.authenticate] no permissions" })
+            pdk.response.exit(501, { err_message = "no permissions" })
         end
     end
 
@@ -83,7 +83,7 @@ function project_controller.updated(params)
     end
 
     if res.affected_rows == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
@@ -105,7 +105,7 @@ function project_controller.selected(params)
     end
 
     if #res == 0 then
-        pdk.response.exit(403, { err_message = "[project.authenticate] project not exists" })
+        pdk.response.exit(501, { err_message = "project not exists" })
     end
     local project = res[1]
 
@@ -127,7 +127,7 @@ function project_controller.deleted(params)
     if not project_controller.is_owner then
         local role = project_controller.project_authenticate(params.project_id, project_controller.uid)
         if role.is_admin ~= 1 then
-            pdk.response.exit(403, { err_message = "[project.authenticate] no permissions" })
+            pdk.response.exit(501, { err_message = "no permissions" })
         end
     end
 
@@ -137,7 +137,7 @@ function project_controller.deleted(params)
     end
 
     if #res > 0 then
-        pdk.response.exit(403, { err_message = "[project.authenticate] routers in project were not deleted" })
+        pdk.response.exit(501, { err_message = "routers in project were not deleted" })
     end
 
     res, err = db.plugin.delete_by_res(db.plugin.RESOURCES_TYPE_PROJECT, params.project_id)
@@ -161,7 +161,7 @@ function project_controller.deleted(params)
     end
 
     if res.affected_rows == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
@@ -197,12 +197,12 @@ function project_controller.member_created(params)
     if not project_controller.is_owner then
         local role = project_controller.project_authenticate(params.project_id, project_controller.uid)
         if role.is_admin ~= 1 then
-            pdk.response.exit(403, { err_message = "[project.authenticate] no permissions" })
+            pdk.response.exit(501, { err_message = "no permissions" })
         end
     end
 
     if pdk.string.tonumber(body.user_id) == project_controller.uid then
-        pdk.response.exit(403, { err_message = "[project.authenticate] no permissions" })
+        pdk.response.exit(501, { err_message = "no permissions" })
     end
 
     local res, err = db.role.create(body.project_id, body.user_id, body.is_admin)
@@ -211,7 +211,7 @@ function project_controller.member_created(params)
     end
 
     if res.insert_id == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
@@ -226,12 +226,12 @@ function project_controller.member_deleted(params)
     if not project_controller.is_owner then
         local user_group = project_controller.project_authenticate(params.project_id, project_controller.uid)
         if user_group.is_admin ~= 1 then
-            pdk.response.exit(403, { err_message = "[project.authenticate] no permissions" })
+            pdk.response.exit(501, { err_message = "no permissions" })
         end
     end
 
     if pdk.string.tonumber(params.user_id) == project_controller.uid then
-        pdk.response.exit(403, { err_message = "[project.authenticate] no permissions" })
+        pdk.response.exit(501, { err_message = "no permissions" })
     end
 
     local res, err = db.role.delete(params.project_id, params.user_id)
@@ -240,7 +240,7 @@ function project_controller.member_deleted(params)
     end
 
     if res.affected_rows == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
@@ -259,12 +259,12 @@ function project_controller.member_updated(params)
     if not project_controller.is_owner then
         local role = project_controller.project_authenticate(params.project_id, project_controller.uid)
         if role.is_admin ~= 1 then
-            pdk.response.exit(403, { err_message = "[project.authenticate] no permissions" })
+            pdk.response.exit(501, { err_message = "no permissions" })
         end
     end
 
     if pdk.string.tonumber(params.user_id) == project_controller.uid then
-        pdk.response.exit(403, { err_message = "[project.authenticate] no permissions" })
+        pdk.response.exit(501, { err_message = "no permissions" })
     end
 
     local res, err = db.role.update(params.project_id, params.user_id, body.is_admin)
@@ -273,7 +273,7 @@ function project_controller.member_updated(params)
     end
 
     if res.affected_rows == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
@@ -309,7 +309,7 @@ function project_controller.plugin_created(params)
     if not project_controller.is_owner then
         local role = project_controller.project_authenticate(params.project_id, project_controller.uid)
         if role.is_admin ~= 1 then
-            pdk.response.exit(403, { err_message = "[project.authenticate] no permissions" })
+            pdk.response.exit(501, { err_message = "no permissions" })
         end
     end
 
@@ -319,7 +319,7 @@ function project_controller.plugin_created(params)
     end
 
     if res.insert_id == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
@@ -338,7 +338,7 @@ function project_controller.plugin_updated(params)
     if not project_controller.is_owner then
         local role = project_controller.project_authenticate(params.project_id, project_controller.uid)
         if role.is_admin ~= 1 then
-            pdk.response.exit(403, { err_message = "[project.authenticate] no permissions" })
+            pdk.response.exit(501, { err_message = "no permissions" })
         end
     end
 
@@ -348,7 +348,7 @@ function project_controller.plugin_updated(params)
     end
 
     if res.affected_rows == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
@@ -363,7 +363,7 @@ function project_controller.plugin_deleted(params)
     if not project_controller.is_owner then
         local role = project_controller.project_authenticate(params.project_id, project_controller.uid)
         if role.is_admin ~= 1 then
-            pdk.response.exit(403, { err_message = "[project.authenticate] no permissions" })
+            pdk.response.exit(501, { err_message = "no permissions" })
         end
     end
 
@@ -373,7 +373,7 @@ function project_controller.plugin_deleted(params)
     end
 
     if res.affected_rows == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end

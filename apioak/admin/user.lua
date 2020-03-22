@@ -14,11 +14,11 @@ function user_controller.created()
     user_controller.check_schema(schema.user.created, body)
 
     if body.password ~= body.valid_password then
-        pdk.response.exit(403, { err_message = "[user.authenticate] inconsistent password entry" })
+        pdk.response.exit(501, { err_message = "inconsistent password entry" })
     end
 
     if not user_controller.is_owner then
-        pdk.response.exit(403, { err_message = "[user.authenticate] no permissions" })
+        pdk.response.exit(501, { err_message = "no permissions" })
     end
 
     local res, err = db.user.create(body)
@@ -37,11 +37,11 @@ function user_controller.deleted(params)
     user_controller.user_authenticate()
 
     if not user_controller.is_owner then
-        pdk.response.exit(403, { err_message = "[user.authenticate] no permissions" })
+        pdk.response.exit(501, { err_message = "no permissions" })
     end
 
     if pdk.string.tonumber(params.user_id) == user_controller.uid then
-        pdk.response.exit(403, { err_message = "[user.authenticate] no permissions" })
+        pdk.response.exit(501, { err_message = "no permissions" })
     end
 
     local res, err = db.role.delete_by_uid(params.user_id)
@@ -64,11 +64,11 @@ function user_controller.enable(params)
     user_controller.user_authenticate()
 
     if not user_controller.is_owner then
-        pdk.response.exit(403, { err_message = "[user.authenticate] no permissions" })
+        pdk.response.exit(501, { err_message = "no permissions" })
     end
 
     if pdk.string.tonumber(params.user_id) == user_controller.uid then
-        pdk.response.exit(403, { err_message = "[user.authenticate] no permissions" })
+        pdk.response.exit(501, { err_message = "no permissions" })
     end
 
     local res, err = db.user.update_status(params.user_id, 1)
@@ -87,11 +87,11 @@ function user_controller.disable(params)
     user_controller.user_authenticate()
 
     if not user_controller.is_owner then
-        pdk.response.exit(403, { err_message = "[user.authenticate] no permissions" })
+        pdk.response.exit(501, { err_message = "no permissions" })
     end
 
     if pdk.string.tonumber(params.user_id) == user_controller.uid then
-        pdk.response.exit(403, { err_message = "[user.authenticate] no permissions" })
+        pdk.response.exit(501, { err_message = "no permissions" })
     end
 
     local res, err = db.user.update_status(params.user_id, 0)
@@ -113,15 +113,15 @@ function user_controller.password(params)
     user_controller.user_authenticate()
 
     if not user_controller.is_owner then
-        pdk.response.exit(403, { err_message = "[user.authenticate] no permissions" })
+        pdk.response.exit(501, { err_message = "no permissions" })
     end
 
     if pdk.string.tonumber(params.user_id) == user_controller.uid then
-        pdk.response.exit(403, { err_message = "[user.authenticate] no permissions" })
+        pdk.response.exit(501, { err_message = "no permissions" })
     end
 
     if body.password ~= body.valid_password then
-        pdk.response.exit(403, { err_message = "[user.authenticate] inconsistent password entry" })
+        pdk.response.exit(501, { err_message = "inconsistent password entry" })
     end
 
     local res, err = db.user.update_password(params.user_id, body.password)

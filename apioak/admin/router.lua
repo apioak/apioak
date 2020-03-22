@@ -23,7 +23,7 @@ function router_controller.created()
     end
 
     if res.insert_id == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
@@ -70,7 +70,7 @@ function router_controller.updated(params)
     end
 
     if res.affected_rows == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
@@ -92,7 +92,7 @@ function router_controller.deleted(params)
     end
 
     if res.affected_rows == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
@@ -134,7 +134,7 @@ function router_controller.env_push(params)
     end
 
     if res.affected_rows == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
@@ -155,7 +155,7 @@ function router_controller.env_pull(params)
     end
 
     if res.affected_rows == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
@@ -198,7 +198,7 @@ function router_controller.plugin_created(params)
     end
 
     if res.insert_id == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
@@ -224,7 +224,7 @@ function router_controller.plugin_updated(params)
     end
 
     if res.affected_rows == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
@@ -246,7 +246,7 @@ function router_controller.plugin_deleted(params)
     end
 
     if res.affected_rows == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
