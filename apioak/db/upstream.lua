@@ -48,17 +48,17 @@ function _M.create(params)
     return res, nil
 end
 
-function _M.update(upstream_id, params)
+function _M.update_by_pid(pid, upstream)
     local sql = pdk.string.format([[
         UPDATE
             %s
         SET
             host = '%s', type = '%s', timeouts = '%s', nodes = '%s'
         WHERE
-            id = %s
-    ]], table_name, params.host, params.type,
-        pdk.json.encode(params.timeouts),
-        pdk.json.encode(params.nodes), upstream_id)
+            id = %s AND project_id = %s
+    ]], table_name, upstream.host, upstream.type,
+            pdk.json.encode(upstream.timeouts),
+            pdk.json.encode(upstream.nodes), upstream.id, pid)
     local res, err = pdk.mysql.execute(sql)
 
     if err then
