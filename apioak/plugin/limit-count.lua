@@ -1,9 +1,13 @@
-local limit_count_new = require("resty.limit.count").new
-local ngx_var = ngx.var
 local pdk = require("apioak.pdk")
+local sys = require("apioak.sys")
+local limit_count = require("resty.limit.count")
+local ngx_var     = ngx.var
+
+
+local plugin_name = "limit-count"
 
 local _M = {
-    name        = "limit-count",
+    name        = plugin_name,
     type        = "Traffic Control",
     description = "Lua module for limiting request counts.",
     config = {
@@ -24,69 +28,79 @@ local _M = {
     }
 }
 
-local schema = {
+local config_schema = {
     type = "object",
     properties = {
         count = {
-            type = "integer",
-            minLength = 1
+            type    = "integer",
+            minimum = 1,
+            maximum = 100000000,
         },
         time_window = {
-            type = "integer",
-            minLength = 1
-        },
-        key = {
-            type = "string",
+            type    = "integer",
+            minimum = 1,
+            maximum = 86400,
         }
     },
-    required = { "count", "time_window", "key" }
+    required = { "count", "time_window" }
 }
 
-local function create_limit_obj(conf)
-    local limit, err = pdk.shared.get(_M.key)
-    if not err then
-        return limit, nil
-    end
+local function create_limit_object(router_id, config)
+    local cache_key = pdk.string.format("%s:ROUTER:%s", plugin_name, router_id)
 
-    limit, err = limit_count_new("plugin_limit_count", conf.count, conf.time_window)
+    local limit = sys.cache.get(cache_key)
     if not limit then
-        return nil, err
-    end
-    pdk.shared.set(_M.key, limit)
-    return limit, nil
-end
-
-function _M.http_access(oak_ctx)
-    if not oak_ctx.plugins or not oak_ctx.plugins[_M.name] then
-        return false, nil
-    end
-
-    local plugin_conf = oak_ctx.plugins[_M.name]
-    local _, err = pdk.schema.check(schema, plugin_conf)
-    if err then
-        return false, nil
-    end
-
-    local limit, err = create_limit_obj(plugin_conf)
-    if not limit then
-        pdk.response.exit(500,
-                { err_message = "failed to instantiate a resty.limit.count object: " ..  err })
-    end
-
-    local key = ngx_var[plugin_conf.key] or "0.0.0.0"
-    local delay, err = limit:incoming(key, true)
-    if not delay then
-        if err == "rejected" then
-            ngx.header["X-RateLimit-Limit"] = plugin_conf.rate
-            ngx.header["X-RateLimit-Remaining"] = 0
-            pdk.response.exit(503, { err_message =  err })
+        local err
+        limit, err = limit_count.new("plugin_limit_count", config.count, config.time_window)
+        if not limit then
+            pdk.log.error("[Limit-Count] failed to instantiate a resty.limit.count object: ", err)
         else
-            pdk.response.exit(500, { err_message =  err })
+            sys.cache.set(cache_key, limit, 86400)
         end
     end
 
-    ngx.header["X-RateLimit-Limit"] = plugin_conf.rate
-    ngx.header["X-RateLimit-Remaining"] = err
+    return limit
+end
+
+function _M.http_access(oak_ctx)
+    local router  = oak_ctx.router or {}
+    local plugins = router.plugins
+
+    if not plugins then
+        return
+    end
+
+    local router_plugin = plugins[plugin_name]
+    if not router_plugin then
+        return
+    end
+
+    local plugin_config = router_plugin.config or {}
+    local _, err_message = pdk.schema.check(config_schema, plugin_config)
+    if err_message then
+        pdk.log.error("[Limit-Count] Authorization FAIL, backend config error, " .. err_message)
+        pdk.response.exit(500)
+    end
+
+    local limit = create_limit_object(router.id, plugin_config)
+    if not limit then
+        pdk.response.exit(500, { err_message = "[Limit-Count] Failed to instantiate a Limit-Count object" })
+    end
+
+    local unique_key = ngx_var.remote_addr
+    local delay, err = limit:incoming(unique_key, true)
+    if not delay then
+        if err == "rejected" then
+            pdk.response.set_header("X-RateLimit-Limit", router_plugin.config.count)
+            pdk.response.set_header("X-RateLimit-Remaining", 0)
+            pdk.response.exit(503, { err_message = "[Limit-Count] Access denied" })
+        end
+        pdk.response.exit(500, { err_message = "[Limit-Count] Failed to limit request, " .. err })
+    end
+
+    local remaining = err
+    pdk.response.set_header("X-RateLimit-Limit", router_plugin.config.count)
+    pdk.response.set_header("X-RateLimit-Remaining", remaining)
 end
 
 return _M
