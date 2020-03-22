@@ -81,7 +81,7 @@ CREATE TABLE `oak_routers`
   `created_at`       timestamp           NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at`       timestamp           NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UNIQ_REQUEST_PATH` (`request_path`, `project_id`) USING BTREE,
+  UNIQUE KEY `UNIQ_REQUEST_PATH` (`request_path`, `request_method`, `project_id`) USING BTREE,
   KEY `IDX_UPDATED_AT` (`updated_at`),
   KEY `IDX_NAME` (`name`)
 ) ENGINE = InnoDB

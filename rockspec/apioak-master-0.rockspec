@@ -16,11 +16,11 @@ description = {
 
 dependencies = {
     "lua-resty-balancer = 0.02rc5",
-    "lua-resty-ngxvar = 0.5",
     "lua-resty-jwt = 0.2.0",
     "lua-resty-libr3 = 1.2-0",
     "lua-resty-http = 0.15-0",
     "lua-resty-mysql = 0.15-0",
+    "lua-resty-lrucache = 0.09-2",
     "jsonschema = 0.4",
     "luasocket = 3.0rc1-2",
     "luafilesystem = 1.7.0-2",
