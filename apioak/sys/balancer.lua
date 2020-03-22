@@ -3,7 +3,7 @@ local db  = require("apioak.db")
 local ngx_sleep          = ngx.sleep
 local ngx_timer_at       = ngx.timer.at
 local ngx_worker_exiting = ngx.worker.exiting
-local ngx_var            = require("resty.ngxvar")
+local ngx_var            = ngx.var
 local balancer           = require("ngx.balancer")
 local balancer_chash     = require('resty.chash')
 local balancer_round     = require('resty.roundrobin')
@@ -127,7 +127,7 @@ function _M.gogogo(oak_ctx)
     local handler = upstream.handler
     local address
     if upstream.type == pdk.const.BALANCER_CHASH then
-        local request_address = ngx_var.fetch("remote_addr")
+        local request_address = ngx_var.remote_addr
         address = handler:find(request_address)
     end
 

@@ -2,7 +2,7 @@ local pdk = require("apioak.pdk")
 local db  = require("apioak.db")
 local pairs               = pairs
 local r3route             = require("resty.r3")
-local ngx_var             = require("resty.ngxvar")
+local ngx_var             = ngx.var
 local ngx_sleep           = ngx.sleep
 local ngx_timer_at        = ngx.timer.at
 local ngx_worker_exiting  = ngx.worker.exiting
@@ -97,18 +97,23 @@ local function automatic_sync_hash_id(premature)
             pdk.log.error("[sys.router] automatic sync routers last updated timestamp reading failure, ", err)
             break
         end
-        local router_hash_id = res.hash_id
+        local router_hash_id = res.hash_id or pdk.string.md5("routers")
 
         res, err = db.project.query_last_updated_hid()
         if err then
             pdk.log.error("[sys.router] automatic sync projects last updated timestamp reading failure, ", err)
             break
         end
-        local project_hash_id = res.hash_id
+        local project_hash_id = res.hash_id or pdk.string.md5("projects")
 
-        if router_hash_id and project_hash_id then
-            router_latest_hash_id = pdk.string.md5(router_hash_id .. project_hash_id)
+        res, err = db.plugin.query_project_last_updated_hid()
+        if err then
+            pdk.log.error("[sys.router] automatic sync plugins last updated timestamp reading failure, ", err)
+            break
         end
+        local plugin_hash_id = res.hash_id or pdk.string.md5("plugins")
+
+        router_latest_hash_id = pdk.string.md5(project_hash_id .. router_hash_id .. plugin_hash_id)
 
         ngx_sleep(10)
     end
@@ -159,8 +164,8 @@ function _M.matched(oak_ctx)
     end
 
     local match_uri = pdk.string.format("/%s%s", oak_ctx.matched.header[pdk.const.REQUEST_API_ENV_KEY],
-            ngx_var.fetch("uri"))
-    local match_ok = router_objects:dispatch(match_uri, pdk.request.method(), oak_ctx)
+            ngx_var.uri)
+    local match_ok = router_objects:dispatch(match_uri, pdk.request.get_method(), oak_ctx)
     if not match_ok then
         return false
     end
