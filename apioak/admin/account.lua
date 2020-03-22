@@ -22,7 +22,7 @@ function account_controller.register()
     body.is_enable = 1
 
     if body.password ~= body.valid_password then
-        pdk.response.exit(403, { err_message = "[account.authenticate] inconsistent password entry" })
+        pdk.response.exit(501, { err_message = "inconsistent password entry" })
     end
 
     res, err = db.user.create(body)
@@ -31,7 +31,7 @@ function account_controller.register()
     end
 
     if res.insert_id == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end
@@ -49,16 +49,16 @@ function account_controller.login()
     end
 
     if #res == 0 then
-        pdk.response.exit(403, { err_message = "[account.authenticate] account not exists" })
+        pdk.response.exit(501, { err_message = "account not exists" })
     end
 
     local user = res[1]
     if pdk.string.md5(body.password) ~= user.password then
-        pdk.response.exit(403, { err_message = "[account.authenticate] password validation failure" })
+        pdk.response.exit(501, { err_message = "password validation failure" })
     end
 
     if user.is_enable == 0 then
-        pdk.response.exit(403, { err_message = "[account.authenticate] account is disabled" })
+        pdk.response.exit(501, { err_message = "account is disabled" })
     end
 
     res, err = db.token.query_by_uid(user.id)
@@ -77,7 +77,7 @@ function account_controller.login()
     end
 
     if res.affected_rows == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         user = pdk.table.del(user, "password")
         user.token = res.token
@@ -97,7 +97,7 @@ function account_controller.logout()
     end
 
     if res.affected_rows == 0 then
-        pdk.response.exit(403, { err_message = "FAIL" })
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
         pdk.response.exit(200, { err_message = "OK" })
     end

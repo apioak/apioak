@@ -38,7 +38,7 @@ local controller = function(name)
     cls.user_authenticate = function()
         local token = cls.get_header(pdk.const.REQUEST_ADMIN_TOKEN_KEY)
         if not token then
-            pdk.response.exit(401, { err_message = "[account.authenticate] property header \"" ..
+            pdk.response.exit(401, { err_message = "property header \"" ..
                     pdk.const.REQUEST_ADMIN_TOKEN_KEY .. "\" is required" })
         end
 
@@ -48,14 +48,14 @@ local controller = function(name)
         end
 
         if #res == 0 then
-            pdk.response.exit(401, { err_message = "[account.authenticate] token \"" ..
+            pdk.response.exit(401, { err_message = "property token \"" ..
                     token .. "\" invalid" })
         end
 
         local exp_at = pdk.time.strtotime(res[1].expired_at)
         local now_at = pdk.time.time()
         if exp_at < now_at then
-            pdk.response.exit(401, { err_message = "[account.authenticate] token \"" ..
+            pdk.response.exit(401, { err_message = "property token \"" ..
                     token .. "\" expired" })
         end
 
@@ -69,10 +69,14 @@ local controller = function(name)
         end
 
         if #res == 0 then
-            pdk.response.exit(401, { err_message = "[account.authenticate] account not exists" })
+            pdk.response.exit(401, { err_message = "account does not exist" })
         end
 
         local user = res[1]
+
+        if user.is_enable == 0 then
+            pdk.response.exit(401, { err_message = "account is disabled" })
+        end
 
         cls.uid   = user.id
         cls.token = token
@@ -93,7 +97,7 @@ local controller = function(name)
         end
 
         if #res == 0 then
-            pdk.response.exit(403, { err_message = "[project.authenticate] no project permissions" })
+            pdk.response.exit(501, { err_message = "no project permissions" })
         end
 
         return res[1]
@@ -106,7 +110,7 @@ local controller = function(name)
         end
 
         if #res == 0 then
-            pdk.response.exit(403, { err_message = "[router.authenticate] no router permissions" })
+            pdk.response.exit(501, { err_message = "no router permissions" })
         end
 
         return cls.project_authenticate(res[1].project_id, user_id)
