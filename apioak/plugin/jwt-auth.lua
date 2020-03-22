@@ -1,81 +1,65 @@
-local jwt      = require("resty.jwt")
-local pdk      = require("apioak.pdk")
+local jwt = require("resty.jwt")
+local pdk = require("apioak.pdk")
+
+local plugin_name = "jwt-auth"
 
 local _M = {
-    type  = 'Authentication',
-    name  = "Jwt Auth",
-    desc  = "Lua module for JWT Authentication.",
-    key   = "jwt-auth",
-    order = 1301,
-    parameter = {
+    name         = plugin_name,
+    type         = "Authentication",
+    description  = "Lua module for JWT Authentication.",
+    config = {
         secret = {
-            type = "string",
-            default = "A65001FB250D8F2E87E3B5821B2C48C7",
-            minLength = 10,
-            maxLength = 32,
-            desc = "signature secret key.",
+            type        = "string",
+            default     = "A65001FB250D8F2E87E3B5821B2C48C7",
+            minLength   = 10,
+            maxLength   = 32,
+            description = "signature secret key",
         }
     },
 }
 
-local schema = {
+local config_schema = {
     type = "object",
     properties = {
         secret = {
-            type = "string",
+            type      = "string",
+            minLength = 10,
+            maxLength = 32,
         }
     },
     required = { "secret" }
 }
-local function jwt_auth(secret, credential)
-    local obj = jwt.verify(_M.key, secret, credential)
-    if obj.verified then
-        return true
-    end
-    return false
-end
-
-local function is_authorized(secret, header_credential, query_credential)
-    if not secret then return false end
-    local authorized = false
-    if (not header_credential) and (not query_credential) then
-        return authorized
-    end
-    if header_credential then
-        authorized = jwt_auth(secret, pdk.string.split(header_credential, " ")[2])
-    elseif query_credential then
-        authorized = jwt_auth(secret, query_credential)
-    end
-    return authorized
-end
 
 function _M.http_access(oak_ctx)
+    local router  = oak_ctx.router or {}
+    local plugins = router.plugins
 
-    if not oak_ctx['plugins'] then
-        return false, nil
-    end
-    if not oak_ctx.plugins[_M.key] then
-        return false, nil
+    if not plugins then
+        return
     end
 
-    local plugin_conf = oak_ctx.plugins[_M.key]
-    local _, err = pdk.schema.check(schema, plugin_conf)
+    local router_plugin = plugins[plugin_name]
+    if not router_plugin then
+        return
+    end
+
+    local plugin_config = router_plugin.config or {}
+    local _, err = pdk.schema.check(config_schema, plugin_config)
     if err then
-        return false, nil
+        pdk.log.error("[Jwt-Auth] Authorization FAIL, backend config error, " .. err)
+        pdk.response.exit(500)
     end
 
-    local header_credential = pdk.request.header("Authorization")
-    local query_credential = pdk.request.query('token')
+    local certificate = pdk.request.header("APIOAK-JWT-AUTH")
+    if not certificate then
+        pdk.response.exit(401,
+                { err_message = "[Jwt-Auth] Authorization FAIL, property header \"APIOAK-JWT-AUTH\" is required" })
+    end
 
-    local is_success = is_authorized(plugin_conf.secret, header_credential, query_credential)
-    if not is_success then
-        pdk.response.exit(403, { err_message = "Authorization Required" })
+    local res = jwt:verify(plugin_config.secret, certificate)
+    if not res.verified then
+        pdk.response.exit(401, { err_message = "[Jwt-Auth] Authorization FAIL" })
     end
 end
 
-
-
 return _M
-
-
-
