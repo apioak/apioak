@@ -75,9 +75,8 @@ function project_controller.updated(params)
     end
 
     for i = 1, #body.upstreams do
-        local upstream      = body.upstreams[i]
-        upstream.project_id = params.project_id
-        res, err = db.upstream.update(upstream.id, upstream)
+        local upstream = body.upstreams[i]
+        res, err = db.upstream.update_by_pid(params.project_id, upstream)
         if err then
             pdk.response.exit(500, { err_message = err })
         end
