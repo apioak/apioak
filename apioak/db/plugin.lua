@@ -92,4 +92,29 @@ function _M.update_by_res(res_type, res_id, plugin_id, params)
     return res, nil
 end
 
+function _M.query_project_last_updated_hid()
+    local sql = pdk.string.format([[
+        SELECT
+            MD5(updated_at) AS hash_id
+        FROM
+            %s
+        WHERE
+            res_type = '%s'
+        ORDER BY
+            updated_at
+        DESC
+        LIMIT 1
+    ]], table_name, _M.RESOURCES_TYPE_PROJECT)
+    local res, err = pdk.mysql.execute(sql)
+    if err then
+        return nil, err
+    end
+
+    if #res == 0 then
+        return res, nil
+    end
+
+    return res[1], nil
+end
+
 return _M
