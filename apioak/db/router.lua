@@ -176,17 +176,35 @@ end
 function _M.query(router_id)
     local sql = pdk.string.format([[
         SELECT
-            id, name, enable_cors, description, constant_params, project_id,
-            request_path, request_method, request_params,
-            backend_path, backend_method, backend_params,
-            response_type, response_success, response_failure, response_codes, response_schema,
-            !ISNULL(env_prod_config) AS env_prod_publish,
-            !ISNULL(env_beta_config) AS env_beta_publish,
-            !ISNULL(env_test_config) AS env_test_publish
-        FROM %s
+            routers.id,
+            routers.name,
+            routers.enable_cors,
+            routers.description,
+            routers.constant_params,
+            routers.request_path,
+            routers.request_method,
+            routers.request_params,
+            routers.backend_path,
+            routers.backend_method,
+            routers.backend_params,
+            routers.response_type,
+            routers.response_success,
+            routers.response_failure,
+            routers.response_codes,
+            routers.response_schema,
+            !ISNULL(routers.env_prod_config) AS env_prod_publish,
+            !ISNULL(routers.env_beta_config) AS env_beta_publish,
+            !ISNULL(routers.env_test_config) AS env_test_publish,
+            projects.id AS project_id,
+            projects.name AS project_name,
+            projects.path AS project_path
+        FROM
+            %s AS routers
+        LEFT JOIN
+            %s AS projects ON routers.project_id = projects.id
         WHERE
-            id = %s
-    ]], table_name, router_id)
+            routers.id = %s
+    ]], table_name, project.table_name, router_id)
     local res, err = pdk.mysql.execute(sql)
 
     if err then

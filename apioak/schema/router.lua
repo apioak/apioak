@@ -5,7 +5,7 @@ _M.created = {
     properties = {
         name = {
             type = "string",
-            minLength = 5,
+            minLength = 3,
             maxLength = 20,
         },
         enable_cors = {
@@ -212,7 +212,7 @@ _M.updated = {
     properties = {
         name = {
             type = "string",
-            minLength = 5,
+            minLength = 3,
             maxLength = 20,
         },
         enable_cors = {
