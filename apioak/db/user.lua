@@ -7,8 +7,13 @@ local table_name = "oak_users"
 
 _M.table_name = table_name
 
-function _M.all()
-    local sql = pdk.string.format("SELECT id, name, email FROM %s WHERE is_enable = 1", table_name)
+function _M.all(is_enable)
+    local sql
+    if is_enable then
+        sql = pdk.string.format("SELECT id, name, email FROM %s WHERE is_enable = 1", table_name)
+    else
+        sql = pdk.string.format("SELECT id, name, email, is_enable, is_owner FROM %s", table_name)
+    end
     local res, err = pdk.mysql.execute(sql)
     if err then
         return nil, err
@@ -83,7 +88,8 @@ function _M.query_by_email(email)
 end
 
 function _M.query_by_id(uid)
-    local sql = pdk.string.format("SELECT * FROM %s WHERE id = %s", table_name, uid)
+    local sql = pdk.string.format("SELECT id, name, email, is_enable, is_owner FROM %s WHERE id = %s",
+            table_name, uid)
     local res, err = pdk.mysql.execute(sql)
     if err then
         return nil, err

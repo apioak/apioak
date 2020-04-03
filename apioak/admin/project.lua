@@ -182,7 +182,7 @@ function project_controller.members(params)
         pdk.response.exit(500, { err_message = err })
     end
 
-    pdk.response.exit(200, { err_message = "OK", users = res })
+    pdk.response.exit(200, { err_message = "OK", members = res })
 end
 
 function project_controller.member_created(params)

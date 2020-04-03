@@ -9,12 +9,30 @@ function common_controller.users()
 
     common_controller.user_authenticate()
 
-    local res, err = db.user.all()
+    local res, err
+    if common_controller.is_owner then
+        res, err = db.user.all()
+    else
+        res, err = db.user.query_by_id(common_controller.uid)
+    end
     if err then
         pdk.response.exit(500, { err_message = err })
     end
 
     pdk.response.exit(200, { err_message = "OK", users = res })
+end
+
+function common_controller.members()
+
+    common_controller.user_authenticate()
+
+    local res, err = db.user.all(true)
+
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+
+    pdk.response.exit(200, { err_message = "OK", members = res })
 end
 
 function common_controller.plugins()
