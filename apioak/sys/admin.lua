@@ -15,6 +15,9 @@ function _M.init_worker()
     router:insert_route("/apioak/admin/users", admin.common.users,
             { method = { "GET" } })
 
+    router:insert_route("/apioak/admin/members", admin.common.members,
+            { method = { "GET" } })
+
     router:insert_route("/apioak/admin/projects", admin.common.projects,
             { method = { "GET" } })
 
