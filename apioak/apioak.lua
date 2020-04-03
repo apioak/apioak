@@ -19,7 +19,7 @@ local function run_plugin(phase, oak_ctx)
 end
 
 local function options_request_handle()
-    if pdk.request.get_method() == "OPTIONS" then
+    if pdk.request.get_method() == "OPTIONS" or ngx.var.uri == "/" then
         pdk.response.exit(200, {
             err_message = "Welcome to APIOAK"
         })
@@ -89,8 +89,9 @@ function APIOAK.http_access()
 
     sys.router.mapping(oak_ctx)
 
-    local router  = oak_ctx.router
-    local matched = oak_ctx.matched
+    local router   = oak_ctx.router
+    local matched  = oak_ctx.matched
+    local upstream = router.upstream
 
     local upstream_uri = router.backend_path
     for path_key, path_val in pairs(matched.path) do
@@ -112,6 +113,8 @@ function APIOAK.http_access()
     pdk.request.set_method(router.backend_method)
 
     ngx.var.upstream_uri = upstream_uri
+
+    ngx.var.upstream_host = upstream.host
 
     sys.balancer.loading()
 
