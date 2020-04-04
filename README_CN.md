@@ -1,3 +1,5 @@
+[简体中文](README_CN.md) | [English](README.md) 
+
 # APIOAK
 
 [![Build Status](https://travis-ci.org/apioak/apioak.svg?branch=master)](https://travis-ci.org/apioak/apioak)
@@ -8,25 +10,67 @@ APIOAK 提供API发布、管理、运维的全生命周期管理。辅助用户�
 
 ## 为什么选择APIOAK
 
-APIOAK 可以帮你隔离内外部流量，通过插件机制提供动态负载平衡，身份验证，速率限制等，并支持您自己的自定义插件。
+APIOAK 提供了几乎可以媲美原生 `Nginx` 的强劲性能，通过插件机制提供动态身份认证、流量控制等功能，并支持根据特定业务场景的自定义插件。同时还提供了多种动态负载均衡策略和功能强大易用的控制台管理面板。
 
-![APIOAK](doc/images/APIOAK-process.jpeg)
+![APIOAK](doc/images/APIOAK-process.png)
 
 
 ## 功能
 
-- **动态轮询 `round` 负载均衡：** 动态支持有权重的 `round-robin` 负载平衡。
-- **动态一致性 `hash` 负载均衡：** 动态支持一致性 `hash` 的负载均衡。
-- **多环境部署发布：** 提供多种发布环境`prod`，`beta`和`dev`，满足不同场景使用需求。
-- **插件热更新和热插拔：** 所有插件均支持热更新和动态插拔。
-- **高扩展性：** 自定义插件可以挂载任意 `Openresty` 执行阶段，用于不同需求场景。
-- **Mock请求：** 支持通过预设数据响应客户端，加速前后端分离开发过程。
-- **分布式部署：** 通过 `etcd` 进行数据存储、服务发现、配置共享。
+- **项目**
+
+    - 支持项目前缀，用于多租户隔离。
+    
+    - 支持多环境环境配置，`生产环境`、`预发环境`、`测试环境` 不同环境完全隔离，满足`持续集成`、`持续交付`的全生命周期管理。
+    
+    - 支持动态加权的 `round-robin` 负载均衡。
+    
+    - 支持动态一致性 `hash` 负载均衡。
+    
+    - 支持动态节点配置，动态 `Host` 配置。
+    
+    - 支持上游服务 `连接`、`发送`、`读取` 超时设置。
+    
+    - 支持插件热插拔，项目插件可被项目下所有路由继承。
+    
+    - 支持自动生成项目文档。
+    
+    - 支持项目成员管理。
+
+- **路由**
+
+    - 支持前后端请求路由映射。
+    
+    - 支持前后端请求方式映射。
+    
+    - 支持前后端请求参数交叉映射。
+    
+    - 支持常量参数定义。
+    
+    - 支持自定义响应数据及响应数据类型。
+    
+    - 支持插件热插拔。
+    
+    - 支持Mock请求，用户加速前后端分离开发过程。
+    
+    - 支持自动生成路由（APIs）文档。
+    
+    - 支持多环境路由（APIs）上下线。
+    
+    - 支持多环境路由（APIs）一键复制。
+    
+- **用户**
+
+    - 支持用户登录、注册。
+    
+    - 支持用户创建、编辑。
+    
+    - 支持用户全局禁用。
 
 
 ## 安装
 
-在不同的操作系统上安装 `APIOAK` 所必需的系统依赖（`openresty`、`resty-cli`、`luarocks`等），请参见：[依赖安装文档](doc/install-dependencies.md)。
+在不同的操作系统上安装 `APIOAK` 所必需的系统依赖（`OpenResty >= 1.15.8.2`、`luarocks >= 2.3`、`MySQL >= 5.7 或 MariaDB >= 10.2`等），请参见：[依赖安装文档](doc/install-dependencies.md)。
 
 > 通过 LuaRocks 安装
 
@@ -34,7 +78,7 @@ APIOAK 可以帮你隔离内外部流量，通过插件机制提供动态负载�
 sudo luarocks install apioak
 ```
 
-请在 [发行列表](https://github.com/apioak/apioak/releases) 中获得相应版本的 `RPM` 或 `DEB` 安装包。
+请在 [发行列表](https://gitee.com/apioak/apioak/releases) 中获得相应版本的 `RPM` 或 `DEB` 安装包。
 
 > 通过 PRM 安装 (CentOS 7)
 
@@ -51,16 +95,24 @@ sudo dpkg -i apioak-{VERSION}-1_amd64.deb
 
 ## 快速开始
 
+> 配置 APIOAK
+
+ - 导入数据库配置文件到 `MySQL` 或 `MariaDB` 中，配置文件路径 `/path/conf/apioak.sql`。
+ 
+ - 编辑 `APIOAK` 配置文件中 `database` 项的数据库连接信息，配置文件路径 `/path/conf/apioak.yaml`。
+
+
 > 启动 APIOAK
 
 ```bash
 sudo apioak start
 ```
 
+> 访问 APIOAK
 
-## 如何贡献
+- 浏览器输入 `http://127.0.0.1:10080/apioak/dashboard` 即可访问控制台管理面板。
 
-请参阅 [贡献](CONTRIBUTING_CN.md) 文档。
+至此，`APIOAK` 已全部安装并配置完毕，请尽情享受。
 
 
 ## 致谢
