@@ -8,7 +8,7 @@ _M.table_name = table_name
 
 function _M.all()
     local sql = pdk.string.format("SELECT * FROM %s", table_name)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -40,7 +40,7 @@ function _M.create(params)
         params.project_id,
         pdk.json.encode(params.timeouts),
         pdk.json.encode(params.nodes))
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
     if err then
         return nil, err
     end
@@ -59,7 +59,7 @@ function _M.update_by_pid(pid, upstream)
     ]], table_name, upstream.host, upstream.type,
             pdk.json.encode(upstream.timeouts),
             pdk.json.encode(upstream.nodes), upstream.id, pid)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -69,7 +69,7 @@ end
 
 function _M.query(upstream_id)
     local sql = pdk.string.format("SELECT * FROM %s WHERE id = %s", table_name, upstream_id)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -79,7 +79,7 @@ end
 
 function _M.query_by_pid(project_id)
     local sql = pdk.string.format("SELECT * FROM %s WHERE project_id = %s", table_name, project_id)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -95,7 +95,7 @@ end
 
 function _M.delete_by_pid(project_id)
     local sql = pdk.string.format("DELETE FROM %s WHERE project_id = %s", table_name, project_id)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -107,7 +107,7 @@ end
 function _M.query_last_updated_hid()
     local sql = pdk.string.format(
             "SELECT MD5(updated_at) AS hash_id FROM %s ORDER BY updated_at DESC LIMIT 1", table_name)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
     if err then
         return nil, err
     end

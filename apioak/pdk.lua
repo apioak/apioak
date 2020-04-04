@@ -13,5 +13,5 @@ return {
     admin    = require("apioak.pdk.admin"),
     pool     = require("apioak.pdk.tablepool"),
     const    = require("apioak.pdk.const"),
-    mysql    = require("apioak.pdk.mysql"),
+    database = require("apioak.pdk.database"),
 }

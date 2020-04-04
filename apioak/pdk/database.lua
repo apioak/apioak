@@ -10,7 +10,7 @@ function _M.new()
     end
     local db = res
 
-    res, err = config.query("mysql")
+    res, err = config.query("database")
     if err then
         return nil, err
     end
@@ -21,7 +21,7 @@ function _M.new()
     res, err = db:connect({
         host     = conf.host     or "127.0.0.1",
         port     = conf.port     or 3306,
-        database = conf.database or "apioak",
+        database = conf.db_name  or "apioak",
         user     = conf.user     or "apioak",
         password = conf.password or ""
     })

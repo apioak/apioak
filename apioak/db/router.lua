@@ -55,7 +55,7 @@ function _M.all(router_name)
     ]], table_name, project.table_name)
     end
 
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
     if err then
         return nil, err
     end
@@ -133,7 +133,7 @@ function _M.query_by_uid(user_id, router_name)
     ]], table_name, project.table_name, pdk.table.concat(project_ids, ","))
     end
 
-    res, err = pdk.mysql.execute(sql)
+    res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -164,7 +164,7 @@ function _M.query_by_pid(project_id)
 	        routers.id
 	    DESC
     ]], table_name, project.table_name, project_id)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -205,7 +205,7 @@ function _M.query(router_id)
         WHERE
             routers.id = %s
     ]], table_name, project.table_name, router_id)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -251,7 +251,7 @@ function _M.created(params)
         pdk.json.encode(params.response_codes),
         pdk.json.encode(params.response_schema),
         params.project_id)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -288,7 +288,7 @@ function _M.updated(router_id, params)
         pdk.json.encode(params.response_codes),
         pdk.json.encode(params.response_schema),
         router_id)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -299,7 +299,7 @@ end
 
 function _M.deleted(router_id)
     local sql = pdk.string.format("DELETE FROM %s WHERE id = %s", table_name, router_id)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -311,7 +311,7 @@ function _M.env_push(router_id, env, router_info)
     router_info = pdk.json.encode(router_info)
     local sql = pdk.string.format("UPDATE %s SET env_%s_config = '%s' WHERE id = %s",
             table_name, pdk.string.lower(env), router_info, router_id)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -322,7 +322,7 @@ end
 function _M.env_pull(router_id, env)
     local sql = pdk.string.format("UPDATE %s SET env_%s_config = NULL WHERE id = %s",
             table_name, pdk.string.lower(env), router_id)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -334,7 +334,7 @@ function _M.query_env_by_pid(project_id)
     local sql = "SELECT id, request_method, request_path, response_type, response_success, env_prod_config, " ..
             "env_beta_config, env_test_config FROM %s WHERE project_id = %s"
     sql = pdk.string.format(sql, table_name, project_id)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
     if err then
         return nil, err
     end
@@ -351,7 +351,7 @@ end
 function _M.query_last_updated_hid()
     local sql = pdk.string.format(
             "SELECT MD5(updated_at) AS hash_id FROM %s ORDER BY updated_at DESC LIMIT 1", table_name)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
     if err then
         return nil, err
     end
