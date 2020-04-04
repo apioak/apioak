@@ -13,7 +13,7 @@ _M.RESOURCES_TYPE_PROJECT = "PROJECT"
 function _M.query_by_res(res_type, res_id)
     local sql = pdk.string.format("SELECT id, name, type, description, config  FROM %s WHERE res_type = '%s' AND res_id = %s",
             table_name, res_type, res_id)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -29,7 +29,7 @@ end
 function _M.create_by_res(res_type, res_id, params)
     local sql = pdk.string.format("INSERT INTO %s (name, type, description, config, res_type, res_id) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')",
             table_name, params.name, params.type, params.description, pdk.json.encode(params.config), res_type, res_id)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -57,7 +57,7 @@ function _M.delete_by_res(res_type, res_id, plugin_id)
         ]], table_name, res_id, res_type)
     end
 
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
     if err then
         return nil, err
     end
@@ -84,7 +84,7 @@ function _M.update_by_res(res_type, res_id, plugin_id, params)
         plugin_id,
         res_id,
         res_type)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -105,7 +105,7 @@ function _M.query_project_last_updated_hid()
         DESC
         LIMIT 1
     ]], table_name, _M.RESOURCES_TYPE_PROJECT)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
     if err then
         return nil, err
     end

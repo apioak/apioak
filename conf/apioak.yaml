@@ -1,7 +1,7 @@
-mysql:
+database:
   host: 127.0.0.1
   port: 3306
-  database: apioak
+  db_name: apioak
   user: root
   password: 123000
   timeout: 1000    # millisecond

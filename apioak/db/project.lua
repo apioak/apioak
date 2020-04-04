@@ -41,7 +41,7 @@ function _M.all(project_name)
         ]], table_name)
     end
 
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
     if err then
         return nil, err
     end
@@ -93,7 +93,7 @@ function _M.query_by_uid(user_id, project_name)
         ]], table_name, role.table_name, user_id)
     end
 
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
     if err then
         return nil, err
     end
@@ -104,7 +104,7 @@ end
 function _M.created(params)
     local sql = pdk.string.format("INSERT INTO %s (name, description, path) VALUES ('%s', '%s', '%s')",
             table_name, params.name, params.description, params.path)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -115,7 +115,7 @@ end
 function _M.updated(project_id, params)
     local sql = pdk.string.format("UPDATE %s SET name = '%s', description = '%s', path = '%s' WHERE id = %s",
             table_name, params.name, params.description, params.path, project_id)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -127,7 +127,7 @@ end
 function _M.query(project_id)
     local sql = pdk.string.format("SELECT * FROM %s WHERE id = %s",
             table_name, project_id)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -139,7 +139,7 @@ end
 function _M.delete(project_id)
     local sql = pdk.string.format("DELETE FROM %s WHERE id = %s",
             table_name, project_id)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -149,7 +149,7 @@ end
 
 function _M.query_env_all()
     local sql      = pdk.string.format("SELECT id, path FROM %s", table_name)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
 
     if err then
         return nil, err
@@ -187,7 +187,7 @@ end
 function _M.query_last_updated_hid()
     local sql = pdk.string.format(
             "SELECT MD5(updated_at) AS hash_id FROM %s ORDER BY updated_at DESC LIMIT 1", table_name)
-    local res, err = pdk.mysql.execute(sql)
+    local res, err = pdk.database.execute(sql)
     if err then
         return nil, err
     end
