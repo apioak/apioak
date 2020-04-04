@@ -203,7 +203,7 @@ function _M.query(router_id)
         LEFT JOIN
             %s AS projects ON routers.project_id = projects.id
         WHERE
-            id = %s
+            routers.id = %s
     ]], table_name, project.table_name, router_id)
     local res, err = pdk.database.execute(sql)
 
