@@ -110,7 +110,7 @@ sudo openresty -s stop
 > Install MariaDB
 
 ```shell
-# key is imported and the repository added.
+# Key is imported and the repository added.
 
 sudo apt-get -y install software-properties-common
 sudo apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
