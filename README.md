@@ -70,7 +70,7 @@ APIOAK performance is almost comparable to native `Nginx`, and provides dynamic 
 
 ## Installation
 
-System dependencies (`OpenResty >= 1.15.8.2`、`luarocks >= 2.3`、`MySQL >= 5.7 or MariaDB >= 10.2`, etc.) necessary to install `APIOAK` on different operating systems, See: [Install Dependencies](doc/install-dependencies.md) Document.
+System dependencies (`OpenResty >= 1.15.8.2`、`luarocks >= 2.3`、`MySQL >= 5.7 or MariaDB >= 10.2`, etc.) necessary to install `APIOAK` on different operating systems, See: [Install Dependencies](doc/en_US/install-dependencies.md) Document.
 
 > Installation via LuaRocks
 
@@ -113,7 +113,40 @@ sudo apioak start
 At this point, `APIOAK` has all been installed and configured, please enjoy it.
 
 
+## Benchmark
+
+> Test environment & parameters
+
+ - Use Google Cloud N1 series basic version (1 vCPU + 3.75 GB RAM) server for testing.
+ 
+ - Runs benchmark for 20 seconds, using 2 threads, keeping 200 HTTP connections open.
+
+> RTT & QPS
+
+```bash
+Thread Stats   Avg      Stdev     Max   +/- Stdev
+Latency       2.65s   584.41ms   3.66s    57.25%
+Requests/sec:  24012.38
+```
+
+> Latency Distribution
+
+```bash
+ 50.000%    2.63s 
+ 75.000%    3.18s 
+ 90.000%    3.44s 
+ 99.000%    3.60s 
+ 99.900%    3.64s 
+ 99.990%    3.65s 
+ 99.999%    3.66s 
+100.000%    3.66s
+```
+
+## FlameGraph
+
+![FlameGraph](doc/images/APIOAK-flamegraph.svg)
+
+
 ## Thanks
-![Kong](doc/images/KONG-logo.jpg)
-![APISIX](doc/images/APISIX-logo.jpg)
-![Orange](doc/images/ORANGE-logo.jpg)
+
+![Thanks](doc/images/APIOAK-thanks.jpg)
