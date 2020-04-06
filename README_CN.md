@@ -70,7 +70,7 @@ APIOAK 提供了几乎可以媲美原生 `Nginx` 的强劲性能，通过插件�
 
 ## 安装
 
-在不同的操作系统上安装 `APIOAK` 所必需的系统依赖（`OpenResty >= 1.15.8.2`、`luarocks >= 2.3`、`MySQL >= 5.7 或 MariaDB >= 10.2`等），请参见：[依赖安装文档](doc/install-dependencies.md)。
+在不同的操作系统上安装 `APIOAK` 所必需的系统依赖（`OpenResty >= 1.15.8.2`、`luarocks >= 2.3`、`MySQL >= 5.7 或 MariaDB >= 10.2`等），请参见：[依赖安装文档](doc/zh_CN/install-dependencies.md)。
 
 > 通过 LuaRocks 安装
 
@@ -115,7 +115,40 @@ sudo apioak start
 至此，`APIOAK` 已全部安装并配置完毕，请尽情享受。
 
 
+## 性能
+
+> 测试环境和参数
+
+- 使用Google Cloud N1系列基本版本（1 vCPU + 3.75 GB RAM）服务器进行测试。
+
+- 使用2个线程运行基准测试20秒，保持200个HTTP连接打开。
+
+> 平均响应时间（RTT）和每秒响应次数（QPS）
+
+```bash
+Thread Stats   Avg      Stdev     Max   +/- Stdev
+Latency       2.65s   584.41ms   3.66s    57.25%
+Requests/sec:  24012.38
+```
+
+> 请求响应时间分布
+
+```bash
+ 50.000%    2.63s 
+ 75.000%    3.18s 
+ 90.000%    3.44s 
+ 99.000%    3.60s 
+ 99.900%    3.64s 
+ 99.990%    3.65s 
+ 99.999%    3.66s 
+100.000%    3.66s
+```
+
+## 火焰图
+
+![FlameGraph](doc/images/APIOAK-flamegraph.svg)
+
+
 ## 致谢
-![Kong](doc/images/KONG-logo.jpg)
-![APISIX](doc/images/APISIX-logo.jpg)
-![Orange](doc/images/ORANGE-logo.jpg)
+
+![Thanks](doc/images/APIOAK-thanks.jpg)
