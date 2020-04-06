@@ -51,7 +51,7 @@ APIOAK performance is almost comparable to native `Nginx`, and provides dynamic 
     
     - Support plug-in hot swap.
     
-    - Support Mock request, accelerate the development process of front and back end separation.
+    - Support `Mock` request, accelerate the development process of front and back end separation.
     
     - Supports automatic generation of routing (APIs) documents.
     
@@ -61,9 +61,9 @@ APIOAK performance is almost comparable to native `Nginx`, and provides dynamic 
 
 - **Users**
 
-    - Support user login and registration.
+    - Support users login and registration.
     
-    - Support user creation and editing.
+    - Support users to create, edit and delete.
     
     - Support users to disable globally.
 
