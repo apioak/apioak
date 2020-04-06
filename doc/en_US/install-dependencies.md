@@ -9,21 +9,15 @@ CentOS 7
 > Install OpenResty and other required dependencies.
 
 ```shell
-# Install epel, `LuaRocks` need it.
+# Addition OpenResty Repo.
 
-wget http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-sudo rpm -ivh epel-release-latest-7.noarch.rpm
-
-
-# Addition `OpenResty` Repo.
-
-sudo yum install -y yum-utils
+sudo yum -y install yum-utils
 sudo yum-config-manager --add-repo https://openresty.org/package/centos/openresty.repo
 
 
 # Install OpenResty and Dependencies.
 
-sudo yum install -y gcc \
+sudo yum -y install gcc \
                     gcc-c++ \
                     git \
                     curl \
@@ -60,7 +54,7 @@ sudo yum -y install MariaDB-server MariaDB-client
 
 # Start `MariaDB` Server.
 
-sudo systemctl status mariadb
+sudo systemctl start mariadb
 
 
 # Initialize `MariaDB` and set root password.
@@ -86,7 +80,7 @@ sudo apt-get update
 
 # Install OpenResty and Dependencies.
 
-sudo apt-get install -y build-essential \
+sudo apt-get -y install build-essential \
                         gcc \
                         g++ \
                         git \
