@@ -1,51 +1,63 @@
-local pdk      = require("apioak.pdk")
+local pdk = require("apioak.pdk")
+
+local plugin_name = "key-auth"
 
 local _M = {
-    type  = 'Authentication',
-    name  = "Key Auth",
-    desc  = "Lua module for Key Authentication.",
-    key   = "key-auth",
-    order = 1201,
-    parameter = {
+    name         = plugin_name,
+    type         = "Authentication",
+    description  = "Lua module for Key Authentication.",
+    config = {
         secret = {
-            type = "string",
-            default = "A65001FB250D8F2E87E3B5821B2C48C7",
-            minLength = 10,
-            maxLength = 32,
-            desc = "signature secret key.",
+            type        = "string",
+            default     = "A65001FB250D8F2E87E3B5821B2C48C7",
+            minLength   = 10,
+            maxLength   = 32,
+            description = "signature secret key.",
         }
-    },
+    }
 }
 
-local function key_verify(secret_key, secret)
-    if secret_key ~= secret then
-        return false
-    end
-
-    return true
-end
+local config_schema = {
+    type = "object",
+    properties = {
+        secret = {
+            type      = "string",
+            minLength = 10,
+            maxLength = 32,
+        }
+    },
+    required = { "secret" }
+}
 
 function _M.http_access(oak_ctx)
+    local router  = oak_ctx.router or {}
+    local plugins = router.plugins
 
-    if oak_ctx['plugins'] and oak_ctx.plugins[_M.key] then
+    if not plugins then
+        return
+    end
 
-        local plugin_conf = oak_ctx.plugins[_M.key]
+    local router_plugin = plugins[plugin_name]
+    if not router_plugin then
+        return
+    end
 
-        if plugin_conf.secret then
-            local secret_key = pdk.request.header('Authentication')
-            if not secret_key then
-                pdk.response.exit(401, { err_message = "Missing Authentication found in request" })
-            end
+    local plugin_config = router_plugin.config or {}
+    local _, err = pdk.schema.check(config_schema, plugin_config)
+    if err then
+        pdk.log.error("[Key-Auth] Authorization FAIL, backend config error, " .. err)
+        pdk.response.exit(500)
+    end
 
-            local verify = key_verify(secret_key, plugin_conf.secret)
-            if not verify then
-                pdk.response.exit(401, { err_message = "Invalid Authentication in request" })
-            end
-        end
+    local certificate = pdk.request.header("APIOAK-KEY-AUTH")
+    if not certificate then
+        pdk.response.exit(401,
+                { err_message = "[Key-Auth] Authorization FAIL, property header \"APIOAK-KEY-AUTH\" is required" })
+    end
+
+    if plugin_config.secret ~= certificate then
+        pdk.response.exit(401, { err_message = "[Key-Auth] Authorization FAIL" })
     end
 end
 
 return _M
-
-
-

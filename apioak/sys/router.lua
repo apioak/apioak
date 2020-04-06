@@ -1,220 +1,225 @@
-local ngx      = ngx
-local pdk      = require("apioak.pdk")
-local ipairs   = ipairs
-local r3route  = require("resty.r3")
-local timer_at = ngx.timer.at
+local pdk = require("apioak.pdk")
+local db  = require("apioak.db")
+local pairs               = pairs
+local r3route             = require("resty.r3")
+local ngx_var             = ngx.var
+local ngx_sleep           = ngx.sleep
+local ngx_timer_at        = ngx.timer.at
+local ngx_worker_exiting  = ngx.worker.exiting
 
-local router
-
-local merge_plugins = function(service_plugins, router_plugins)
-    if not router_plugins then
-        return service_plugins
-    end
-    if service_plugins then
-        for plugin_key, plugin_config in ipairs(service_plugins) do
-            if not router_plugins[plugin_key] then
-                router_plugins[plugin_key] = plugin_config
-            end
-        end
-    end
-    return router_plugins
-end
+local router_objects
+local router_latest_hash_id
+local router_cached_hash_id
 
 local _M = {}
 
-local loading_routers = function()
-    local service_etcd_key = pdk.admin.get_service_etcd_key()
-    local res, code, err   = pdk.etcd.query(service_etcd_key)
-    if not res then
-        pdk.log.error("failed to read \"service\" response body when try to fetch etcd")
-    end
-
-    local routers = {}
-    for _, service in ipairs(res.nodes) do
-        if service.value then
-            local service_id        = pdk.admin.get_service_id_by_etcd_key(service.key)
-            local service_prefix    = service.value.prefix
-            local service_plugins   = service.value.plugins
-            local service_upstreams = service.value.upstreams
-
-            local envs = pdk.admin.envs
-            for _, env in ipairs(envs) do
-                local router_etcd_key = pdk.admin.get_router_etcd_key(env, service_id)
-                res, code, err        = pdk.etcd.query(router_etcd_key)
-                if res and res.nodes then
-                    for _, service_router in ipairs(res.nodes) do
-                        if service_router.value then
-                            local router_info = service_router.value
-                            local router_upstream = service_upstreams[env]
-                            local router_plugins  = merge_plugins(service_plugins, router_info.plugins)
-                            local router_abs_path = "/" .. env .. service_prefix .. router_info.path
-
-                            pdk.table.insert(routers, {
-                                path   = router_abs_path,
-                                method = { router_info.method },
-                                handler = function(params, oak_ctx)
-                                    oak_ctx.router = {}
-                                    oak_ctx.router.uri            = router_info.path
-                                    oak_ctx.router.method         = router_info.method
-                                    oak_ctx.router.abs_uri        = router_abs_path
-                                    oak_ctx.router.environment    = env
-                                    oak_ctx.router.enable_cors    = router_info.enable_cors
-                                    oak_ctx.router.request_params = router_info.request_params
-                                    oak_ctx.router.uri_prefix     = service_prefix
-
-                                    oak_ctx.backend = {}
-                                    oak_ctx.backend.uri             = router_info.service_path
-                                    oak_ctx.backend.method          = router_info.service_method
-                                    oak_ctx.backend.timeout         = router_info.timeout
-                                    oak_ctx.backend.request_params  = router_info.service_params
-                                    oak_ctx.backend.constant_params = router_info.constant_params
-
-                                    oak_ctx.response = {}
-                                    oak_ctx.response.type            = router_info.response_type
-                                    oak_ctx.response.success_content = router_info.response_success
-                                    oak_ctx.response.failure_content = router_info.response_fail
-                                    oak_ctx.response.error_codes     = router_info.response_error_codes
-
-                                    oak_ctx.upstream = router_upstream
-                                    oak_ctx.plugins  = router_plugins
-
-                                    oak_ctx.request = {}
-                                    oak_ctx.request.client_ip = ngx.var.remote_addr
-
-                                    oak_ctx.matched = {}
-                                    oak_ctx.matched.params = params or {}
-                                end
-                            })
-                        end
-                    end
-                end
-            end
+local create_routers = function(project, router, env_router, environment)
+    if not env_router then
+        env_router = {}
+        env_router.request_path     = "/" .. environment .. project.path .. router.request_path
+        env_router.request_method   = router.request_method
+        env_router.response_type    = router.response_type
+        env_router.response_success = router.response_success
+        env_router.is_mock_request  = true
+    else
+        local project_upstreams = project.upstreams
+        if project_upstreams then
+            env_router.upstream = project_upstreams[environment] or {}
         end
+
+        local router_plugins  = env_router.plugins
+        local project_plugins = project.plugins
+        for router_plugin_name, router_plugin_config in pairs(router_plugins) do
+            project_plugins[router_plugin_name] = router_plugin_config
+        end
+        env_router.plugins = project_plugins or {}
+
+        env_router.request_path = "/" .. environment .. project.path .. router.request_path
     end
-    router = r3route.new(routers)
-    router:compile()
+
+    return {
+        path    = env_router.request_path,
+        method  = env_router.request_method,
+        handler = function(params, oak_ctx)
+            oak_ctx.router       = env_router
+            oak_ctx.matched.path = params
+        end
+    }
 end
 
-function _M.init_worker()
-    timer_at(0, function (premature)
-        if premature then
+local loading_routers = function()
+    local router_caches = {}
+    local res, err = db.project.query_env_all()
+    if err then
+        pdk.log.error("[sys.router] reading projects from MySQL failure, ", err)
+        return
+    end
+
+    local projects = res
+    for p = 1, #projects do
+        local project = projects[p]
+        res, err = db.router.query_env_by_pid(project.id)
+        if err then
+            pdk.log.error("[sys.router] reading routers from MySQL failure, ", err)
             return
         end
 
-        local service_etcd_key = pdk.admin.get_service_etcd_key()
-        local res, code, err   = pdk.etcd.query(service_etcd_key)
-        if not res then
-            pdk.log.error("failed to read \"service\" response body when try to fetch etcd")
-        end
+        local routers = res
+        for a = 1, #routers do
+            local router = routers[a]
 
-        loading_routers()
+            local prod_env_handler = create_routers(project, router, router.env_prod_config, pdk.const.ENVIRONMENT_PROD)
+            pdk.table.insert(router_caches, prod_env_handler)
 
-    end)
-end
+            local beta_env_handler = create_routers(project, router, router.env_beta_config, pdk.const.ENVIRONMENT_BETA)
+            pdk.table.insert(router_caches, beta_env_handler)
 
-local function format_params(params, request_params, matched)
-
-    if string.upper(request_params.position) == "QUERY" then
-        if pdk.request.query(request_params.name) then
-            params[request_params.service_name] = pdk.request.query(request_params.name)
-        end
-    elseif string.upper(request_params.position) == "PATH" then
-        if matched.params[request_params.name] then
-            params[request_params.service_name] = matched.params[request_params.name]
-        end
-    elseif string.upper(request_params.position) == "HEADER" then
-        if pdk.request.header(request_params.name) then
-            params[request_params.service_name] = pdk.request.header(request_params.name)
+            local test_env_handler = create_routers(project, router, router.env_test_config, pdk.const.ENVIRONMENT_TEST)
+            pdk.table.insert(router_caches, test_env_handler)
         end
     end
 
-    return params, nil
+    router_objects = r3route.new(router_caches)
+    router_objects:compile()
 end
 
-local function get_backend_uri(backend, matched, constants)
-
-    local backend_uri = ""
-    if not backend then
-        return nil, "\"backend\" is null"
-    end
-
-    if backend.request_params then
-
-        local path_params = {}
-        local query_params = {}
-        local header_params = {}
-        local tmp_query_params = {}
-
-        for _, request_params in pairs(backend.request_params) do
-            if string.upper(request_params.service_position) == "QUERY" then
-                tmp_query_params = format_params(tmp_query_params, request_params, matched)
-            elseif string.upper(request_params.service_position) == "PATH" then
-                path_params = format_params(path_params, request_params, matched)
-            elseif string.upper(request_params.service_position) == "HEADER" then
-                header_params = format_params(header_params, request_params, matched)
-            end
-        end
-
-        if constants then
-            for _, constant in pairs(constants) do
-                if constant.name and constant.value and constant.position then
-                    if string.upper(constant.position) == "QUERY" then
-                        tmp_query_params[constant.name] = constant.value
-                    elseif string.upper(constant.position) == "PATH" then
-                        path_params[constant.name] = constant.value
-                    elseif string.upper(constant.position) == "HEADER" then
-                        header_params[constant.name] = constant.value
-                    end
-                end
-            end
-        end
-
-        if tmp_query_params then
-            for path_name, path_value in pairs(tmp_query_params) do
-                table.insert(query_params, path_name .. "=" .. path_value)
-            end
-        end
-
-        backend_uri = backend.uri
-        if header_params then
-            for header_name, header_value in pairs(header_params) do
-                ngx.req.set_header(header_name, header_value)
-            end
-        end
-        if path_params then
-            for path_name, path_value in pairs(path_params) do
-                backend_uri = string.gsub(backend_uri, "{" .. path_name .. "}", path_value)
-            end
-        end
-        if query_params then
-            backend_uri = backend_uri .. "?" .. table.concat(query_params, "&")
-        end
-    end
-
-    return backend_uri, nil
-end
-
-function _M.analysis_uri(oak_ctx)
-    if (not oak_ctx.backend) or (not oak_ctx.backend.uri) then
-        pdk.log.error("backend uri service is empty")
+local function automatic_sync_hash_id(premature)
+    if premature then
         return
     end
 
-    local uri, err = get_backend_uri(oak_ctx.backend, oak_ctx.matched, oak_ctx.backend.constant_params)
-    if not uri then
-        pdk.log.error(err)
-        return
+    local i = 0
+    while not ngx_worker_exiting() and i <= 10 do
+        i = i + 1
+
+        local res, err = db.router.query_last_updated_hid()
+        if err then
+            pdk.log.error("[sys.router] automatic sync routers last updated timestamp reading failure, ", err)
+            break
+        end
+        local router_hash_id = res.hash_id or pdk.string.md5("routers")
+
+        res, err = db.project.query_last_updated_hid()
+        if err then
+            pdk.log.error("[sys.router] automatic sync projects last updated timestamp reading failure, ", err)
+            break
+        end
+        local project_hash_id = res.hash_id or pdk.string.md5("projects")
+
+        res, err = db.plugin.query_project_last_updated_hid()
+        if err then
+            pdk.log.error("[sys.router] automatic sync plugins last updated timestamp reading failure, ", err)
+            break
+        end
+        local plugin_hash_id = res.hash_id or pdk.string.md5("plugins")
+
+        router_latest_hash_id = pdk.string.md5(project_hash_id .. router_hash_id .. plugin_hash_id)
+
+        ngx_sleep(10)
     end
 
-    oak_ctx.backend.uri = uri
-    ngx.var.upstream_uri = uri
+    if not ngx_worker_exiting() then
+        ngx_timer_at(0, automatic_sync_hash_id)
+    end
 end
 
-function _M.get()
-    if not router then
-        loading_routers()
+function _M.init_worker()
+    ngx_timer_at(0, automatic_sync_hash_id)
+end
+
+local checked_request_params = function(rule, params)
+    local query_val = params[rule.request_param_name]
+    if rule.required == 1 then
+        if not query_val then
+            return nil, "request param \"[" .. rule.request_param_position .. "." .. rule.request_param_name .. "]\" undefined"
+        end
+    else
+        if not query_val then
+            query_val = rule.request_param_default_val
+        end
     end
-    return router
+
+    return query_val, nil
+end
+
+function _M.parameter(oak_ctx)
+    local env = pdk.request.header(pdk.const.REQUEST_API_ENV_KEY)
+    if env then
+        env = pdk.string.upper(env)
+    else
+        env = pdk.const.ENVIRONMENT_PROD
+    end
+
+    oak_ctx.matched = {}
+    oak_ctx.matched.query    = pdk.request.query()
+    oak_ctx.matched.header   = pdk.request.header()
+
+    oak_ctx.matched.header[pdk.const.REQUEST_API_ENV_KEY] = env
+end
+
+function _M.matched(oak_ctx)
+    if not router_cached_hash_id or router_cached_hash_id ~= router_latest_hash_id then
+        loading_routers()
+        router_cached_hash_id = router_latest_hash_id
+    end
+
+    local match_uri = pdk.string.format("/%s%s", oak_ctx.matched.header[pdk.const.REQUEST_API_ENV_KEY],
+            ngx_var.uri)
+    local match_ok = router_objects:dispatch(match_uri, pdk.request.get_method(), oak_ctx)
+    if not match_ok then
+        return false
+    end
+    return true
+end
+
+function _M.mapping(oak_ctx)
+    local router = oak_ctx.router
+    local backend_param_rules = router.backend_params
+    for b = 1, #backend_param_rules do
+        local backend_param_rule     = backend_param_rules[b]
+        local backend_param_position = pdk.string.lower(backend_param_rule.position)
+        local request_param_position = pdk.string.lower(backend_param_rule.request_param_position)
+
+        if backend_param_position == request_param_position then
+            local request_params = oak_ctx.matched[request_param_position]
+
+            local request_value, err = checked_request_params(backend_param_rule, request_params)
+            if err then
+                pdk.response.exit(403, { err_message = err })
+            end
+
+            if backend_param_rule.name ~= backend_param_rule.request_param_name then
+                request_params[backend_param_rule.request_param_name] = nil
+                request_params[backend_param_rule.name]               = request_value
+            end
+
+            oak_ctx.matched[request_param_position] = request_params
+        else
+            local request_params = oak_ctx.matched[request_param_position]
+            local backend_params = oak_ctx.matched[backend_param_position]
+
+            local request_value, err = checked_request_params(backend_param_rule, request_params)
+            if err then
+                pdk.response.exit(403, { err_message = err })
+            end
+
+            request_params[backend_param_rule.request_param_name] = nil
+            backend_params[backend_param_rule.name]               = request_value
+
+            oak_ctx.matched[request_param_position] = request_params
+            oak_ctx.matched[backend_param_position] = backend_params
+        end
+    end
+
+    local constant_param_rules = router.constant_params
+    for c = 1, #constant_param_rules do
+        local constant_param_rule     = constant_param_rules[c]
+        local constant_param_position = pdk.string.lower(constant_param_rule.position)
+        local constant_param_value    = constant_param_rule.value
+        local constant_param_name     = constant_param_rule.name
+
+        oak_ctx.matched[constant_param_position][constant_param_name] = constant_param_value
+    end
 end
 
 return _M

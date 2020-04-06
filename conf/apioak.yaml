@@ -1,7 +1,12 @@
-etcd:
-  host: "http://127.0.0.1:2379"   # etcd address
-  prefix: "/apioak"               # apioak config prefix
-  timeout: 3                      # 3 seconds
+database:
+  host: 127.0.0.1
+  port: 3306
+  db_name: apioak
+  user: root
+  password: 123000
+  timeout: 1000    # millisecond
+  pool_size: 100
+  max_idle_timeout: 10000 # millisecond
 
 plugins:
   - limit-req

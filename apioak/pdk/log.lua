@@ -15,7 +15,7 @@ local _M = {}
 
 for log_name, log_level in pairs(_NGX_LOG_LEVELS) do
     _M[log_name] = function(...)
-        ngx_log(log_level, ...)
+        return ngx_log(log_level, ...)
     end
 end
 

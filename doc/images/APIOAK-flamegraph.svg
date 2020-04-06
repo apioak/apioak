@@ -1,0 +1,1072 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" width="1200" height="182" onload="init(evt)" viewBox="0 0 1200 182" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<!-- Flame graph stack visualization. See https://github.com/brendangregg/FlameGraph for latest version, and http://www.brendangregg.com/flamegraphs.html for examples. -->
+<!-- NOTES:  -->
+<defs>
+	<linearGradient id="background" y1="0" y2="1" x1="0" x2="0" >
+		<stop stop-color="#eeeeee" offset="5%" />
+		<stop stop-color="#eeeeb0" offset="95%" />
+	</linearGradient>
+</defs>
+<style type="text/css">
+	text { font-family:Verdana; font-size:12px; fill:rgb(0,0,0); }
+	#search, #ignorecase { opacity:0.1; cursor:pointer; }
+	#search:hover, #search.show, #ignorecase:hover, #ignorecase.show { opacity:1; }
+	#subtitle { text-anchor:middle; font-color:rgb(160,160,160); }
+	#title { text-anchor:middle; font-size:17px}
+	#unzoom { cursor:pointer; }
+	#frames > *:hover { stroke:black; stroke-width:0.5; cursor:pointer; }
+	.hide { display:none; }
+	.parent { opacity:0.5; }
+</style>
+<script type="text/ecmascript">
+<![CDATA[
+	"use strict";
+	var details, searchbtn, unzoombtn, matchedtxt, svg, searching, currentSearchTerm, ignorecase, ignorecaseBtn;
+	function init(evt) {
+		details = document.getElementById("details").firstChild;
+		searchbtn = document.getElementById("search");
+		ignorecaseBtn = document.getElementById("ignorecase");
+		unzoombtn = document.getElementById("unzoom");
+		matchedtxt = document.getElementById("matched");
+		svg = document.getElementsByTagName("svg")[0];
+		searching = 0;
+		currentSearchTerm = null;
+	}
+
+	window.addEventListener("click", function(e) {
+		var target = find_group(e.target);
+		if (target) {
+			if (target.nodeName == "a") {
+				if (e.ctrlKey === false) return;
+				e.preventDefault();
+			}
+			if (target.classList.contains("parent")) unzoom();
+			zoom(target);
+		}
+		else if (e.target.id == "unzoom") unzoom();
+		else if (e.target.id == "search") search_prompt();
+		else if (e.target.id == "ignorecase") toggle_ignorecase();
+	}, false)
+
+	// mouse-over for info
+	// show
+	window.addEventListener("mouseover", function(e) {
+		var target = find_group(e.target);
+		if (target) details.nodeValue = "Function: " + g_to_text(target);
+	}, false)
+
+	// clear
+	window.addEventListener("mouseout", function(e) {
+		var target = find_group(e.target);
+		if (target) details.nodeValue = ' ';
+	}, false)
+
+	// ctrl-F for search
+	window.addEventListener("keydown",function (e) {
+		if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) {
+			e.preventDefault();
+			search_prompt();
+		}
+	}, false)
+
+	// ctrl-I to toggle case-sensitive search
+	window.addEventListener("keydown",function (e) {
+		if (e.ctrlKey && e.keyCode === 73) {
+			e.preventDefault();
+			toggle_ignorecase();
+		}
+	}, false)
+
+	// functions
+	function find_child(node, selector) {
+		var children = node.querySelectorAll(selector);
+		if (children.length) return children[0];
+		return;
+	}
+	function find_group(node) {
+		var parent = node.parentElement;
+		if (!parent) return;
+		if (parent.id == "frames") return node;
+		return find_group(parent);
+	}
+	function orig_save(e, attr, val) {
+		if (e.attributes["_orig_" + attr] != undefined) return;
+		if (e.attributes[attr] == undefined) return;
+		if (val == undefined) val = e.attributes[attr].value;
+		e.setAttribute("_orig_" + attr, val);
+	}
+	function orig_load(e, attr) {
+		if (e.attributes["_orig_"+attr] == undefined) return;
+		e.attributes[attr].value = e.attributes["_orig_" + attr].value;
+		e.removeAttribute("_orig_"+attr);
+	}
+	function g_to_text(e) {
+		var text = find_child(e, "title").firstChild.nodeValue;
+		return (text)
+	}
+	function g_to_func(e) {
+		var func = g_to_text(e);
+		// if there's any manipulation we want to do to the function
+		// name before it's searched, do it here before returning.
+		return (func);
+	}
+	function update_text(e) {
+		var r = find_child(e, "rect");
+		var t = find_child(e, "text");
+		var w = parseFloat(r.attributes.width.value) -3;
+		var txt = find_child(e, "title").textContent.replace(/\([^(]*\)$/,"");
+		t.attributes.x.value = parseFloat(r.attributes.x.value) + 3;
+
+		// Smaller than this size won't fit anything
+		if (w < 2 * 12 * 0.59) {
+			t.textContent = "";
+			return;
+		}
+
+		t.textContent = txt;
+		// Fit in full text width
+		if (/^ *$/.test(txt) || t.getSubStringLength(0, txt.length) < w)
+			return;
+
+		for (var x = txt.length - 2; x > 0; x--) {
+			if (t.getSubStringLength(0, x + 2) <= w) {
+				t.textContent = txt.substring(0, x) + "..";
+				return;
+			}
+		}
+		t.textContent = "";
+	}
+
+	// zoom
+	function zoom_reset(e) {
+		if (e.attributes != undefined) {
+			orig_load(e, "x");
+			orig_load(e, "width");
+		}
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_reset(c[i]);
+		}
+	}
+	function zoom_child(e, x, ratio) {
+		if (e.attributes != undefined) {
+			if (e.attributes.x != undefined) {
+				orig_save(e, "x");
+				e.attributes.x.value = (parseFloat(e.attributes.x.value) - x - 10) * ratio + 10;
+				if (e.tagName == "text")
+					e.attributes.x.value = find_child(e.parentNode, "rect[x]").attributes.x.value + 3;
+			}
+			if (e.attributes.width != undefined) {
+				orig_save(e, "width");
+				e.attributes.width.value = parseFloat(e.attributes.width.value) * ratio;
+			}
+		}
+
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_child(c[i], x - 10, ratio);
+		}
+	}
+	function zoom_parent(e) {
+		if (e.attributes) {
+			if (e.attributes.x != undefined) {
+				orig_save(e, "x");
+				e.attributes.x.value = 10;
+			}
+			if (e.attributes.width != undefined) {
+				orig_save(e, "width");
+				e.attributes.width.value = parseInt(svg.width.baseVal.value) - (10 * 2);
+			}
+		}
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_parent(c[i]);
+		}
+	}
+	function zoom(node) {
+		var attr = find_child(node, "rect").attributes;
+		var width = parseFloat(attr.width.value);
+		var xmin = parseFloat(attr.x.value);
+		var xmax = parseFloat(xmin + width);
+		var ymin = parseFloat(attr.y.value);
+		var ratio = (svg.width.baseVal.value - 2 * 10) / width;
+
+		// XXX: Workaround for JavaScript float issues (fix me)
+		var fudge = 0.0001;
+
+		unzoombtn.classList.remove("hide");
+
+		var el = document.getElementById("frames").children;
+		for (var i = 0; i < el.length; i++) {
+			var e = el[i];
+			var a = find_child(e, "rect").attributes;
+			var ex = parseFloat(a.x.value);
+			var ew = parseFloat(a.width.value);
+			var upstack;
+			// Is it an ancestor
+			if (0 == 0) {
+				upstack = parseFloat(a.y.value) > ymin;
+			} else {
+				upstack = parseFloat(a.y.value) < ymin;
+			}
+			if (upstack) {
+				// Direct ancestor
+				if (ex <= xmin && (ex+ew+fudge) >= xmax) {
+					e.classList.add("parent");
+					zoom_parent(e);
+					update_text(e);
+				}
+				// not in current path
+				else
+					e.classList.add("hide");
+			}
+			// Children maybe
+			else {
+				// no common path
+				if (ex < xmin || ex + fudge >= xmax) {
+					e.classList.add("hide");
+				}
+				else {
+					zoom_child(e, xmin, ratio);
+					update_text(e);
+				}
+			}
+		}
+		search();
+	}
+	function unzoom() {
+		unzoombtn.classList.add("hide");
+		var el = document.getElementById("frames").children;
+		for(var i = 0; i < el.length; i++) {
+			el[i].classList.remove("parent");
+			el[i].classList.remove("hide");
+			zoom_reset(el[i]);
+			update_text(el[i]);
+		}
+		search();
+	}
+
+	// search
+	function toggle_ignorecase() {
+		ignorecase = !ignorecase;
+		if (ignorecase) {
+			ignorecaseBtn.classList.add("show");
+		} else {
+			ignorecaseBtn.classList.remove("show");
+		}
+		reset_search();
+		search();
+	}
+	function reset_search() {
+		var el = document.querySelectorAll("#frames rect");
+		for (var i = 0; i < el.length; i++) {
+			orig_load(el[i], "fill")
+		}
+	}
+	function search_prompt() {
+		if (!searching) {
+			var term = prompt("Enter a search term (regexp " +
+			    "allowed, eg: ^ext4_)"
+			    + (ignorecase ? ", ignoring case" : "")
+			    + "\nPress Ctrl-i to toggle case sensitivity", "");
+			if (term != null) {
+				currentSearchTerm = term;
+				search();
+			}
+		} else {
+			reset_search();
+			searching = 0;
+			currentSearchTerm = null;
+			searchbtn.classList.remove("show");
+			searchbtn.firstChild.nodeValue = "Search"
+			matchedtxt.classList.add("hide");
+			matchedtxt.firstChild.nodeValue = ""
+		}
+	}
+	function search(term) {
+		if (currentSearchTerm === null) return;
+		var term = currentSearchTerm;
+
+		var re = new RegExp(term, ignorecase ? 'i' : '');
+		var el = document.getElementById("frames").children;
+		var matches = new Object();
+		var maxwidth = 0;
+		for (var i = 0; i < el.length; i++) {
+			var e = el[i];
+			var func = g_to_func(e);
+			var rect = find_child(e, "rect");
+			if (func == null || rect == null)
+				continue;
+
+			// Save max width. Only works as we have a root frame
+			var w = parseFloat(rect.attributes.width.value);
+			if (w > maxwidth)
+				maxwidth = w;
+
+			if (func.match(re)) {
+				// highlight
+				var x = parseFloat(rect.attributes.x.value);
+				orig_save(rect, "fill");
+				rect.attributes.fill.value = "rgb(230,0,230)";
+
+				// remember matches
+				if (matches[x] == undefined) {
+					matches[x] = w;
+				} else {
+					if (w > matches[x]) {
+						// overwrite with parent
+						matches[x] = w;
+					}
+				}
+				searching = 1;
+			}
+		}
+		if (!searching)
+			return;
+
+		searchbtn.classList.add("show");
+		searchbtn.firstChild.nodeValue = "Reset Search";
+
+		// calculate percent matched, excluding vertical overlap
+		var count = 0;
+		var lastx = -1;
+		var lastw = 0;
+		var keys = Array();
+		for (k in matches) {
+			if (matches.hasOwnProperty(k))
+				keys.push(k);
+		}
+		// sort the matched frames by their x location
+		// ascending, then width descending
+		keys.sort(function(a, b){
+			return a - b;
+		});
+		// Step through frames saving only the biggest bottom-up frames
+		// thanks to the sort order. This relies on the tree property
+		// where children are always smaller than their parents.
+		var fudge = 0.0001;	// JavaScript floating point
+		for (var k in keys) {
+			var x = parseFloat(keys[k]);
+			var w = matches[keys[k]];
+			if (x >= lastx + lastw - fudge) {
+				count += w;
+				lastx = x;
+				lastw = w;
+			}
+		}
+		// display matched percent
+		matchedtxt.classList.remove("hide");
+		var pct = 100 * count / maxwidth;
+		if (pct != 100) pct = pct.toFixed(1)
+		matchedtxt.firstChild.nodeValue = "Matched: " + pct + "%";
+	}
+]]>
+</script>
+<rect x="0.0" y="0" width="1200.0" height="182.0" fill="url(#background)"  />
+<text id="title" x="600.00" y="24" >Lua-land on-CPU flamegraph</text>
+<text id="details" x="10.00" y="165" > </text>
+<text id="unzoom" x="10.00" y="24" class="hide">Reset Zoom</text>
+<text id="search" x="1090.00" y="24" >Search</text>
+<text id="ignorecase" x="1174.00" y="24" >ic</text>
+<text id="matched" x="1090.00" y="165" > </text>
+<g id="frames">
+<g >
+<title>_int_malloc (11 samples, 1.58%)</title><rect x="229.8" y="53" width="18.6" height="15.0" fill="rgb(235,93,43)" rx="2" ry="2" />
+<text  x="232.77" y="63.5" ></text>
+</g>
+<g >
+<title>lj_str_new (10 samples, 1.43%)</title><rect x="381.9" y="53" width="16.9" height="15.0" fill="rgb(219,10,23)" rx="2" ry="2" />
+<text  x="384.92" y="63.5" ></text>
+</g>
+<g >
+<title>gc_sweep (15 samples, 2.15%)</title><rect x="121.6" y="69" width="25.3" height="15.0" fill="rgb(211,114,23)" rx="2" ry="2" />
+<text  x="124.58" y="79.5" >g..</text>
+</g>
+<g >
+<title>lj_lib_checkint (3 samples, 0.43%)</title><rect x="554.4" y="69" width="5.0" height="15.0" fill="rgb(251,72,49)" rx="2" ry="2" />
+<text  x="557.36" y="79.5" ></text>
+</g>
+<g >
+<title>0x7f452cf23baf (3 samples, 0.43%)</title><rect x="1056.4" y="69" width="5.1" height="15.0" fill="rgb(207,38,54)" rx="2" ry="2" />
+<text  x="1059.45" y="79.5" ></text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/apioak.lua:6 (71 samples, 10.17%)</title><rect x="745.4" y="85" width="120.0" height="15.0" fill="rgb(231,26,53)" rx="2" ry="2" />
+<text  x="748.39" y="95.5" >@/usr/local/ap..</text>
+</g>
+<g >
+<title>ngx_pnalloc (3 samples, 0.43%)</title><rect x="1146.0" y="69" width="5.1" height="15.0" fill="rgb(227,75,38)" rx="2" ry="2" />
+<text  x="1149.05" y="79.5" ></text>
+</g>
+<g >
+<title>lj_BC_CAT (5 samples, 0.72%)</title><rect x="605.1" y="85" width="8.4" height="15.0" fill="rgb(244,49,27)" rx="2" ry="2" />
+<text  x="608.07" y="95.5" ></text>
+</g>
+<g >
+<title>r3_vector__expand (5 samples, 0.72%)</title><rect x="312.6" y="53" width="8.5" height="15.0" fill="rgb(252,85,33)" rx="2" ry="2" />
+<text  x="315.61" y="63.5" ></text>
+</g>
+<g >
+<title>ngx_http_set_header_helper (9 samples, 1.29%)</title><rect x="1130.8" y="69" width="15.2" height="15.0" fill="rgb(234,225,35)" rx="2" ry="2" />
+<text  x="1133.83" y="79.5" ></text>
+</g>
+<g >
+<title>ngx_http_lua_set_output_header (4 samples, 0.57%)</title><rect x="878.9" y="69" width="6.8" height="15.0" fill="rgb(236,137,26)" rx="2" ry="2" />
+<text  x="881.94" y="79.5" ></text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/apioak.lua:131 (71 samples, 10.17%)</title><rect x="745.4" y="101" width="120.0" height="15.0" fill="rgb(244,100,13)" rx="2" ry="2" />
+<text  x="748.39" y="111.5" >@/usr/local/a..</text>
+</g>
+<g >
+<title>rehashtab (3 samples, 0.43%)</title><rect x="600.0" y="69" width="5.1" height="15.0" fill="rgb(206,4,47)" rx="2" ry="2" />
+<text  x="603.00" y="79.5" ></text>
+</g>
+<g >
+<title>lj_BC_TGETS (3 samples, 0.43%)</title><rect x="503.6" y="69" width="5.1" height="15.0" fill="rgb(236,19,30)" rx="2" ry="2" />
+<text  x="506.64" y="79.5" ></text>
+</g>
+<g >
+<title>C:ngx_http_lua_ngx_say (48 samples, 6.88%)</title><rect x="895.8" y="101" width="81.2" height="15.0" fill="rgb(205,135,20)" rx="2" ry="2" />
+<text  x="898.85" y="111.5" >C:ngx_htt..</text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/sys/router.lua:155 (113 samples, 16.19%)</title><rect x="185.8" y="85" width="191.0" height="15.0" fill="rgb(219,54,31)" rx="2" ry="2" />
+<text  x="188.82" y="95.5" >@/usr/local/apioak/apioak/..</text>
+</g>
+<g >
+<title>T:@/usr/local/apioak/deps/share/lua/5.1/resty/chash.lua:260 (28 samples, 4.01%)</title><rect x="671.0" y="69" width="47.3" height="15.0" fill="rgb(219,2,37)" rx="2" ry="2" />
+<text  x="674.00" y="79.5" >T:@/..</text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/pdk/plugin.lua:8 (71 samples, 10.17%)</title><rect x="745.4" y="69" width="120.0" height="15.0" fill="rgb(222,78,38)" rx="2" ry="2" />
+<text  x="748.39" y="79.5" >@/usr/local/ap..</text>
+</g>
+<g >
+<title>__GI_memset (4 samples, 0.57%)</title><rect x="895.8" y="85" width="6.8" height="15.0" fill="rgb(254,83,4)" rx="2" ry="2" />
+<text  x="898.85" y="95.5" ></text>
+</g>
+<g >
+<title>rehashtab (9 samples, 1.29%)</title><rect x="843.4" y="37" width="15.3" height="15.0" fill="rgb(244,70,8)" rx="2" ry="2" />
+<text  x="846.44" y="47.5" ></text>
+</g>
+<g >
+<title>lj_BC_CALL (4 samples, 0.57%)</title><rect x="398.8" y="69" width="6.8" height="15.0" fill="rgb(251,143,50)" rx="2" ry="2" />
+<text  x="401.83" y="79.5" ></text>
+</g>
+<g >
+<title>T:@/usr/local/apioak/apioak/sys/router.lua:140 (37 samples, 5.30%)</title><rect x="59.0" y="69" width="62.6" height="15.0" fill="rgb(220,34,35)" rx="2" ry="2" />
+<text  x="62.03" y="79.5" >T:@/ho..</text>
+</g>
+<g >
+<title>ngx_http_lua_set_input_header (5 samples, 0.72%)</title><rect x="456.3" y="53" width="8.5" height="15.0" fill="rgb(226,15,14)" rx="2" ry="2" />
+<text  x="459.30" y="63.5" ></text>
+</g>
+<g >
+<title>lj_alloc_malloc (3 samples, 0.43%)</title><rect x="430.9" y="53" width="5.1" height="15.0" fill="rgb(253,200,48)" rx="2" ry="2" />
+<text  x="433.95" y="63.5" ></text>
+</g>
+<g >
+<title>@/usr/local/openresty/lualib/resty/core/var.lua:78 (24 samples, 3.44%)</title><rect x="480.0" y="85" width="40.5" height="15.0" fill="rgb(206,86,12)" rx="2" ry="2" />
+<text  x="482.97" y="95.5" >@/h..</text>
+</g>
+<g >
+<title>lj_BC_JFUNCF (3 samples, 0.43%)</title><rect x="498.6" y="69" width="5.0" height="15.0" fill="rgb(253,93,21)" rx="2" ry="2" />
+<text  x="501.57" y="79.5" ></text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/apioak.lua:6 (29 samples, 4.15%)</title><rect x="10.0" y="85" width="49.0" height="15.0" fill="rgb(205,1,11)" rx="2" ry="2" />
+<text  x="13.00" y="95.5" >@/ho..</text>
+</g>
+<g >
+<title>ngx_strlow (7 samples, 1.00%)</title><rect x="1151.1" y="69" width="11.9" height="15.0" fill="rgb(249,64,45)" rx="2" ry="2" />
+<text  x="1154.12" y="79.5" ></text>
+</g>
+<g >
+<title>C:ngx_http_lua_ngx_crc32_short (7 samples, 1.00%)</title><rect x="659.2" y="53" width="11.8" height="15.0" fill="rgb(254,110,45)" rx="2" ry="2" />
+<text  x="662.17" y="63.5" ></text>
+</g>
+<g >
+<title>lj_tab_set (3 samples, 0.43%)</title><rect x="106.4" y="53" width="5.0" height="15.0" fill="rgb(230,111,41)" rx="2" ry="2" />
+<text  x="109.36" y="63.5" ></text>
+</g>
+<g >
+<title>rehashtab (3 samples, 0.43%)</title><rect x="1024.3" y="37" width="5.1" height="15.0" fill="rgb(234,34,36)" rx="2" ry="2" />
+<text  x="1027.33" y="47.5" ></text>
+</g>
+<g >
+<title>lj_tab_new (4 samples, 0.57%)</title><rect x="94.5" y="53" width="6.8" height="15.0" fill="rgb(243,160,38)" rx="2" ry="2" />
+<text  x="97.53" y="63.5" ></text>
+</g>
+<g >
+<title>lj_tab_newkey (7 samples, 1.00%)</title><rect x="268.7" y="53" width="11.8" height="15.0" fill="rgb(217,85,27)" rx="2" ry="2" />
+<text  x="271.65" y="63.5" ></text>
+</g>
+<g >
+<title>ngx_http_header_filter (12 samples, 1.72%)</title><rect x="926.3" y="85" width="20.3" height="15.0" fill="rgb(249,96,1)" rx="2" ry="2" />
+<text  x="929.28" y="95.5" ></text>
+</g>
+<g >
+<title>propagatemark (3 samples, 0.43%)</title><rect x="451.2" y="69" width="5.1" height="15.0" fill="rgb(226,83,18)" rx="2" ry="2" />
+<text  x="454.23" y="79.5" ></text>
+</g>
+<g >
+<title>lj_BC_TGETS (11 samples, 1.58%)</title><rect x="613.5" y="85" width="18.6" height="15.0" fill="rgb(221,37,17)" rx="2" ry="2" />
+<text  x="616.52" y="95.5" ></text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/pdk/plugin.lua:8 (16 samples, 2.29%)</title><rect x="1163.0" y="69" width="27.0" height="15.0" fill="rgb(229,144,40)" rx="2" ry="2" />
+<text  x="1165.95" y="79.5" >@..</text>
+</g>
+<g >
+<title>__memcpy_ssse3_back (4 samples, 0.57%)</title><rect x="671.0" y="53" width="6.8" height="15.0" fill="rgb(246,136,49)" rx="2" ry="2" />
+<text  x="674.00" y="63.5" ></text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/sys/router.lua:169 (13 samples, 1.86%)</title><rect x="376.8" y="85" width="22.0" height="15.0" fill="rgb(218,179,6)" rx="2" ry="2" />
+<text  x="379.85" y="95.5" >@..</text>
+</g>
+<g >
+<title>lj_BC_TGETS (5 samples, 0.72%)</title><rect x="865.4" y="85" width="8.5" height="15.0" fill="rgb(249,5,22)" rx="2" ry="2" />
+<text  x="868.42" y="95.5" ></text>
+</g>
+<g >
+<title>propagatemark (10 samples, 1.43%)</title><rect x="359.9" y="69" width="16.9" height="15.0" fill="rgb(216,96,8)" rx="2" ry="2" />
+<text  x="362.94" y="79.5" ></text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/apioak.lua:6 (41 samples, 5.87%)</title><rect x="977.0" y="85" width="69.3" height="15.0" fill="rgb(228,47,25)" rx="2" ry="2" />
+<text  x="979.99" y="95.5" >@/usr/l..</text>
+</g>
+<g >
+<title>T:@/usr/local/apioak/apioak/pdk/plugin.lua:8 (16 samples, 2.29%)</title><rect x="1163.0" y="53" width="27.0" height="15.0" fill="rgb(212,201,28)" rx="2" ry="2" />
+<text  x="1165.95" y="63.5" >T..</text>
+</g>
+<g >
+<title>_IO_str_init_static_internal (3 samples, 0.43%)</title><rect x="192.6" y="53" width="5.1" height="15.0" fill="rgb(212,144,38)" rx="2" ry="2" />
+<text  x="195.58" y="63.5" ></text>
+</g>
+<g >
+<title>=log_by_lua(nginx.conf:131):0 (16 samples, 2.29%)</title><rect x="1163.0" y="117" width="27.0" height="15.0" fill="rgb(252,116,24)" rx="2" ry="2" />
+<text  x="1165.95" y="127.5" >=..</text>
+</g>
+<g >
+<title>gc_sweep (7 samples, 1.00%)</title><rect x="1029.4" y="53" width="11.8" height="15.0" fill="rgb(243,62,49)" rx="2" ry="2" />
+<text  x="1032.40" y="63.5" ></text>
+</g>
+<g >
+<title>lj_tab_len (4 samples, 0.57%)</title><rect x="831.6" y="37" width="6.8" height="15.0" fill="rgb(224,160,22)" rx="2" ry="2" />
+<text  x="834.60" y="47.5" ></text>
+</g>
+<g >
+<title>@/usr/local/openresty/lualib/resty/core/misc.lua:56 (15 samples, 2.15%)</title><rect x="430.9" y="85" width="25.4" height="15.0" fill="rgb(209,59,38)" rx="2" ry="2" />
+<text  x="433.95" y="95.5" >@..</text>
+</g>
+<g >
+<title>=header_filter_by_lua:0 (110 samples, 15.76%)</title><rect x="977.0" y="117" width="186.0" height="15.0" fill="rgb(233,6,16)" rx="2" ry="2" />
+<text  x="979.99" y="127.5" >=header_filter_by_lua:0</text>
+</g>
+<g >
+<title>@/usr/local/openresty/lualib/resty/core/misc.lua:66 (3 samples, 0.43%)</title><rect x="873.9" y="101" width="5.0" height="15.0" fill="rgb(231,147,26)" rx="2" ry="2" />
+<text  x="876.87" y="111.5" ></text>
+</g>
+<g >
+<title>lj_str_new (7 samples, 1.00%)</title><rect x="1169.7" y="37" width="11.8" height="15.0" fill="rgb(227,130,14)" rx="2" ry="2" />
+<text  x="1172.71" y="47.5" ></text>
+</g>
+<g >
+<title>builtin#5 (3 samples, 0.43%)</title><rect x="584.8" y="85" width="5.1" height="15.0" fill="rgb(239,222,29)" rx="2" ry="2" />
+<text  x="587.79" y="95.5" ></text>
+</g>
+<g >
+<title>lj_alloc_free (3 samples, 0.43%)</title><rect x="1041.2" y="53" width="5.1" height="15.0" fill="rgb(224,88,52)" rx="2" ry="2" />
+<text  x="1044.23" y="63.5" ></text>
+</g>
+<g >
+<title>=body_filter_by_lua:0 (71 samples, 10.17%)</title><rect x="745.4" y="117" width="120.0" height="15.0" fill="rgb(207,80,34)" rx="2" ry="2" />
+<text  x="748.39" y="127.5" >=body_filter_b..</text>
+</g>
+<g >
+<title>propagatemark (5 samples, 0.72%)</title><rect x="736.9" y="85" width="8.5" height="15.0" fill="rgb(249,131,16)" rx="2" ry="2" />
+<text  x="739.93" y="95.5" ></text>
+</g>
+<g >
+<title>lj_str_new (9 samples, 1.29%)</title><rect x="253.4" y="53" width="15.3" height="15.0" fill="rgb(228,82,39)" rx="2" ry="2" />
+<text  x="256.44" y="63.5" ></text>
+</g>
+<g >
+<title>lj_BC_TGETS (9 samples, 1.29%)</title><rect x="410.7" y="69" width="15.2" height="15.0" fill="rgb(252,223,49)" rx="2" ry="2" />
+<text  x="413.66" y="79.5" ></text>
+</g>
+<g >
+<title>lj_str_new (18 samples, 2.58%)</title><rect x="987.1" y="37" width="30.5" height="15.0" fill="rgb(224,127,25)" rx="2" ry="2" />
+<text  x="990.13" y="47.5" >lj..</text>
+</g>
+<g >
+<title>ngx_hash_key_lc (11 samples, 1.58%)</title><rect x="1081.8" y="69" width="18.6" height="15.0" fill="rgb(237,54,39)" rx="2" ry="2" />
+<text  x="1084.81" y="79.5" ></text>
+</g>
+<g >
+<title>ngx_http_set_header_helper (4 samples, 0.57%)</title><rect x="464.8" y="53" width="6.7" height="15.0" fill="rgb(230,142,43)" rx="2" ry="2" />
+<text  x="467.76" y="63.5" ></text>
+</g>
+<g >
+<title>rehashtab (5 samples, 0.72%)</title><rect x="1181.5" y="37" width="8.5" height="15.0" fill="rgb(251,194,26)" rx="2" ry="2" />
+<text  x="1184.55" y="47.5" ></text>
+</g>
+<g >
+<title>lj_alloc_free (4 samples, 0.57%)</title><rect x="858.7" y="53" width="6.7" height="15.0" fill="rgb(238,205,2)" rx="2" ry="2" />
+<text  x="861.65" y="63.5" ></text>
+</g>
+<g >
+<title>@/usr/local/apioak/deps/share/lua/5.1/resty/chash.lua:292 (7 samples, 1.00%)</title><rect x="659.2" y="69" width="11.8" height="15.0" fill="rgb(228,164,9)" rx="2" ry="2" />
+<text  x="662.17" y="79.5" ></text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/apioak.lua:137 (16 samples, 2.29%)</title><rect x="1163.0" y="101" width="27.0" height="15.0" fill="rgb(251,98,53)" rx="2" ry="2" />
+<text  x="1165.95" y="111.5" >@..</text>
+</g>
+<g >
+<title>lj_cf_table_insert (3 samples, 0.43%)</title><rect x="594.9" y="69" width="5.1" height="15.0" fill="rgb(239,99,46)" rx="2" ry="2" />
+<text  x="597.93" y="79.5" ></text>
+</g>
+<g >
+<title>mmcall (4 samples, 0.57%)</title><rect x="647.3" y="85" width="6.8" height="15.0" fill="rgb(253,2,42)" rx="2" ry="2" />
+<text  x="650.34" y="95.5" ></text>
+</g>
+<g >
+<title>ngx_http_lua_ffi_set_resp_header (6 samples, 0.86%)</title><rect x="1100.4" y="69" width="10.1" height="15.0" fill="rgb(236,125,45)" rx="2" ry="2" />
+<text  x="1103.40" y="79.5" ></text>
+</g>
+<g >
+<title>T:@/usr/local/openresty/lualib/resty/core/misc.lua:66 (3 samples, 0.43%)</title><rect x="873.9" y="85" width="5.0" height="15.0" fill="rgb(210,30,3)" rx="2" ry="2" />
+<text  x="876.87" y="95.5" ></text>
+</g>
+<g >
+<title>=content_by_lua(nginx.conf:92):0 (66 samples, 9.46%)</title><rect x="865.4" y="117" width="111.6" height="15.0" fill="rgb(227,61,1)" rx="2" ry="2" />
+<text  x="868.42" y="127.5" >=content_by_l..</text>
+</g>
+<g >
+<title>r3_tree_matchl_base (12 samples, 1.72%)</title><rect x="292.3" y="53" width="20.3" height="15.0" fill="rgb(219,61,24)" rx="2" ry="2" />
+<text  x="295.32" y="63.5" ></text>
+</g>
+<g >
+<title>ngx_palloc (6 samples, 0.86%)</title><rect x="966.8" y="85" width="10.2" height="15.0" fill="rgb(207,5,18)" rx="2" ry="2" />
+<text  x="969.85" y="95.5" ></text>
+</g>
+<g >
+<title>lj_alloc_free (5 samples, 0.72%)</title><rect x="442.8" y="69" width="8.4" height="15.0" fill="rgb(231,206,44)" rx="2" ry="2" />
+<text  x="445.78" y="79.5" ></text>
+</g>
+<g >
+<title>ngx_strncasecmp (3 samples, 0.43%)</title><rect x="885.7" y="69" width="5.1" height="15.0" fill="rgb(221,142,16)" rx="2" ry="2" />
+<text  x="888.70" y="79.5" ></text>
+</g>
+<g >
+<title>lj_alloc_malloc (3 samples, 0.43%)</title><rect x="549.3" y="69" width="5.1" height="15.0" fill="rgb(222,97,31)" rx="2" ry="2" />
+<text  x="552.28" y="79.5" ></text>
+</g>
+<g >
+<title>T:@/usr/local/apioak/apioak/pdk/plugin.lua:8 (67 samples, 9.60%)</title><rect x="745.4" y="53" width="113.3" height="15.0" fill="rgb(214,77,35)" rx="2" ry="2" />
+<text  x="748.39" y="63.5" >T:@/usr/local..</text>
+</g>
+<g >
+<title>lj_BC_RET (7 samples, 1.00%)</title><rect x="530.7" y="69" width="11.8" height="15.0" fill="rgb(242,50,13)" rx="2" ry="2" />
+<text  x="533.69" y="79.5" ></text>
+</g>
+<g >
+<title>_IO_vfprintf (11 samples, 1.58%)</title><rect x="197.7" y="53" width="18.5" height="15.0" fill="rgb(221,24,45)" rx="2" ry="2" />
+<text  x="200.65" y="63.5" ></text>
+</g>
+<g >
+<title>lj_alloc_malloc (3 samples, 0.43%)</title><rect x="774.1" y="37" width="5.1" height="15.0" fill="rgb(229,93,30)" rx="2" ry="2" />
+<text  x="777.13" y="47.5" ></text>
+</g>
+<g >
+<title>lj_tab_free (3 samples, 0.43%)</title><rect x="158.8" y="69" width="5.0" height="15.0" fill="rgb(229,191,45)" rx="2" ry="2" />
+<text  x="161.77" y="79.5" ></text>
+</g>
+<g >
+<title>ngx_output_chain (3 samples, 0.43%)</title><rect x="961.8" y="85" width="5.0" height="15.0" fill="rgb(215,149,41)" rx="2" ry="2" />
+<text  x="964.78" y="95.5" ></text>
+</g>
+<g >
+<title>gc_sweep (4 samples, 0.57%)</title><rect x="436.0" y="69" width="6.8" height="15.0" fill="rgb(205,129,40)" rx="2" ry="2" />
+<text  x="439.02" y="79.5" ></text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/sys/balancer.lua:92 (35 samples, 5.01%)</title><rect x="659.2" y="85" width="59.1" height="15.0" fill="rgb(249,95,13)" rx="2" ry="2" />
+<text  x="662.17" y="95.5" >@/usr/..</text>
+</g>
+<g >
+<title>propagatemark (4 samples, 0.57%)</title><rect x="578.0" y="69" width="6.8" height="15.0" fill="rgb(230,35,15)" rx="2" ry="2" />
+<text  x="581.02" y="79.5" ></text>
+</g>
+<g >
+<title>ngx_http_lua_ngx_crc32_short (7 samples, 1.00%)</title><rect x="659.2" y="37" width="11.8" height="15.0" fill="rgb(247,98,16)" rx="2" ry="2" />
+<text  x="662.17" y="47.5" ></text>
+</g>
+<g >
+<title>T:@/usr/local/apioak/apioak/pdk/plugin.lua:8 (31 samples, 4.44%)</title><rect x="977.0" y="53" width="52.4" height="15.0" fill="rgb(231,140,49)" rx="2" ry="2" />
+<text  x="979.99" y="63.5" >T:@/h..</text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/apioak.lua:113 (51 samples, 7.31%)</title><rect x="659.2" y="101" width="86.2" height="15.0" fill="rgb(246,114,13)" rx="2" ry="2" />
+<text  x="662.17" y="111.5" >@/usr/loca..</text>
+</g>
+<g >
+<title>T:@/usr/local/openresty/lualib/resty/core/request.lua:299 (14 samples, 2.01%)</title><rect x="456.3" y="69" width="23.7" height="15.0" fill="rgb(205,51,40)" rx="2" ry="2" />
+<text  x="459.30" y="79.5" >T..</text>
+</g>
+<g >
+<title>lj_buf_putstr (3 samples, 0.43%)</title><rect x="982.1" y="37" width="5.0" height="15.0" fill="rgb(220,105,52)" rx="2" ry="2" />
+<text  x="985.06" y="47.5" ></text>
+</g>
+<g >
+<title>lua_tolstring (3 samples, 0.43%)</title><rect x="916.1" y="85" width="5.1" height="15.0" fill="rgb(205,45,3)" rx="2" ry="2" />
+<text  x="919.13" y="95.5" ></text>
+</g>
+<g >
+<title>0x7f452cf25216 (3 samples, 0.43%)</title><rect x="873.9" y="69" width="5.0" height="15.0" fill="rgb(250,22,27)" rx="2" ry="2" />
+<text  x="876.87" y="79.5" ></text>
+</g>
+<g >
+<title>ngx_http_lua_set_output_header (12 samples, 1.72%)</title><rect x="1110.5" y="69" width="20.3" height="15.0" fill="rgb(238,96,28)" rx="2" ry="2" />
+<text  x="1113.54" y="79.5" ></text>
+</g>
+<g >
+<title>rehashtab (3 samples, 0.43%)</title><rect x="713.3" y="53" width="5.0" height="15.0" fill="rgb(230,153,54)" rx="2" ry="2" />
+<text  x="716.27" y="63.5" ></text>
+</g>
+<g >
+<title>lj_meta_tset (3 samples, 0.43%)</title><rect x="637.2" y="85" width="5.1" height="15.0" fill="rgb(214,216,48)" rx="2" ry="2" />
+<text  x="640.19" y="95.5" ></text>
+</g>
+<g >
+<title>T:@/usr/local/openresty/lualib/resty/core/ctx.lua:33 (3 samples, 0.43%)</title><rect x="430.9" y="69" width="5.1" height="15.0" fill="rgb(228,119,16)" rx="2" ry="2" />
+<text  x="433.95" y="79.5" ></text>
+</g>
+<g >
+<title>T:@/usr/local/openresty/lualib/resty/core/response.lua:48 (7 samples, 1.00%)</title><rect x="878.9" y="85" width="11.9" height="15.0" fill="rgb(235,67,12)" rx="2" ry="2" />
+<text  x="881.94" y="95.5" ></text>
+</g>
+<g >
+<title>lj_tab_newkey (3 samples, 0.43%)</title><rect x="101.3" y="53" width="5.1" height="15.0" fill="rgb(207,179,30)" rx="2" ry="2" />
+<text  x="104.29" y="63.5" ></text>
+</g>
+<g >
+<title>lj_str_new (16 samples, 2.29%)</title><rect x="16.8" y="37" width="27.0" height="15.0" fill="rgb(216,148,20)" rx="2" ry="2" />
+<text  x="19.76" y="47.5" >l..</text>
+</g>
+<g >
+<title>T:@/usr/local/apioak/apioak/apioak.lua:6 (3 samples, 0.43%)</title><rect x="654.1" y="101" width="5.1" height="15.0" fill="rgb(219,17,14)" rx="2" ry="2" />
+<text  x="657.10" y="111.5" ></text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/apioak.lua:62 (381 samples, 54.58%)</title><rect x="10.0" y="101" width="644.1" height="15.0" fill="rgb(206,48,45)" rx="2" ry="2" />
+<text  x="13.00" y="111.5" >@/usr/local/apioak/apioak/apioak.lua:62</text>
+</g>
+<g >
+<title>@/usr/local/openresty/lualib/resty/core/response.lua:48 (10 samples, 1.43%)</title><rect x="878.9" y="101" width="16.9" height="15.0" fill="rgb(211,77,15)" rx="2" ry="2" />
+<text  x="881.94" y="111.5" ></text>
+</g>
+<g >
+<title>T:@/usr/local/apioak/apioak/sys/router.lua:169 (13 samples, 1.86%)</title><rect x="376.8" y="69" width="22.0" height="15.0" fill="rgb(248,225,42)" rx="2" ry="2" />
+<text  x="379.85" y="79.5" >T..</text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/apioak.lua:6 (16 samples, 2.29%)</title><rect x="1163.0" y="85" width="27.0" height="15.0" fill="rgb(211,16,31)" rx="2" ry="2" />
+<text  x="1165.95" y="95.5" >@..</text>
+</g>
+<g >
+<title>lj_tab_new (11 samples, 1.58%)</title><rect x="559.4" y="69" width="18.6" height="15.0" fill="rgb(233,156,30)" rx="2" ry="2" />
+<text  x="562.43" y="79.5" ></text>
+</g>
+<g >
+<title>ngx_vslprintf (3 samples, 0.43%)</title><rect x="708.2" y="53" width="5.1" height="15.0" fill="rgb(223,150,22)" rx="2" ry="2" />
+<text  x="711.19" y="63.5" ></text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/pdk/plugin.lua:8 (29 samples, 4.15%)</title><rect x="10.0" y="69" width="49.0" height="15.0" fill="rgb(251,72,50)" rx="2" ry="2" />
+<text  x="13.00" y="79.5" >@/ho..</text>
+</g>
+<g >
+<title>gc_sweep (3 samples, 0.43%)</title><rect x="718.3" y="85" width="5.1" height="15.0" fill="rgb(247,105,24)" rx="2" ry="2" />
+<text  x="721.34" y="95.5" ></text>
+</g>
+<g >
+<title>lj_mem_realloc (3 samples, 0.43%)</title><rect x="65.8" y="53" width="5.1" height="15.0" fill="rgb(254,40,13)" rx="2" ry="2" />
+<text  x="68.79" y="63.5" ></text>
+</g>
+<g >
+<title>ngx_http_set_host_header (5 samples, 0.72%)</title><rect x="471.5" y="53" width="8.5" height="15.0" fill="rgb(213,56,2)" rx="2" ry="2" />
+<text  x="474.52" y="63.5" ></text>
+</g>
+<g >
+<title>lj_strscan_scan (5 samples, 0.72%)</title><rect x="684.5" y="53" width="8.5" height="15.0" fill="rgb(226,177,43)" rx="2" ry="2" />
+<text  x="687.53" y="63.5" ></text>
+</g>
+<g >
+<title>lj_alloc_malloc (7 samples, 1.00%)</title><rect x="508.7" y="69" width="11.8" height="15.0" fill="rgb(221,80,50)" rx="2" ry="2" />
+<text  x="511.71" y="79.5" ></text>
+</g>
+<g >
+<title>lj_alloc_free (4 samples, 0.57%)</title><rect x="542.5" y="69" width="6.8" height="15.0" fill="rgb(212,147,29)" rx="2" ry="2" />
+<text  x="545.52" y="79.5" ></text>
+</g>
+<g >
+<title>__memcpy_ssse3_back (8 samples, 1.15%)</title><rect x="902.6" y="85" width="13.5" height="15.0" fill="rgb(247,168,23)" rx="2" ry="2" />
+<text  x="905.61" y="95.5" ></text>
+</g>
+<g >
+<title>_IO_default_xsputn (4 samples, 0.57%)</title><rect x="185.8" y="53" width="6.8" height="15.0" fill="rgb(206,181,39)" rx="2" ry="2" />
+<text  x="188.82" y="63.5" ></text>
+</g>
+<g >
+<title>propagatemark (13 samples, 1.86%)</title><rect x="163.8" y="69" width="22.0" height="15.0" fill="rgb(232,204,32)" rx="2" ry="2" />
+<text  x="166.84" y="79.5" >p..</text>
+</g>
+<g >
+<title>__memcpy_ssse3_back (9 samples, 1.29%)</title><rect x="1066.6" y="69" width="15.2" height="15.0" fill="rgb(240,89,23)" rx="2" ry="2" />
+<text  x="1069.59" y="79.5" ></text>
+</g>
+<g >
+<title>strchrnul (3 samples, 0.43%)</title><rect x="321.1" y="53" width="5.0" height="15.0" fill="rgb(212,160,1)" rx="2" ry="2" />
+<text  x="324.06" y="63.5" ></text>
+</g>
+<g >
+<title>0x7f452cf23bde (3 samples, 0.43%)</title><rect x="1061.5" y="69" width="5.1" height="15.0" fill="rgb(208,93,0)" rx="2" ry="2" />
+<text  x="1064.52" y="79.5" ></text>
+</g>
+<g >
+<title>lj_str_new (3 samples, 0.43%)</title><rect x="642.3" y="85" width="5.0" height="15.0" fill="rgb(221,81,21)" rx="2" ry="2" />
+<text  x="645.26" y="95.5" ></text>
+</g>
+<g >
+<title>T:@/usr/local/openresty/lualib/resty/core/var.lua:78 (3 samples, 0.43%)</title><rect x="480.0" y="69" width="5.0" height="15.0" fill="rgb(240,125,1)" rx="2" ry="2" />
+<text  x="482.97" y="79.5" ></text>
+</g>
+<g >
+<title>lj_alloc_free (11 samples, 1.58%)</title><rect x="341.3" y="69" width="18.6" height="15.0" fill="rgb(250,210,9)" rx="2" ry="2" />
+<text  x="344.35" y="79.5" ></text>
+</g>
+<g >
+<title>lj_str_new (4 samples, 0.57%)</title><rect x="677.8" y="53" width="6.7" height="15.0" fill="rgb(244,124,19)" rx="2" ry="2" />
+<text  x="680.77" y="63.5" ></text>
+</g>
+<g >
+<title>lj_alloc_malloc (4 samples, 0.57%)</title><rect x="59.0" y="53" width="6.8" height="15.0" fill="rgb(236,204,21)" rx="2" ry="2" />
+<text  x="62.03" y="63.5" ></text>
+</g>
+<g >
+<title>lj_str_new (27 samples, 3.87%)</title><rect x="786.0" y="37" width="45.6" height="15.0" fill="rgb(237,147,44)" rx="2" ry="2" />
+<text  x="788.96" y="47.5" >lj_s..</text>
+</g>
+<g >
+<title>all (698 samples, 100%)</title><rect x="10.0" y="133" width="1180.0" height="15.0" fill="rgb(235,66,42)" rx="2" ry="2" />
+<text  x="13.00" y="143.5" ></text>
+</g>
+<g >
+<title>ngx_http_chunked_header_filter (3 samples, 0.43%)</title><rect x="921.2" y="85" width="5.1" height="15.0" fill="rgb(205,48,17)" rx="2" ry="2" />
+<text  x="924.20" y="95.5" ></text>
+</g>
+<g >
+<title>lj_tab_resize (4 samples, 0.57%)</title><rect x="1017.6" y="37" width="6.7" height="15.0" fill="rgb(221,205,41)" rx="2" ry="2" />
+<text  x="1020.56" y="47.5" ></text>
+</g>
+<g >
+<title>builtin#101 (38 samples, 5.44%)</title><rect x="520.5" y="85" width="64.3" height="15.0" fill="rgb(216,162,7)" rx="2" ry="2" />
+<text  x="523.54" y="95.5" >builtin..</text>
+</g>
+<g >
+<title>=balancer_by_lua:0 (51 samples, 7.31%)</title><rect x="659.2" y="117" width="86.2" height="15.0" fill="rgb(237,5,1)" rx="2" ry="2" />
+<text  x="662.17" y="127.5" >=balancer_..</text>
+</g>
+<g >
+<title>gc_sweep (6 samples, 0.86%)</title><rect x="520.5" y="69" width="10.2" height="15.0" fill="rgb(221,81,49)" rx="2" ry="2" />
+<text  x="523.54" y="79.5" ></text>
+</g>
+<g >
+<title>lj_ffh_pairs (3 samples, 0.43%)</title><rect x="584.8" y="69" width="5.1" height="15.0" fill="rgb(231,149,38)" rx="2" ry="2" />
+<text  x="587.79" y="79.5" ></text>
+</g>
+<g >
+<title>lj_alloc_free (5 samples, 0.72%)</title><rect x="765.7" y="37" width="8.4" height="15.0" fill="rgb(212,156,11)" rx="2" ry="2" />
+<text  x="768.67" y="47.5" ></text>
+</g>
+<g >
+<title>lj_BC_CALLT (3 samples, 0.43%)</title><rect x="405.6" y="69" width="5.1" height="15.0" fill="rgb(232,157,50)" rx="2" ry="2" />
+<text  x="408.59" y="79.5" ></text>
+</g>
+<g >
+<title>lj_buf_putstr (4 samples, 0.57%)</title><rect x="779.2" y="37" width="6.8" height="15.0" fill="rgb(253,77,26)" rx="2" ry="2" />
+<text  x="782.20" y="47.5" ></text>
+</g>
+<g >
+<title>ngx_http_lua_ffi_req_get_headers (3 samples, 0.43%)</title><rect x="111.4" y="53" width="5.1" height="15.0" fill="rgb(253,128,28)" rx="2" ry="2" />
+<text  x="114.43" y="63.5" ></text>
+</g>
+<g >
+<title>0x7f452cf23b92 (6 samples, 0.86%)</title><rect x="1046.3" y="69" width="10.1" height="15.0" fill="rgb(236,224,22)" rx="2" ry="2" />
+<text  x="1049.30" y="79.5" ></text>
+</g>
+<g >
+<title>lj_BC_UGET (3 samples, 0.43%)</title><rect x="425.9" y="69" width="5.0" height="15.0" fill="rgb(250,38,32)" rx="2" ry="2" />
+<text  x="428.87" y="79.5" ></text>
+</g>
+<g >
+<title>lj_buf_putstr (4 samples, 0.57%)</title><rect x="10.0" y="37" width="6.8" height="15.0" fill="rgb(227,181,20)" rx="2" ry="2" />
+<text  x="13.00" y="47.5" ></text>
+</g>
+<g >
+<title>rehashtab (9 samples, 1.29%)</title><rect x="43.8" y="37" width="15.2" height="15.0" fill="rgb(233,205,7)" rx="2" ry="2" />
+<text  x="46.81" y="47.5" ></text>
+</g>
+<g >
+<title>ngx_http_lua_ngx_echo (3 samples, 0.43%)</title><rect x="946.6" y="85" width="5.0" height="15.0" fill="rgb(247,162,22)" rx="2" ry="2" />
+<text  x="949.56" y="95.5" ></text>
+</g>
+<g >
+<title>__memcpy_ssse3_back (3 samples, 0.43%)</title><rect x="977.0" y="37" width="5.1" height="15.0" fill="rgb(229,171,40)" rx="2" ry="2" />
+<text  x="979.99" y="47.5" ></text>
+</g>
+<g >
+<title>lj_meta_cat (3 samples, 0.43%)</title><rect x="632.1" y="85" width="5.1" height="15.0" fill="rgb(212,123,13)" rx="2" ry="2" />
+<text  x="635.12" y="95.5" ></text>
+</g>
+<g >
+<title>ngx_http_write_filter (6 samples, 0.86%)</title><rect x="951.6" y="85" width="10.2" height="15.0" fill="rgb(247,79,15)" rx="2" ry="2" />
+<text  x="954.63" y="95.5" ></text>
+</g>
+<g >
+<title>lj_buf_putstr (4 samples, 0.57%)</title><rect x="1163.0" y="37" width="6.7" height="15.0" fill="rgb(226,83,30)" rx="2" ry="2" />
+<text  x="1165.95" y="47.5" ></text>
+</g>
+<g >
+<title>T:@/usr/local/openresty/lualib/resty/core/ctx.lua:33 (69 samples, 9.89%)</title><rect x="1046.3" y="85" width="116.7" height="15.0" fill="rgb(237,202,4)" rx="2" ry="2" />
+<text  x="1049.30" y="95.5" >T:@/usr/local/..</text>
+</g>
+<g >
+<title>T:@/usr/local/apioak/apioak/pdk/plugin.lua:8 (29 samples, 4.15%)</title><rect x="10.0" y="53" width="49.0" height="15.0" fill="rgb(208,74,36)" rx="2" ry="2" />
+<text  x="13.00" y="63.5" >T:@/..</text>
+</g>
+<g >
+<title>rehashtab (3 samples, 0.43%)</title><rect x="116.5" y="53" width="5.1" height="15.0" fill="rgb(235,99,2)" rx="2" ry="2" />
+<text  x="119.50" y="63.5" ></text>
+</g>
+<g >
+<title>lj_buf_putstr_lower (3 samples, 0.43%)</title><rect x="376.8" y="53" width="5.1" height="15.0" fill="rgb(214,62,29)" rx="2" ry="2" />
+<text  x="379.85" y="63.5" ></text>
+</g>
+<g >
+<title>@/usr/local/openresty/lualib/resty/core/request.lua:299 (14 samples, 2.01%)</title><rect x="456.3" y="85" width="23.7" height="15.0" fill="rgb(252,128,4)" rx="2" ry="2" />
+<text  x="459.30" y="95.5" >@..</text>
+</g>
+<g >
+<title>builtin#93 (9 samples, 1.29%)</title><rect x="589.9" y="85" width="15.2" height="15.0" fill="rgb(215,68,6)" rx="2" ry="2" />
+<text  x="592.86" y="95.5" ></text>
+</g>
+<g >
+<title>__memcpy_ssse3_back (12 samples, 1.72%)</title><rect x="745.4" y="37" width="20.3" height="15.0" fill="rgb(217,110,9)" rx="2" ry="2" />
+<text  x="748.39" y="47.5" ></text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/sys/router.lua:140 (75 samples, 10.74%)</title><rect x="59.0" y="85" width="126.8" height="15.0" fill="rgb(210,154,49)" rx="2" ry="2" />
+<text  x="62.03" y="95.5" >@/usr/local/ap..</text>
+</g>
+<g >
+<title>ngx_parse_url (6 samples, 0.86%)</title><rect x="693.0" y="53" width="10.1" height="15.0" fill="rgb(207,51,51)" rx="2" ry="2" />
+<text  x="695.98" y="63.5" ></text>
+</g>
+<g >
+<title>lj_BC_TGETS (3 samples, 0.43%)</title><rect x="589.9" y="69" width="5.0" height="15.0" fill="rgb(242,173,46)" rx="2" ry="2" />
+<text  x="592.86" y="79.5" ></text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/apioak.lua:119 (110 samples, 15.76%)</title><rect x="977.0" y="101" width="186.0" height="15.0" fill="rgb(231,188,53)" rx="2" ry="2" />
+<text  x="979.99" y="111.5" >@/usr/local/apioak/apioak..</text>
+</g>
+<g >
+<title>__memcpy_ssse3_back (8 samples, 1.15%)</title><rect x="485.0" y="69" width="13.6" height="15.0" fill="rgb(223,124,38)" rx="2" ry="2" />
+<text  x="488.04" y="79.5" ></text>
+</g>
+<g >
+<title>ngx_http_lua_ffi_var_set (3 samples, 0.43%)</title><rect x="480.0" y="53" width="5.0" height="15.0" fill="rgb(241,182,54)" rx="2" ry="2" />
+<text  x="482.97" y="63.5" ></text>
+</g>
+<g >
+<title>lj_BC_TGETS (3 samples, 0.43%)</title><rect x="890.8" y="85" width="5.0" height="15.0" fill="rgb(221,198,19)" rx="2" ry="2" />
+<text  x="893.77" y="95.5" ></text>
+</g>
+<g >
+<title>T:@/usr/local/apioak/apioak/sys/router.lua:155 (83 samples, 11.89%)</title><rect x="185.8" y="69" width="140.3" height="15.0" fill="rgb(215,155,6)" rx="2" ry="2" />
+<text  x="188.82" y="79.5" >T:@/usr/local/ap..</text>
+</g>
+<g >
+<title>_int_free (4 samples, 0.57%)</title><rect x="223.0" y="53" width="6.8" height="15.0" fill="rgb(218,144,0)" rx="2" ry="2" />
+<text  x="226.01" y="63.5" ></text>
+</g>
+<g >
+<title>lj_alloc_free (7 samples, 1.00%)</title><rect x="146.9" y="69" width="11.9" height="15.0" fill="rgb(213,30,16)" rx="2" ry="2" />
+<text  x="149.93" y="79.5" ></text>
+</g>
+<g >
+<title>@/usr/local/openresty/lualib/resty/core/misc.lua:108 (5 samples, 0.72%)</title><rect x="865.4" y="101" width="8.5" height="15.0" fill="rgb(234,12,46)" rx="2" ry="2" />
+<text  x="868.42" y="111.5" ></text>
+</g>
+<g >
+<title>lj_alloc_malloc (3 samples, 0.43%)</title><rect x="248.4" y="53" width="5.0" height="15.0" fill="rgb(226,124,41)" rx="2" ry="2" />
+<text  x="251.37" y="63.5" ></text>
+</g>
+<g >
+<title>lj_tab_setstr (3 samples, 0.43%)</title><rect x="280.5" y="53" width="5.1" height="15.0" fill="rgb(240,152,31)" rx="2" ry="2" />
+<text  x="283.49" y="63.5" ></text>
+</g>
+<g >
+<title>ngx_sprintf_num (3 samples, 0.43%)</title><rect x="703.1" y="53" width="5.1" height="15.0" fill="rgb(219,188,3)" rx="2" ry="2" />
+<text  x="706.12" y="63.5" ></text>
+</g>
+<g >
+<title>lj_tab_set (3 samples, 0.43%)</title><rect x="838.4" y="37" width="5.0" height="15.0" fill="rgb(209,111,13)" rx="2" ry="2" />
+<text  x="841.37" y="47.5" ></text>
+</g>
+<g >
+<title>lj_str_new (14 samples, 2.01%)</title><rect x="70.9" y="53" width="23.6" height="15.0" fill="rgb(231,22,25)" rx="2" ry="2" />
+<text  x="73.86" y="63.5" >l..</text>
+</g>
+<g >
+<title>lj_vm_exit_interp (3 samples, 0.43%)</title><rect x="654.1" y="85" width="5.1" height="15.0" fill="rgb(205,186,34)" rx="2" ry="2" />
+<text  x="657.10" y="95.5" ></text>
+</g>
+<g >
+<title>_IO_vsprintf (4 samples, 0.57%)</title><rect x="216.2" y="53" width="6.8" height="15.0" fill="rgb(243,221,48)" rx="2" ry="2" />
+<text  x="219.25" y="63.5" ></text>
+</g>
+<g >
+<title>r3_tree_match_route (4 samples, 0.57%)</title><rect x="285.6" y="53" width="6.7" height="15.0" fill="rgb(216,95,26)" rx="2" ry="2" />
+<text  x="288.56" y="63.5" ></text>
+</g>
+<g >
+<title>=access_by_lua(nginx.conf:119):0 (384 samples, 55.01%)</title><rect x="10.0" y="117" width="649.2" height="15.0" fill="rgb(212,58,45)" rx="2" ry="2" />
+<text  x="13.00" y="127.5" >=access_by_lua(nginx.conf:119):0</text>
+</g>
+<g >
+<title>lj_alloc_free (8 samples, 1.15%)</title><rect x="723.4" y="85" width="13.5" height="15.0" fill="rgb(232,123,46)" rx="2" ry="2" />
+<text  x="726.41" y="95.5" ></text>
+</g>
+<g >
+<title>@/usr/local/apioak/apioak/pdk/plugin.lua:8 (41 samples, 5.87%)</title><rect x="977.0" y="69" width="69.3" height="15.0" fill="rgb(209,57,26)" rx="2" ry="2" />
+<text  x="979.99" y="79.5" >@/usr/l..</text>
+</g>
+<g >
+<title>@/usr/local/openresty/lualib/resty/core/ctx.lua:33 (19 samples, 2.72%)</title><rect x="398.8" y="85" width="32.1" height="15.0" fill="rgb(254,186,43)" rx="2" ry="2" />
+<text  x="401.83" y="95.5" >@/..</text>
+</g>
+<g >
+<title>gc_sweep (9 samples, 1.29%)</title><rect x="326.1" y="69" width="15.2" height="15.0" fill="rgb(249,43,49)" rx="2" ry="2" />
+<text  x="329.13" y="79.5" ></text>
+</g>
+</g>
+</svg>

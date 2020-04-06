@@ -1,284 +1,255 @@
-local pdk      = require("apioak.pdk")
-local ipairs   = ipairs
-local etcd_key
-local uri_params
+local db         = require("apioak.db")
+local pdk        = require("apioak.pdk")
+local schema     = require("apioak.schema")
+local controller = require("apioak.admin.controller")
 
-local ENV_DEV    = pdk.admin.ENV_DEV
-local ENV_BETA   = pdk.admin.ENV_BETA
-local ENV_PROD   = pdk.admin.ENV_PROD
-local ENV_MASTER = pdk.admin.ENV_MASTER
-local env_names  = { ENV_PROD, ENV_BETA, ENV_DEV }
+local router_controller = controller.new("router")
 
-local _M = {}
+function router_controller.created()
 
-local function create_etcd_key(env, service_id, router_id)
-    etcd_key = pdk.admin.get_router_etcd_key(env, service_id, router_id)
-end
+    local body = router_controller.get_body()
 
-local function get_service_id()
-    local service_id = pdk.request.header('APIOAK-SERVICE-ID')
-    if not service_id then
-        pdk.response.exit(500, { err_message = "property \"HEADER: APIOAK-SERVICE-ID\" is required" })
+    router_controller.check_schema(schema.router.created, body)
+
+    router_controller.user_authenticate()
+
+    if not router_controller.is_owner then
+        router_controller.project_authenticate(body.project_id, router_controller.uid)
     end
-    return service_id
-end
 
-local function get_body()
-    local body, err = pdk.request.body()
+    local res, err = db.router.created(body)
     if err then
         pdk.response.exit(500, { err_message = err })
     end
-    return body
+
+    if res.insert_id == 0 then
+        pdk.response.exit(500, { err_message = "FAIL" })
+    else
+        pdk.response.exit(200, { err_message = "OK" })
+    end
 end
 
-local function check_schema(schema, body)
-    local _, err = pdk.schema.check(schema, body)
+function router_controller.query(params)
+
+    router_controller.check_schema(schema.router.query, params)
+
+    router_controller.user_authenticate()
+
+    if not router_controller.is_owner then
+        router_controller.router_authenticate(params.router_id, router_controller.uid)
+    end
+
+    local res, err = db.router.query(params.router_id)
     if err then
         pdk.response.exit(500, { err_message = err })
     end
-end
 
-local function get_uri_param(key)
-    local val = uri_params[key] or nil
-    if not val then
-        if key == "env" then
-            return ENV_MASTER
-        else
-            pdk.response.exit(500,
-                    { err_message = pdk.string.format("property \"URI: %s\" is required", key) })
-        end
+    if #res == 0 then
+        pdk.response.exit(500, { err_message = "router: " .. params.router_id .. "not exists" })
     end
-    return val
+
+    pdk.response.exit(200, { err_message = "OK", router = res[1] })
 end
 
-function _M.list(params)
-    uri_params       = params
-    local env        = get_uri_param('env')
-    local service_id = get_service_id()
+function router_controller.updated(params)
 
-    create_etcd_key(env, service_id)
+    local body      = router_controller.get_body()
+    body.router_id  = params.router_id
 
-    local data, code, err = pdk.etcd.query(etcd_key)
+    router_controller.check_schema(schema.router.updated, body)
+
+    router_controller.user_authenticate()
+
+    if not router_controller.is_owner then
+        router_controller.router_authenticate(params.router_id, router_controller.uid)
+    end
+
+    local res, err = db.router.updated(params.router_id, body)
     if err then
-        return pdk.response.exit(code, { err_message = err })
+        pdk.response.exit(500, { err_message = err })
     end
 
-    return pdk.response.exit(code, data)
-end
-
-function _M.query(params)
-    uri_params       = params
-    local env        = get_uri_param('env')
-    local router_id  = get_uri_param('router_id')
-    local service_id = get_service_id()
-
-    create_etcd_key(env, service_id, router_id)
-
-    local data, code, etcd_err = pdk.etcd.query(etcd_key)
-    if data then
-        pdk.response.exit(code, data)
+    if res.affected_rows == 0 then
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
-        pdk.response.exit(code, { err_message = etcd_err })
+        pdk.response.exit(200, { err_message = "OK" })
     end
 end
 
-function _M.create(params)
-    uri_params       = params
-    local env        = get_uri_param('env')
-    local body       = get_body()
-    local service_id = get_service_id()
+function router_controller.deleted(params)
 
-    check_schema(pdk.schema.router, body)
+    router_controller.check_schema(schema.router.deleted, params)
 
-    create_etcd_key(env, service_id)
+    router_controller.user_authenticate()
 
-    if not body.push_env then
-        body.push_env = {}
-        for _, env_name in ipairs(env_names) do
-            body.push_env[env_name] = false
-        end
+    if not router_controller.is_owner then
+        router_controller.router_authenticate(params.router_id, router_controller.uid)
     end
 
-    local data, code, etcd_err = pdk.etcd.create(etcd_key, body)
-    if data then
-        pdk.response.exit(code, data)
+    local res, err = db.router.deleted(params.router_id)
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+
+    if res.affected_rows == 0 then
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
-        pdk.response.exit(code, etcd_err)
+        pdk.response.exit(200, { err_message = "OK" })
     end
 end
 
-function _M.update(params)
-    uri_params       = params
-    local env        = get_uri_param('env')
-    local router_id  = get_uri_param('router_id')
-    local body       = get_body()
-    local service_id = get_service_id()
+function router_controller.env_push(params)
 
-    check_schema(pdk.schema.router, body)
+    router_controller.check_schema(schema.router.env_push, params)
 
-    create_etcd_key(env, service_id, router_id)
+    router_controller.user_authenticate()
+    if not router_controller.is_owner then
+        router_controller.router_authenticate(params.router_id, router_controller.uid)
+    end
 
-    local res, code, err = pdk.etcd.query(etcd_key)
-    if res and res.value.push_env then
-        body.push_env = res.value.push_env
+    local res, err = db.router.query(params.router_id)
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+
+    local router = res[1]
+    if router.response_type == pdk.const.CONTENT_TYPE_JSON then
+        router.response_success = pdk.json.decode(router.response_success)
+        router.response_failure = pdk.json.decode(router.response_failure)
+    end
+
+    local plugins = {}
+    res, err = db.plugin.query_by_res(db.plugin.RESOURCES_TYPE_ROUTER, params.router_id)
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+    for q = 1, #res do
+        plugins[res[q].name] = res[q]
+    end
+    router.plugins = plugins
+
+    res, err = db.router.env_push(params.router_id, pdk.string.upper(params.env), router)
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+
+    if res.affected_rows == 0 then
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
-        body.push_env = {}
-        for _, env_name in ipairs(env_names) do
-            body.push_env[env_name] = false
-        end
+        pdk.response.exit(200, { err_message = "OK" })
+    end
+end
+
+function router_controller.env_pull(params)
+
+    router_controller.check_schema(schema.router.env_pull, params)
+
+    router_controller.user_authenticate()
+    if not router_controller.is_owner then
+        router_controller.router_authenticate(params.router_id, router_controller.uid)
     end
 
-    res, code, err = pdk.etcd.update(etcd_key, body)
-    if res then
-        pdk.response.exit(code, res)
+    local res, err = db.router.env_pull(params.router_id, pdk.string.upper(params.env))
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+
+    if res.affected_rows == 0 then
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
-        pdk.response.exit(code, { err_message = err })
+        pdk.response.exit(200, { err_message = "OK" })
     end
 end
 
-function _M.delete(params)
-    uri_params       = params
-    local env        = get_uri_param('env')
-    local router_id  = get_uri_param('router_id')
-    local service_id = get_service_id()
+function router_controller.plugins(params)
 
-    create_etcd_key(env, service_id, router_id)
+    router_controller.check_schema(schema.router.plugins, params)
 
-    local data, code, etcd_err = pdk.etcd.delete(etcd_key)
+    router_controller.user_authenticate()
 
-    if env == ENV_MASTER then
-        for _, env_name in ipairs(env_names) do
-            create_etcd_key(env_name, service_id, router_id)
-            pdk.etcd.delete(etcd_key)
-        end
+    if not router_controller.is_owner then
+        router_controller.router_authenticate(params.router_id, router_controller.uid)
     end
 
-    if data then
-        pdk.response.exit(code, data)
+    local res, err = db.plugin.query_by_res(db.plugin.RESOURCES_TYPE_ROUTER, params.router_id)
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+
+    pdk.response.exit(200, { err_message = "OK", plugins = res })
+end
+
+function router_controller.plugin_created(params)
+
+    local body      = router_controller.get_body()
+    body.router_id  = params.router_id
+
+    router_controller.check_schema(schema.router.plugin_created, body)
+
+    router_controller.user_authenticate()
+
+    if not router_controller.is_owner then
+        router_controller.router_authenticate(params.router_id, router_controller.uid)
+    end
+
+    local res, err = db.plugin.create_by_res(db.plugin.RESOURCES_TYPE_ROUTER, params.router_id, body)
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+
+    if res.insert_id == 0 then
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
-        pdk.response.exit(code, { err_message = etcd_err })
+        pdk.response.exit(200, { err_message = "OK" })
     end
 end
 
-function _M.plugin_create(params)
-    uri_params       = params
-    local env        = get_uri_param('env')
-    local router_id  = get_uri_param('router_id')
-    local body       = get_body()
-    local service_id = get_service_id()
+function router_controller.plugin_updated(params)
 
-    check_schema(pdk.schema.plugin, body)
+    local body      = router_controller.get_body()
+    body.router_id  = params.router_id
+    body.plugin_id  = params.plugin_id
 
-    create_etcd_key(env, service_id, router_id)
+    router_controller.check_schema(schema.router.plugin_updated, body)
 
-    local res, code, err = pdk.etcd.query(etcd_key)
-    if err then
-        pdk.response.exit(code, { err_message = err })
+    router_controller.user_authenticate()
+
+    if not router_controller.is_owner then
+        router_controller.router_authenticate(params.router_id, router_controller.uid)
     end
 
-    if res.value.plugins then
-        res.value.plugins[body.key] = body.config or {}
+    local res, err = db.plugin.update_by_res(db.plugin.RESOURCES_TYPE_ROUTER, params.router_id, params.plugin_id, body)
+    if err then
+        pdk.response.exit(500, { err_message = err })
+    end
+
+    if res.affected_rows == 0 then
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
-        local plugins = {}
-        plugins[body.key] = body.config or {}
-        res.value.plugins = plugins
+        pdk.response.exit(200, { err_message = "OK" })
     end
-
-    res, code, err = pdk.etcd.update(etcd_key, res.value)
-    if err then
-        pdk.response.exit(code, { err_message = err })
-    end
-    pdk.response.exit(code, res)
 end
 
-function _M.plugin_delete(params)
-    uri_params       = params
-    local env        = get_uri_param('env')
-    local router_id  = get_uri_param('router_id')
-    local plugin_key = get_uri_param('plugin_key')
-    local service_id = get_service_id()
+function router_controller.plugin_deleted(params)
 
-    create_etcd_key(env, service_id, router_id)
+    router_controller.check_schema(schema.router.plugin_deleted, params)
 
-    local res, code, err = pdk.etcd.query(etcd_key)
+    router_controller.user_authenticate()
+
+    if not router_controller.is_owner then
+        router_controller.router_authenticate(params.router_id, router_controller.uid)
+    end
+
+    local res, err = db.plugin.delete_by_res(db.plugin.RESOURCES_TYPE_ROUTER, params.router_id, params.plugin_id)
     if err then
-        pdk.response.exit(code, { err_message = err })
+        pdk.response.exit(500, { err_message = err })
     end
 
-    if not res.value.plugins or not res.value.plugins[plugin_key] then
-        pdk.response.exit(500,
-                { err_message = pdk.string.format("property \"PLUGIN: %s\" not found", plugin_key) })
-    end
-
-    res.value.plugins[plugin_key] = nil
-
-    res, code, err = pdk.etcd.update(etcd_key, res.value)
-    if err then
-        pdk.response.exit(code, { err_message = err })
-    end
-    pdk.response.exit(code, res)
-end
-
-function _M.env_create(params)
-    uri_params       = params
-    local env        = get_uri_param('env')
-    local router_id  = get_uri_param('router_id')
-    local service_id = get_service_id()
-
-    create_etcd_key(ENV_MASTER, service_id, router_id)
-
-    local router, code, err = pdk.etcd.query(etcd_key)
-    if err then
-        pdk.response.exit(code, { err_message = err })
-    end
-
-    router.value.push_env[env] = true
-
-    router, code, err = pdk.etcd.update(etcd_key, router.value)
-    if err then
-        pdk.response.exit(code, { err_message = err })
-    end
-
-    create_etcd_key(env, service_id, router_id)
-
-    router.value.push_env = nil
-
-    router, code, err = pdk.etcd.update(etcd_key, router.value)
-    if err then
-        pdk.response.exit(code, { err_message = err })
-    end
-    pdk.response.exit(code, router)
-end
-
-function _M.env_delete(params)
-    uri_params       = params
-    local env        = get_uri_param('env')
-    local router_id  = get_uri_param('router_id')
-    local service_id = get_service_id()
-
-    create_etcd_key(ENV_MASTER, service_id, router_id)
-
-    local res, code, err = pdk.etcd.query(etcd_key)
-    if err then
-        pdk.response.exit(code, { err_message = err })
-    end
-
-    res.value.push_env[env] = false
-
-    res, code, err = pdk.etcd.update(etcd_key, res.value)
-    if err then
-        pdk.response.exit(code, { err_message = err })
-    end
-
-    create_etcd_key(env, service_id, router_id)
-
-    res, code, err = pdk.etcd.delete(etcd_key)
-
-    if res then
-        pdk.response.exit(code, res)
+    if res.affected_rows == 0 then
+        pdk.response.exit(500, { err_message = "FAIL" })
     else
-        pdk.response.exit(code, { err_message = err })
+        pdk.response.exit(200, { err_message = "OK" })
     end
 end
 
-return _M
+return router_controller
