@@ -119,7 +119,7 @@ sudo apioak start
 
 > 测试环境和参数
 
-- 使用Google Cloud N1系列基本版本（1 vCPU + 3.75 GB RAM）服务器进行测试。
+- 使用Google Cloud N1系列基础版（1 vCPU + 3.75 GB RAM）服务器进行测试。
 
 - 使用2个线程运行基准测试20秒，保持200个HTTP连接打开。
 

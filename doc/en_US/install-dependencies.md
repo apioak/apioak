@@ -114,5 +114,5 @@ sudo apt update
 
 # Install `MariaDB` and set root password (After installation, set the root password according to the system prompt).
 
-apt -y install mariadb-server
+sudo apt-get -y install mariadb-server
 ```
