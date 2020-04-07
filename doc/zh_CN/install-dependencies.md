@@ -41,8 +41,8 @@ sudo yum -y install gcc \
 sudo cat > /etc/yum.repos.d/MariaDB.repo <<EOF
 [mariadb]
 name = MariaDB
-baseurl = http://yum.mariadb.org/10.2/centos7-amd64
-gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+baseurl = https://mirrors.aliyun.com/mariadb/yum/10.2/centos7-amd64/
+gpgkey=https://mirrors.aliyun.com/mariadb/yum/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
 
@@ -108,11 +108,11 @@ sudo openresty -s stop
 
 sudo apt-get -y install software-properties-common
 sudo apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
-sudo add-apt-repository 'deb [arch=amd64,arm64,ppc64el] http://mirror.hosting90.cz/mariadb/repo/10.2/ubuntu bionic main'
+sudo add-apt-repository 'deb [arch=amd64,arm64,ppc64el] https://mirrors.aliyun.com/mariadb/repo/10.2/ubuntu bionic main'
 sudo apt update
 
 
 # 初始化 MariaDB 并设置 root 密码（安装过程中会提示设置 root 密码）。
 
-apt -y install mariadb-server
+sudo apt-get -y install mariadb-server
 ```
