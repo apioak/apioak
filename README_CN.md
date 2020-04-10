@@ -152,6 +152,17 @@ Requests/sec:  24012.38
 
 ## 控制台
 
+<div>
+    <div>
+        <img src="doc/images/APIOAK-products.png" witth="50%">
+        <img src="doc/images/APIOAK-routers.png" witth="50%">
+    </div>
+    <div>
+        <img src="doc/images/APIOAK-plugins.png" witth="50%">
+        <img src="doc/images/APIOAK-members.png" witth="50%">
+    </div>
+</div>
+
 ![Projects](doc/images/APIOAK-products.png)![Routers](doc/images/APIOAK-routers.png)
 ![Plugins](doc/images/APIOAK-plugins.png)![Members](doc/images/APIOAK-members.png)
 
