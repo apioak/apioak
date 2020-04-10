@@ -144,9 +144,15 @@ Requests/sec:  24012.38
 100.000%    3.66s
 ```
 
+
 ## 火焰图
 
 ![FlameGraph](doc/images/APIOAK-flamegraph.svg)
+
+
+## 控制台
+
+![Projects](doc/images/APIOAK-dashboard.jpg)
 
 
 ## 致谢
