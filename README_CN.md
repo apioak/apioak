@@ -152,15 +152,11 @@ Requests/sec:  24012.38
 
 ## 控制台
 
-<div>
-    <div style="width:100%">
-        <img src="doc/images/APIOAK-products.png" style="width:50%" align="left">
-        <img src="doc/images/APIOAK-routers.png" style="width:50%" align="left">
-    </div>
-    <div style="width:100%">
-        <img src="doc/images/APIOAK-plugins.png" witth="50%" align="left">
-        <img src="doc/images/APIOAK-members.png" witth="50%" align="left">
-    </div>
+<div style="width:100%">
+    <img style="max-width:50%" align="left" src="doc/images/APIOAK-products.png">
+    <img style="max-width:50%" align="left" src="doc/images/APIOAK-routers.png">
+    <img witth="max-width:50%" align="left" src="doc/images/APIOAK-plugins.png">
+    <img witth="max-width:50%" align="left" src="doc/images/APIOAK-members.png">
 </div>
 
 ![Projects](doc/images/APIOAK-products.png)![Routers](doc/images/APIOAK-routers.png)
