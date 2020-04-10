@@ -147,6 +147,11 @@ Requests/sec:  24012.38
 ![FlameGraph](doc/images/APIOAK-flamegraph.svg)
 
 
+## Dashboard
+
+![Projects](doc/images/APIOAK-dashboard.jpg)
+
+
 ## Thanks
 
 ![Thanks](doc/images/APIOAK-thanks.jpg)
