@@ -332,7 +332,7 @@ end
 
 function _M.query_env_by_pid(project_id)
     local sql = "SELECT id, request_method, request_path, response_type, response_success, env_prod_config, " ..
-            "env_beta_config, env_test_config FROM %s WHERE project_id = %s"
+            "env_beta_config, env_test_config FROM %s WHERE project_id = %s ORDER BY request_path DESC"
     sql = pdk.string.format(sql, table_name, project_id)
     local res, err = pdk.database.execute(sql)
     if err then
