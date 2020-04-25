@@ -152,9 +152,9 @@ Requests/sec:  24012.38
 ![Projects](doc/images/APIOAK-dashboard.jpg)
 
 
-## Tutorial Documentation
+## Documentation
 
-[APIOAK tutorial documentation](https://github.com/apioak/apioak-document)
+See [APIOAK's Documentation](https://github.com/apioak/apioak-document).
 
 ## Thanks
 
