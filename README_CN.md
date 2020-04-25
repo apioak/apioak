@@ -155,6 +155,10 @@ Requests/sec:  24012.38
 ![Projects](doc/images/APIOAK-dashboard.jpg)
 
 
+## 教程文档
+
+ [APIOAK 使用教程文档](https://github.com/apioak/apioak-document/blob/master/README_CN.md)
+
 ## 致谢
 
 ![Thanks](doc/images/APIOAK-thanks.jpg)
