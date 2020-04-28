@@ -1,5 +1,5 @@
 local oakrouting = require("resty.oakrouting")
-local admin   = require("apioak.admin")
+local admin      = require("apioak.admin")
 local router
 
 local _M = {}
