@@ -1,7 +1,7 @@
 local pdk = require("apioak.pdk")
 local db  = require("apioak.db")
 local pairs               = pairs
-local r3route             = require("resty.r3")
+local oakrouting          = require("resty.oakrouting")
 local ngx_var             = ngx.var
 local ngx_sleep           = ngx.sleep
 local ngx_timer_at        = ngx.timer.at
@@ -79,8 +79,7 @@ local loading_routers = function()
         end
     end
 
-    router_objects = r3route.new(router_caches)
-    router_objects:compile()
+    router_objects = oakrouting.new(router_caches)
 end
 
 local function automatic_sync_hash_id(premature)
