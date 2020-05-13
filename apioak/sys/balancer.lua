@@ -60,6 +60,11 @@ local function loading_upstreams()
 
         local servers = pdk.table.new(10, 0)
         for s = 1, #nodes do
+            local node_res = ngx.re.match(nodes[s].ip, "^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$")
+            if not node_res then
+                nodes[s].ip = pdk.string.format("[%s]", nodes[s].ip)
+            end
+
             local node    = pdk.string.format("%s:%s", nodes[s].ip, nodes[s].port)
             servers[node] = nodes[s].weight
         end
@@ -140,8 +145,8 @@ function _M.gogogo(oak_ctx)
         pdk.response.exit(500)
     end
 
-    address = pdk.string.split(address, ":")
-    local ok, err = set_current_peer(address[1], pdk.string.tonumber(address[2]))
+    local host, port = pdk.string.parse_address(address)
+    local ok, err = set_current_peer(host, port)
     if not ok then
         pdk.log.error("[sys.balancer] failed to set the current peer: ", err)
         pdk.response.exit(500)

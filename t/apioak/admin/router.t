@@ -83,8 +83,8 @@ location /t {
                     },
                     nodes = {
                         {
-                            ip = "127.0.0.1",
-                            port = 80,
+                            ip = "::1",
+                            port = 10666,
                             weight = 100,
                         }
                     }
@@ -458,7 +458,26 @@ OK
 
 
 
-=== TEST 11: router env pull
+=== TEST 11: router access
+--- config
+location /t {
+    content_by_lua_block {
+        local t       = require("tools.request").test
+        local code, message = t('/test_case_project/test/router', ngx.HTTP_GET, {}, {}, 10080)
+        ngx.status = code
+        ngx.say(message)
+    }
+}
+--- request
+GET /t
+--- response_body
+OK
+--- error_code chomp
+200
+
+
+
+=== TEST 12: router env pull
 --- config
 location /t {
     content_by_lua_block {
@@ -487,7 +506,7 @@ OK
 
 
 
-=== TEST 12: router plugin deleted
+=== TEST 13: router plugin deleted
 --- config
 location /t {
     content_by_lua_block {
@@ -517,7 +536,7 @@ OK
 
 
 
-=== TEST 13: router deleted
+=== TEST 14: router deleted
 --- config
 location /t {
     content_by_lua_block {
@@ -546,7 +565,7 @@ OK
 
 
 
-=== TEST 14: project deleted
+=== TEST 15: project deleted
 --- config
 location /t {
     content_by_lua_block {
@@ -574,7 +593,7 @@ OK
 
 
 
-=== TEST 15: account delete
+=== TEST 16: account delete
 --- config
 location /t {
     content_by_lua_block {
