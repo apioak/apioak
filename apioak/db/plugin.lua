@@ -11,8 +11,10 @@ _M.RESOURCES_TYPE_ROUTER = "ROUTER"
 _M.RESOURCES_TYPE_PROJECT = "PROJECT"
 
 function _M.query_by_res(res_type, res_id)
-    local sql = pdk.string.format("SELECT id, name, type, description, config  FROM %s WHERE res_type = '%s' AND res_id = %s",
-            table_name, res_type, res_id)
+    local sql = pdk.string.format("SELECT id, name, type, description, config  FROM %s WHERE res_type = %s AND res_id = %s",
+            table_name,
+            ngx.quote_sql_str(res_type),
+            ngx.quote_sql_str(res_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -27,8 +29,14 @@ function _M.query_by_res(res_type, res_id)
 end
 
 function _M.create_by_res(res_type, res_id, params)
-    local sql = pdk.string.format("INSERT INTO %s (name, type, description, config, res_type, res_id) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')",
-            table_name, params.name, params.type, params.description, pdk.json.encode(params.config), res_type, res_id)
+    local sql = pdk.string.format("INSERT INTO %s (name, type, description, config, res_type, res_id) VALUES (%s, %s, %s, %s, %s, %s)",
+            table_name,
+            ngx.quote_sql_str(params.name),
+            ngx.quote_sql_str(params.type),
+            ngx.quote_sql_str(params.description),
+            ngx.quote_sql_str(pdk.json.encode(params.config)),
+            ngx.quote_sql_str(res_type),
+            ngx.quote_sql_str(res_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -45,16 +53,21 @@ function _M.delete_by_res(res_type, res_id, plugin_id)
             FROM
                 %s
             WHERE
-                id = %s AND res_id = %s AND res_type = '%s'
-        ]], table_name, plugin_id, res_id, res_type)
+                id = %s AND res_id = %s AND res_type = %s
+        ]], table_name,
+                ngx.quote_sql_str(plugin_id),
+                ngx.quote_sql_str(res_id),
+                ngx.quote_sql_str(res_type))
     else
         sql = pdk.string.format([[
             DELETE
             FROM
                 %s
             WHERE
-                res_id = %s AND res_type = '%s'
-        ]], table_name, res_id, res_type)
+                res_id = %s AND res_type = %s
+        ]], table_name,
+                ngx.quote_sql_str(res_id),
+                ngx.quote_sql_str(res_type))
     end
 
     local res, err = pdk.database.execute(sql)
@@ -70,20 +83,21 @@ function _M.update_by_res(res_type, res_id, plugin_id, params)
         UPDATE
             %s
         SET
-            name= '%s',
-            type = '%s',
-            description = '%s',
-            config = '%s'
+            name= %s,
+            type = %s,
+            description = %s,
+            config = %s
         WHERE
-            id = %s AND res_id = %s AND res_type = '%s'
-    ]], table_name,
-        params.name,
-        params.type,
-        params.description,
-        pdk.json.encode(params.config),
-        plugin_id,
-        res_id,
-        res_type)
+            id = %s AND res_id = %s AND res_type = %s
+    ]],
+            table_name,
+            ngx.quote_sql_str(params.name),
+            ngx.quote_sql_str(params.type),
+            ngx.quote_sql_str(params.description),
+            ngx.quote_sql_str(pdk.json.encode(params.config)),
+            ngx.quote_sql_str(plugin_id),
+            ngx.quote_sql_str(res_id),
+            ngx.quote_sql_str(res_type))
     local res, err = pdk.database.execute(sql)
 
     if err then
