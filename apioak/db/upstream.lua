@@ -32,14 +32,14 @@ function _M.create(params)
             timeouts,
             nodes
         )
-        VALUES ('%s', '%s', '%s', '%s', '%s', '%s')
+        VALUES (%s, %s, %s, %s, %s, %s)
     ]], table_name,
-        params.env,
-        params.host,
-        params.type,
-        params.project_id,
-        pdk.json.encode(params.timeouts),
-        pdk.json.encode(params.nodes))
+            ngx.quote_sql_str(params.env),
+            ngx.quote_sql_str(params.host),
+            ngx.quote_sql_str(params.type),
+            ngx.quote_sql_str(params.project_id),
+            ngx.quote_sql_str(pdk.json.encode(params.timeouts)),
+            ngx.quote_sql_str(pdk.json.encode(params.nodes)))
     local res, err = pdk.database.execute(sql)
     if err then
         return nil, err
@@ -53,12 +53,16 @@ function _M.update_by_pid(pid, upstream)
         UPDATE
             %s
         SET
-            host = '%s', type = '%s', timeouts = '%s', nodes = '%s'
+            host = %s, type = %s, timeouts = %s, nodes = %s
         WHERE
             id = %s AND project_id = %s
-    ]], table_name, upstream.host, upstream.type,
-            pdk.json.encode(upstream.timeouts),
-            pdk.json.encode(upstream.nodes), upstream.id, pid)
+    ]], table_name,
+            ngx.quote_sql_str(upstream.host),
+            ngx.quote_sql_str(upstream.type),
+            ngx.quote_sql_str(pdk.json.encode(upstream.timeouts)),
+            ngx.quote_sql_str(pdk.json.encode(upstream.nodes)),
+            ngx.quote_sql_str(upstream.id),
+            ngx.quote_sql_str(pid))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -68,7 +72,7 @@ function _M.update_by_pid(pid, upstream)
 end
 
 function _M.query(upstream_id)
-    local sql = pdk.string.format("SELECT * FROM %s WHERE id = %s", table_name, upstream_id)
+    local sql = pdk.string.format("SELECT * FROM %s WHERE id = %s", table_name, ngx.quote_sql_str(upstream_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -78,7 +82,7 @@ function _M.query(upstream_id)
 end
 
 function _M.query_by_pid(project_id)
-    local sql = pdk.string.format("SELECT * FROM %s WHERE project_id = %s", table_name, project_id)
+    local sql = pdk.string.format("SELECT * FROM %s WHERE project_id = %s", table_name, ngx.quote_sql_str(project_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -94,7 +98,7 @@ function _M.query_by_pid(project_id)
 end
 
 function _M.delete_by_pid(project_id)
-    local sql = pdk.string.format("DELETE FROM %s WHERE project_id = %s", table_name, project_id)
+    local sql = pdk.string.format("DELETE FROM %s WHERE project_id = %s", table_name, ngx.quote_sql_str(project_id))
     local res, err = pdk.database.execute(sql)
 
     if err then

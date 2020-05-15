@@ -23,9 +23,13 @@ end
 
 function _M.create(params)
     local sql = pdk.string.format(
-            "INSERT INTO %s (name, password, email, is_owner, is_enable) VALUES ('%s', '%s', '%s', '%s', '%s')",
-            table_name, params.name, pdk.string.md5(params.password), params.email,
-            params.is_owner or 0, params.is_enable or 0)
+            "INSERT INTO %s (name, password, email, is_owner, is_enable) VALUES (%s, '%s', %s, %s, %s)",
+            table_name,
+            ngx.quote_sql_str(params.name),
+            pdk.string.md5(params.password),
+            ngx.quote_sql_str(params.email),
+            ngx.quote_sql_str((params.is_owner or 0)),
+            ngx.quote_sql_str((params.is_enable or 0)))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -35,8 +39,13 @@ function _M.create(params)
 end
 
 function _M.update(user_id, params)
-    local sql = pdk.string.format("UPDATE %s SET name = '%s', password = '%s', email = '%s', is_enable = %s WHERE id = %s",
-            table_name, params.name, pdk.string.md5(params.password), params.email, params.is_enable, user_id)
+    local sql = pdk.string.format("UPDATE %s SET name = %s, password = '%s', email = %s, is_enable = %s WHERE id = %s",
+            table_name,
+            ngx.quote_sql_str(params.name),
+            pdk.string.md5(params.password),
+            ngx.quote_sql_str(params.email),
+            ngx.quote_sql_str(params.is_enable),
+            ngx.quote_sql_str(user_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -47,7 +56,7 @@ end
 
 function _M.delete(user_id)
     local sql = pdk.string.format("DELETE FROM %s WHERE id = %s",
-            table_name, user_id)
+            table_name, ngx.quote_sql_str(user_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -58,7 +67,7 @@ end
 
 function _M.update_password(user_id, password)
     local sql = pdk.string.format("UPDATE %s SET password = '%s' WHERE id = %s",
-            table_name, pdk.string.md5(password), user_id)
+            table_name, pdk.string.md5(password), ngx.quote_sql_str(user_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -69,7 +78,7 @@ end
 
 function _M.update_status(user_id, status)
     local sql = pdk.string.format("UPDATE %s SET is_enable = %s WHERE id = %s",
-            table_name, status, user_id)
+            table_name, ngx.quote_sql_str(status), ngx.quote_sql_str(user_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -79,7 +88,8 @@ function _M.update_status(user_id, status)
 end
 
 function _M.query_by_email(email)
-    local sql = pdk.string.format("SELECT * FROM %s WHERE email = '%s'", table_name, email)
+    local sql = pdk.string.format("SELECT * FROM %s WHERE email = %s",
+            table_name, ngx.quote_sql_str(email))
     local res, err = pdk.database.execute(sql)
     if err then
         return nil, err
@@ -89,7 +99,7 @@ end
 
 function _M.query_by_id(uid)
     local sql = pdk.string.format("SELECT id, name, email, is_enable, is_owner FROM %s WHERE id = %s",
-            table_name, uid)
+            table_name, ngx.quote_sql_str(uid))
     local res, err = pdk.database.execute(sql)
     if err then
         return nil, err
@@ -100,7 +110,7 @@ end
 function _M.query_by_pid(gid)
    local sql = pdk.string.format(
            "SELECT users.id, users.name, users.email, roles.is_admin FROM %s AS roles LEFT JOIN %s AS users ON roles.user_id = users.id WHERE roles.project_id = %s",
-           role.table_name, table_name, gid)
+           role.table_name, table_name, ngx.quote_sql_str(gid))
     local res, err = pdk.database.execute(sql)
 
     if err then

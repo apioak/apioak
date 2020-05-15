@@ -32,7 +32,7 @@ function _M.all(router_name)
             ORDER BY
                 routers.id
             DESC
-    ]], table_name, project.table_name, router_name)
+    ]], table_name, project.table_name, ngx.quote_sql_str(router_name))
     else
         sql = pdk.string.format([[
             SELECT
@@ -104,7 +104,7 @@ function _M.query_by_uid(user_id, router_name)
             ORDER BY
                 routers.id
             DESC
-    ]], table_name, project.table_name, pdk.table.concat(project_ids, ","), router_name)
+    ]], table_name, project.table_name, pdk.table.concat(project_ids, ","), ngx.quote_sql_str(router_name))
     else
         sql = pdk.string.format([[
             SELECT
@@ -163,7 +163,7 @@ function _M.query_by_pid(project_id)
 	    ORDER BY
 	        routers.id
 	    DESC
-    ]], table_name, project.table_name, project_id)
+    ]], table_name, project.table_name, ngx.quote_sql_str(project_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -204,7 +204,7 @@ function _M.query(router_id)
             %s AS projects ON routers.project_id = projects.id
         WHERE
             routers.id = %s
-    ]], table_name, project.table_name, router_id)
+    ]], table_name, project.table_name, ngx.quote_sql_str(router_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -232,25 +232,25 @@ function _M.created(params)
             project_id
         )
         VALUES(
-            '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
         )
     ]], table_name,
-        params.name,
-        params.enable_cors,
-        params.description,
-        params.request_path,
-        params.request_method,
-        pdk.json.encode(params.request_params),
-        params.backend_path,
-        params.backend_method,
-        pdk.json.encode(params.backend_params),
-        pdk.json.encode(params.constant_params),
-        params.response_type,
-        params.response_success,
-        params.response_failure,
-        pdk.json.encode(params.response_codes),
-        pdk.json.encode(params.response_schema),
-        params.project_id)
+            ngx.quote_sql_str(params.name),
+            ngx.quote_sql_str(params.enable_cors),
+            ngx.quote_sql_str(params.description),
+            ngx.quote_sql_str(params.request_path),
+            ngx.quote_sql_str(params.request_method),
+            ngx.quote_sql_str(pdk.json.encode(params.request_params)),
+            ngx.quote_sql_str(params.backend_path),
+            ngx.quote_sql_str(params.backend_method),
+            ngx.quote_sql_str(pdk.json.encode(params.backend_params)),
+            ngx.quote_sql_str(pdk.json.encode(params.constant_params)),
+            ngx.quote_sql_str(params.response_type),
+            ngx.quote_sql_str(params.response_success),
+            ngx.quote_sql_str(params.response_failure),
+            ngx.quote_sql_str(pdk.json.encode(params.response_codes)),
+            ngx.quote_sql_str(pdk.json.encode(params.response_schema)),
+            ngx.quote_sql_str(params.project_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -264,30 +264,30 @@ function _M.updated(router_id, params)
     local sql = pdk.string.format([[
         UPDATE %s
         SET
-            name = '%s', enable_cors = '%s', description = '%s',
-            request_path = '%s', request_method = '%s', request_params = '%s',
-            backend_path = '%s', backend_method = '%s', backend_params = '%s',
-            constant_params = '%s', response_type = '%s', response_success = '%s', response_failure = '%s',
-            response_codes = '%s', response_schema = '%s'
+            name = %s, enable_cors = %s, description = %s,
+            request_path = %s, request_method = %s, request_params = %s,
+            backend_path = %s, backend_method = %s, backend_params = %s,
+            constant_params = %s, response_type = %s, response_success = %s, response_failure = %s,
+            response_codes = %s, response_schema = %s
         WHERE
             id = %s;
     ]], table_name,
-        params.name,
-        params.enable_cors,
-        params.description,
-        params.request_path,
-        params.request_method,
-        pdk.json.encode(params.request_params),
-        params.backend_path,
-        params.backend_method,
-        pdk.json.encode(params.backend_params),
-        pdk.json.encode(params.constant_params),
-        params.response_type,
-        params.response_success,
-        params.response_failure,
-        pdk.json.encode(params.response_codes),
-        pdk.json.encode(params.response_schema),
-        router_id)
+            ngx.quote_sql_str(params.name),
+            ngx.quote_sql_str(params.enable_cors),
+            ngx.quote_sql_str(params.description),
+            ngx.quote_sql_str(params.request_path),
+            ngx.quote_sql_str(params.request_method),
+            ngx.quote_sql_str(pdk.json.encode(params.request_params)),
+            ngx.quote_sql_str(params.backend_path),
+            ngx.quote_sql_str(params.backend_method),
+            ngx.quote_sql_str(pdk.json.encode(params.backend_params)),
+            ngx.quote_sql_str(pdk.json.encode(params.constant_params)),
+            ngx.quote_sql_str(params.response_type),
+            ngx.quote_sql_str(params.response_success),
+            ngx.quote_sql_str(params.response_failure),
+            ngx.quote_sql_str(pdk.json.encode(params.response_codes)),
+            ngx.quote_sql_str(pdk.json.encode(params.response_schema)),
+            ngx.quote_sql_str(router_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -298,7 +298,7 @@ function _M.updated(router_id, params)
 end
 
 function _M.deleted(router_id)
-    local sql = pdk.string.format("DELETE FROM %s WHERE id = %s", table_name, router_id)
+    local sql = pdk.string.format("DELETE FROM %s WHERE id = %s", table_name, ngx.quote_sql_str(router_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -309,8 +309,11 @@ end
 
 function _M.env_push(router_id, env, router_info)
     router_info = pdk.json.encode(router_info)
-    local sql = pdk.string.format("UPDATE %s SET env_%s_config = '%s' WHERE id = %s",
-            table_name, pdk.string.lower(env), router_info, router_id)
+    local sql = pdk.string.format("UPDATE %s SET env_%s_config = %s WHERE id = %s",
+            table_name,
+            pdk.string.lower(env),
+            ngx.quote_sql_str(router_info),
+            ngx.quote_sql_str(router_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -321,7 +324,9 @@ end
 
 function _M.env_pull(router_id, env)
     local sql = pdk.string.format("UPDATE %s SET env_%s_config = NULL WHERE id = %s",
-            table_name, pdk.string.lower(env), router_id)
+            table_name,
+            pdk.string.lower(env),
+            ngx.quote_sql_str(router_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -333,7 +338,7 @@ end
 function _M.query_env_by_pid(project_id)
     local sql = "SELECT id, request_method, request_path, response_type, response_success, env_prod_config, " ..
             "env_beta_config, env_test_config FROM %s WHERE project_id = %s ORDER BY request_path DESC"
-    sql = pdk.string.format(sql, table_name, project_id)
+    sql = pdk.string.format(sql, table_name, ngx.quote_sql_str(project_id))
     local res, err = pdk.database.execute(sql)
     if err then
         return nil, err
