@@ -25,7 +25,8 @@ function _M.all(project_name)
             ORDER BY
                 id
             DESC
-        ]], table_name, project_name)
+        ]], table_name,
+                ngx.quote_sql_str(project_name))
     else
         sql = pdk.string.format([[
             SELECT
@@ -70,7 +71,10 @@ function _M.query_by_uid(user_id, project_name)
             ORDER BY
                 projects.id
             DESC
-        ]], table_name, role.table_name, user_id, project_name)
+        ]], table_name,
+                role.table_name,
+                ngx.quote_sql_str(user_id),
+                ngx.quote_sql_str(project_name))
     else
         sql = pdk.string.format([[
             SELECT
@@ -90,7 +94,7 @@ function _M.query_by_uid(user_id, project_name)
             ORDER BY
                 projects.id
             DESC
-        ]], table_name, role.table_name, user_id)
+        ]], table_name, role.table_name, ngx.quote_sql_str(user_id))
     end
 
     local res, err = pdk.database.execute(sql)
@@ -102,8 +106,11 @@ function _M.query_by_uid(user_id, project_name)
 end
 
 function _M.created(params)
-    local sql = pdk.string.format("INSERT INTO %s (name, description, path) VALUES ('%s', '%s', '%s')",
-            table_name, params.name, params.description, params.path)
+    local sql = pdk.string.format("INSERT INTO %s (name, description, path) VALUES (%s, %s, %s)",
+            table_name,
+            ngx.quote_sql_str(params.name),
+            ngx.quote_sql_str(params.description),
+            ngx.quote_sql_str(params.path))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -113,8 +120,12 @@ function _M.created(params)
 end
 
 function _M.updated(project_id, params)
-    local sql = pdk.string.format("UPDATE %s SET name = '%s', description = '%s', path = '%s' WHERE id = %s",
-            table_name, params.name, params.description, params.path, project_id)
+    local sql = pdk.string.format("UPDATE %s SET name = %s, description = %s, path = %s WHERE id = %s",
+            table_name,
+            ngx.quote_sql_str(params.name),
+            ngx.quote_sql_str(params.description),
+            ngx.quote_sql_str(params.path),
+            ngx.quote_sql_str(project_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -126,7 +137,8 @@ end
 
 function _M.query(project_id)
     local sql = pdk.string.format("SELECT * FROM %s WHERE id = %s",
-            table_name, project_id)
+            table_name,
+            ngx.quote_sql_str(project_id))
     local res, err = pdk.database.execute(sql)
 
     if err then
@@ -138,7 +150,8 @@ end
 
 function _M.delete(project_id)
     local sql = pdk.string.format("DELETE FROM %s WHERE id = %s",
-            table_name, project_id)
+            table_name,
+            ngx.quote_sql_str(project_id))
     local res, err = pdk.database.execute(sql)
 
     if err then

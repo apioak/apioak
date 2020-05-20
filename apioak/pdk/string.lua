@@ -24,4 +24,16 @@ _M.null     = ngx.null
 
 _M.tonumber = tonumber
 
+-- 验证IPV4 or IPV6
+function _M.parse_address(address)
+    local address_obj
+    if string.sub(address, 1, 1) == '[' then
+        address_obj = plstring.split(address, ']:')
+        return address_obj[1] .. ']', tonumber(address_obj[2])
+    else
+        address_obj = plstring.split(address, ':')
+        return address_obj[1], tonumber(address_obj[2])
+    end
+end
+
 return _M

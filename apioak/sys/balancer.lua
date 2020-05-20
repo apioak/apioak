@@ -1,16 +1,17 @@
 local pdk = require("apioak.pdk")
-local db = require("apioak.db")
-local ngx_sleep = ngx.sleep
-local ngx_timer_at = ngx.timer.at
+local db  = require("apioak.db")
+local ngx_sleep          = ngx.sleep
+local ngx_timer_at       = ngx.timer.at
 local ngx_worker_exiting = ngx.worker.exiting
-local ngx_var = ngx.var
-local balancer = require("ngx.balancer")
-local balancer_chash = require('resty.chash')
-local balancer_round = require('resty.roundrobin')
-local set_current_peer = balancer.set_current_peer
-local get_last_failure = balancer.get_last_failure
-local set_more_tries = balancer.set_more_tries
-local set_timeouts = balancer.set_timeouts
+local ngx_var            = ngx.var
+local ngx_re_match       = ngx.re.match
+local balancer           = require("ngx.balancer")
+local balancer_chash     = require('resty.chash')
+local balancer_round     = require('resty.roundrobin')
+local set_current_peer   = balancer.set_current_peer
+local get_last_failure   = balancer.get_last_failure
+local set_more_tries     = balancer.set_more_tries
+local set_timeouts       = balancer.set_timeouts
 
 local upstream_objects = {}
 local checker
@@ -39,12 +40,17 @@ local function loading_upstreams()
     end
 
     for i = 1, #res do
-        local nodes = res[i].nodes
-        local type = res[i].type
+        local nodes       = res[i].nodes
+        local type        = res[i].type
 
         local servers = pdk.table.new(10, 0)
         for s = 1, #nodes do
-            local node = pdk.string.format("%s:%s", nodes[s].ip, nodes[s].port)
+            local node_res = ngx_re_match(nodes[s].ip, "^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$")
+            if not node_res then
+                nodes[s].ip = pdk.string.format("[%s]", nodes[s].ip)
+            end
+
+            local node    = pdk.string.format("%s:%s", nodes[s].ip, nodes[s].port)
             servers[node] = nodes[s].weight
 
             local ok, err = checker:add_target(nodes[s].ip, pdk.string.tonumber(nodes[s].port))
@@ -62,11 +68,11 @@ local function loading_upstreams()
             balancer_handle = balancer_chash:new(servers)
         end
 
-        local upstream_id = pdk.string.tonumber(res[i].id)
+        local upstream_id = tonumber(res[i].id)
         upstream_objects[upstream_id] = {
-            handler = balancer_handle,
+            handler  = balancer_handle,
             timeouts = res[i].timeouts,
-            type = type,
+            type     = type
         }
     end
 end
@@ -155,8 +161,9 @@ function _M.loading()
 end
 
 function _M.gogogo(oak_ctx)
-    local router = oak_ctx.router
+    local router   = oak_ctx.router
     local upstream = router.upstream
+
     if not upstream then
         pdk.log.error("[sys.balancer] upstream undefined")
         pdk.response.exit(500)
@@ -203,8 +210,8 @@ function _M.gogogo(oak_ctx)
         pdk.response.exit(500)
     end
 
-    address = pdk.string.split(address, ":")
-    local ok, err = set_current_peer(address[1], pdk.string.tonumber(address[2]))
+    local host, port = pdk.string.parse_address(address)
+    local ok, err = set_current_peer(host, port)
     if not ok then
         pdk.log.error("[sys.balancer] failed to set the current peer: ", err)
         pdk.response.exit(500)

@@ -9,12 +9,20 @@ __DATA__
 location /t {
     content_by_lua_block {
         local t = require("tools.request").test
-        local code, message = t('/apioak/admin/account/register', ngx.HTTP_POST, {
+        local code, _ = t('/apioak/admin/account/register', ngx.HTTP_POST, {
             name = "test account",
             password = "123456",
             valid_password = "123456",
             email = "test@email.com",
         })
+
+        local _, message = t('/apioak/admin/account/register', ngx.HTTP_POST, {
+            name = "project user",
+            password = "123456",
+            valid_password = "123456",
+            email = "project_user@email.com",
+        })
+
         ngx.status = code
         ngx.say(message)
     }
@@ -83,8 +91,8 @@ location /t {
                     },
                     nodes = {
                         {
-                            ip = "::1",
-                            port = 10666,
+                            ip = "127.0.0.1",
+                            port = 80,
                             weight = 100,
                         }
                     }
@@ -140,7 +148,7 @@ OK
 
 
 
-=== TEST 4: router created
+=== TEST 4: project updated
 --- config
 location /t {
     content_by_lua_block {
@@ -148,62 +156,75 @@ location /t {
         local account = require("tools.account")
         local project = require("tools.project")
 
-        local _, admin  = account.user_info("test@email.com")
-        local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
+        local _, admin    = account.user_info("test@email.com")
+        local _, token    = account.get_token(admin.id)
+        local _, p_info   = project.project_info("testCaseProject", "/test_case_project")
+        local _, u_p_info = project.project_upstream(p_info.id, "PROD")
+        local _, u_b_info = project.project_upstream(p_info.id, "BETA")
+        local _, u_t_info = project.project_upstream(p_info.id, "TEST")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
-        local code, message = t('/apioak/admin/router', ngx.HTTP_POST, {
-            project_id = p_info.id,
-            id = 0,
-            name = "路由测试",
-            enable_cors = 1,
-            description = "路由备注",
-            request_path = "/test/router",
-            request_method = "GET",
-            request_params = {
+        local code, message = t('/apioak/admin/project/' .. p_info.id, ngx.HTTP_PUT, {
+            name = "testCaseProject",
+            path = "/test_case_project_u",
+            description = "test case project created description updated",
+            upstreams = {
                 {
-                    name = "id",
-                    position = "QUERY",
-                    type = "STRING",
-                    default_val = "",
-                    required = 1,
-                    description = "this is id",
-                    isTrusted = true
-                }
-            },
-            backend_path = "/test/router/back",
-            backend_method = "GET",
-            backend_params = {
+                    id = u_p_info.id,
+                    env = "PROD",
+                    host = "produce",
+                    type = "CHASH",
+                    timeouts = {
+                        connect = 5000,
+                        send = 5000,
+                        read = 5000,
+                    },
+                    nodes = {
+                        {
+                            ip = "127.0.0.1",
+                            port = 80,
+                            weight = 100,
+                        }
+                    }
+                },
                 {
-                    request_param_position = "QUERY",
-                    request_param_type = "STRING",
-                    request_param_name = "id",
-                    request_param_required = 1,
-                    name = "id",
-                    position = "QUERY",
-                    request_param_description = "is id",
-                    request_param_default_val = ""
-                }
-            },
-            constant_params = {
+                    id = u_b_info.id,
+                    env = "BETA",
+                    host = "beta",
+                    type = "CHASH",
+                    timeouts = {
+                        connect = 5000,
+                        send = 5000,
+                        read = 5000,
+                    },
+                    nodes = {
+                        {
+                            ip = "127.0.0.1",
+                            port = 80,
+                            weight = 100,
+                        }
+                    }
+                },
                 {
-                    name = "content",
-                    type = "STRING",
-                    isTrusted = true,
-                    description = "this is constant params",
-                    position = "HEADER",
-                    value = "123"
+                    id = u_b_info.id,
+                    env = "TEST",
+                    host = "test",
+                    type = "CHASH",
+                    timeouts = {
+                        connect = 5000,
+                        send = 5000,
+                        read = 5000,
+                    },
+                    nodes = {
+                        {
+                            ip = "127.0.0.1",
+                            port = 80,
+                            weight = 100,
+                        }
+                    }
                 }
-            },
-            response_type = "application/json",
-            response_success = "",
-            response_failure = "",
-            response_codes = {},
-            response_schema = {},
-            response_success_schema = {},
-            response_failure_schema = {}
+            }
         }, request_header)
         ngx.status = code
         ngx.say(message)
@@ -218,7 +239,7 @@ OK
 
 
 
-=== TEST 5: router updated
+=== TEST 5: project selected
 --- config
 location /t {
     content_by_lua_block {
@@ -228,59 +249,42 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
-        local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
+        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
-        local code, message = t('/apioak/admin/router/' .. r_info.id, ngx.HTTP_PUT, {
-            name = "路由测试更新",
-            enable_cors = 1,
-            description = "路由备注更新测试",
-            request_path = "/test/router",
-            request_method = "GET",
-            request_params = {
-                {
-                    name = "id",
-                    position = "QUERY",
-                    type = "STRING",
-                    default_val = "",
-                    required = 1,
-                    description = "this is id",
-                    isTrusted = true
-                }
-            },
-            backend_path = "/test/router/back",
-            backend_method = "GET",
-            backend_params = {
-                {
-                    request_param_position = "QUERY",
-                    request_param_type = "STRING",
-                    request_param_name = "id",
-                    request_param_required = 1,
-                    name = "id",
-                    position = "QUERY",
-                    request_param_description = "is id",
-                    request_param_default_val = ""
-                }
-            },
-            constant_params = {
-                {
-                    name = "content",
-                    type = "STRING",
-                    isTrusted = true,
-                    description = "this is constant params",
-                    position = "HEADER",
-                    value = "123"
-                }
-            },
-            response_type = "application/json",
-            response_success = "",
-            response_failure = "",
-            response_codes = {},
-            response_schema = {},
-            response_success_schema = {},
-            response_failure_schema = {}
+        local code, message = t('/apioak/admin/project/' .. p_info.id, ngx.HTTP_GET, {}, request_header)
+        ngx.status = code
+        ngx.say(message)
+    }
+}
+--- request
+GET /t
+--- response_body
+OK
+--- error_code chomp
+200
+
+
+
+=== TEST 6: project member created
+--- config
+location /t {
+    content_by_lua_block {
+        local t       = require("tools.request").test
+        local account = require("tools.account")
+        local project = require("tools.project")
+
+        local _, admin  = account.user_info("test@email.com")
+        local _, user   = account.user_info("project_user@email.com")
+        local _, token  = account.get_token(admin.id)
+        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
+
+        local request_header = {}
+        request_header["APIOAK-ADMIN-TOKEN"] = token
+        local code, message = t('/apioak/admin/project/' .. p_info.id .. '/member', ngx.HTTP_POST, {
+            user_id = user.id,
+            is_admin = 0,
         }, request_header)
         ngx.status = code
         ngx.say(message)
@@ -295,7 +299,7 @@ OK
 
 
 
-=== TEST 6: router query
+=== TEST 7: project member updated
 --- config
 location /t {
     content_by_lua_block {
@@ -304,13 +308,15 @@ location /t {
         local project = require("tools.project")
 
         local _, admin  = account.user_info("test@email.com")
+        local _, user   = account.user_info("project_user@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
-        local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
+        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
-        local code, message = t('/apioak/admin/router/' .. r_info.id, ngx.HTTP_GET, {}, request_header)
+        local code, message = t('/apioak/admin/project/' .. p_info.id .. '/member/' .. user.id, ngx.HTTP_PUT, {
+            is_admin = 1,
+        }, request_header)
         ngx.status = code
         ngx.say(message)
     }
@@ -324,7 +330,7 @@ OK
 
 
 
-=== TEST 7: router plugin created
+=== TEST 8: project member selected
 --- config
 location /t {
     content_by_lua_block {
@@ -334,12 +340,68 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
-        local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
+        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
-        local code, message = t('/apioak/admin/router/' .. r_info.id .. '/plugin', ngx.HTTP_POST, {
+        local code, message = t('/apioak/admin/project/' .. p_info.id .. '/members', ngx.HTTP_GET, {}, request_header)
+        ngx.status = code
+        ngx.say(message)
+    }
+}
+--- request
+GET /t
+--- response_body
+OK
+--- error_code chomp
+200
+
+
+
+=== TEST 9: project member deleted
+--- config
+location /t {
+    content_by_lua_block {
+        local t       = require("tools.request").test
+        local account = require("tools.account")
+        local project = require("tools.project")
+
+        local _, admin  = account.user_info("test@email.com")
+        local _, user   = account.user_info("project_user@email.com")
+        local _, token  = account.get_token(admin.id)
+        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
+
+        local request_header = {}
+        request_header["APIOAK-ADMIN-TOKEN"] = token
+        local code, message = t('/apioak/admin/project/' .. p_info.id .. '/member/' .. user.id, ngx.HTTP_DELETE, {}, request_header)
+        ngx.status = code
+        ngx.say(message)
+    }
+}
+--- request
+GET /t
+--- response_body
+OK
+--- error_code chomp
+200
+
+
+
+=== TEST 10: project plugin created
+--- config
+location /t {
+    content_by_lua_block {
+        local t       = require("tools.request").test
+        local account = require("tools.account")
+        local project = require("tools.project")
+
+        local _, admin  = account.user_info("test@email.com")
+        local _, token  = account.get_token(admin.id)
+        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
+
+        local request_header = {}
+        request_header["APIOAK-ADMIN-TOKEN"] = token
+        local code, message = t('/apioak/admin/project/' .. p_info.id .. '/plugin', ngx.HTTP_POST, {
             id = 0,
             name = "limit-req",
             type = "Traffic Control",
@@ -362,7 +424,7 @@ OK
 
 
 
-=== TEST 8: router plugin updated
+=== TEST 11: project plugin updated
 --- config
 location /t {
     content_by_lua_block {
@@ -372,13 +434,12 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
-        local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
-        local _, l_info = project.plugins_info("ROUTER", r_info.id, "limit-req")
+        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
+        local _, l_info = project.plugins_info("PROJECT", p_info.id, "limit-req")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
-        local code, message = t('/apioak/admin/router/' .. r_info.id .. '/plugin/' .. l_info.id, ngx.HTTP_PUT, {
+        local code, message = t('/apioak/admin/project/' .. p_info.id .. '/plugin/' .. l_info.id, ngx.HTTP_PUT, {
             name = "limit-req",
             type = "Traffic Control",
             description = "Lua module for limiting request rate.",
@@ -400,7 +461,7 @@ OK
 
 
 
-=== TEST 9: router plugins
+=== TEST 12: project plugin selected
 --- config
 location /t {
     content_by_lua_block {
@@ -410,12 +471,11 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
-        local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
+        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
-        local code, message = t('/apioak/admin/router/' .. r_info.id .. '/plugins', ngx.HTTP_GET, {}, request_header)
+        local code, message = t('/apioak/admin/project/' .. p_info.id .. '/plugins', ngx.HTTP_GET, {}, request_header)
         ngx.status = code
         ngx.say(message)
     }
@@ -429,7 +489,7 @@ OK
 
 
 
-=== TEST 10: router env push
+=== TEST 13: project plugin deleted
 --- config
 location /t {
     content_by_lua_block {
@@ -439,12 +499,12 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
-        local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
+        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
+        local _, l_info = project.plugins_info("PROJECT", p_info.id, "limit-req")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
-        local code, message = t('/apioak/admin/router/' .. r_info.id .. '/env/TEST', ngx.HTTP_POST, {}, request_header)
+        local code, message = t('/apioak/admin/project/' .. p_info.id .. '/plugin/' .. l_info.id, ngx.HTTP_DELETE, {}, request_header)
         ngx.status = code
         ngx.say(message)
     }
@@ -458,26 +518,7 @@ OK
 
 
 
-=== TEST 11: router access
---- config
-location /t {
-    content_by_lua_block {
-        local t       = require("tools.request").test
-        local code, message = t('/test_case_project/test/router', ngx.HTTP_GET, {}, {}, 10080)
-        ngx.status = code
-        ngx.say(message)
-    }
-}
---- request
-GET /t
---- response_body
-OK
---- error_code chomp
-200
-
-
-
-=== TEST 12: router env pull
+=== TEST 14: project routers
 --- config
 location /t {
     content_by_lua_block {
@@ -487,71 +528,11 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
-        local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
+        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
-        local code, message = t('/apioak/admin/router/' .. r_info.id .. '/env/TEST', ngx.HTTP_DELETE, {}, request_header)
-        ngx.status = code
-        ngx.say(message)
-    }
-}
---- request
-GET /t
---- response_body
-OK
---- error_code chomp
-200
-
-
-
-=== TEST 13: router plugin deleted
---- config
-location /t {
-    content_by_lua_block {
-        local t       = require("tools.request").test
-        local account = require("tools.account")
-        local project = require("tools.project")
-
-        local _, admin  = account.user_info("test@email.com")
-        local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
-        local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
-        local _, l_info = project.plugins_info("ROUTER", r_info.id, "limit-req")
-
-        local request_header = {}
-        request_header["APIOAK-ADMIN-TOKEN"] = token
-        local code, message = t('/apioak/admin/router/' .. r_info.id .. '/plugin/' .. l_info.id, ngx.HTTP_DELETE, {}, request_header)
-        ngx.status = code
-        ngx.say(message)
-    }
-}
---- request
-GET /t
---- response_body
-OK
---- error_code chomp
-200
-
-
-
-=== TEST 14: router deleted
---- config
-location /t {
-    content_by_lua_block {
-        local t       = require("tools.request").test
-        local account = require("tools.account")
-        local project = require("tools.project")
-
-        local _, admin  = account.user_info("test@email.com")
-        local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
-        local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
-
-        local request_header = {}
-        request_header["APIOAK-ADMIN-TOKEN"] = token
-        local code, message = t('/apioak/admin/router/' .. r_info.id, ngx.HTTP_DELETE, {}, request_header)
+        local code, message = t('/apioak/admin/project/' .. p_info.id .. '/routers', ngx.HTTP_GET, {}, request_header)
         ngx.status = code
         ngx.say(message)
     }
@@ -575,7 +556,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
+        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
@@ -599,8 +580,12 @@ location /t {
     content_by_lua_block {
         local account = require("tools.account")
 
-        local _, admin      = account.user_info("test@email.com")
-        local code, message = account.user_delete(admin.id)
+        local _, admin   = account.user_info("test@email.com")
+        local code, _    = account.user_delete(admin.id)
+
+        local _, user    = account.user_info("project_user@email.com")
+        local _, message = account.user_delete(user.id)
+
         ngx.status = code
         ngx.say(message)
     }
