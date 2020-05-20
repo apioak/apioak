@@ -1,8 +1,7 @@
-local ngx = ngx
-local pairs = pairs
-local require = require
-local pdk = require("apioak.pdk")
-local sys = require("apioak.sys")
+local ngx    = ngx
+local pairs  = pairs
+local pdk    = require("apioak.pdk")
+local sys    = require("apioak.sys")
 
 local function run_plugin(phase, oak_ctx)
     local plugins, err = pdk.plugin.loading()
@@ -38,6 +37,7 @@ local APIOAK = {}
 
 function APIOAK.init()
     require("resty.core")
+
     if require("ffi").os == "Linux" then
         require("ngx.re").opt("jit_stack_size", 200 * 1024)
     end
@@ -91,8 +91,8 @@ function APIOAK.http_access()
 
     sys.router.mapping(oak_ctx)
 
-    local router = oak_ctx.router
-    local matched = oak_ctx.matched
+    local router   = oak_ctx.router
+    local matched  = oak_ctx.matched
     local upstream = router.upstream
 
     local upstream_uri = router.backend_path
@@ -119,6 +119,7 @@ function APIOAK.http_access()
     ngx.var.upstream_host = upstream.host
 
     sys.balancer.loading()
+
     run_plugin("http_access", oak_ctx)
 end
 
