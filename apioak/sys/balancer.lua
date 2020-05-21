@@ -92,6 +92,10 @@ local function fetch_health_nodes(upstream_id)
     for _, nodes in ipairs(upstream_objects[upstream_id].handler.ids) do
 
         local addr = pdk.string.split(nodes, ':')
+        local node_res = ngx_re_match(addr[1], "^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$")
+        if not node_res then
+            addr[1] = pdk.string.format("[%s]", addr[1])
+        end
         local ok, err = checker:get_target_status(addr[1], pdk.string.tonumber(addr[2]))
 
         if not ok then
