@@ -56,6 +56,8 @@ _EOC_
     lua_shared_dict plugin_limit_conn  10m;
     lua_shared_dict plugin_limit_req   10m;
     lua_shared_dict plugin_limit_count 10m;
+    lua_shared_dict upstream_health_check 10m;
+    lua_shared_dict upstream_worker_event 10m;
 
     upstream apioak_backend {
         server 0.0.0.1;
