@@ -67,8 +67,8 @@ location /t {
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
         local code, message = t('/apioak/admin/project', ngx.HTTP_POST, {
-            name = "testCaseProject",
-            path = "/test_case_project",
+            name = "caseProject",
+            path = "/case_project",
             description = "test case project created description",
             upstreams = {
                 {
@@ -150,7 +150,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
+        local _, p_info = project.project_info("caseProject", "/case_project")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
@@ -228,7 +228,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
+        local _, p_info = project.project_info("caseProject", "/case_project")
         local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
 
         local request_header = {}
@@ -305,7 +305,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
+        local _, p_info = project.project_info("caseProject", "/case_project")
         local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
 
         local request_header = {}
@@ -334,7 +334,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
+        local _, p_info = project.project_info("caseProject", "/case_project")
         local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
 
         local request_header = {}
@@ -372,7 +372,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
+        local _, p_info = project.project_info("caseProject", "/case_project")
         local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
         local _, l_info = project.plugins_info("ROUTER", r_info.id, "limit-req")
 
@@ -410,7 +410,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
+        local _, p_info = project.project_info("caseProject", "/case_project")
         local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
 
         local request_header = {}
@@ -439,12 +439,12 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
+        local _, p_info = project.project_info("caseProject", "/case_project")
         local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
-        local code, message = t('/apioak/admin/router/' .. r_info.id .. '/env/TEST', ngx.HTTP_POST, {}, request_header)
+        local code, message = t('/apioak/admin/router/' .. r_info.id .. '/env/PROD', ngx.HTTP_POST, {}, request_header)
         ngx.status = code
         ngx.say(message)
     }
@@ -463,7 +463,7 @@ OK
 location /t {
     content_by_lua_block {
         local t       = require("tools.request").test
-        local code, message = t('/test_case_project/test/router', ngx.HTTP_GET, {}, {}, 10080)
+        local code, message = t('/case_project/test/router')
         ngx.status = code
         ngx.say(message)
     }
@@ -487,12 +487,12 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
+        local _, p_info = project.project_info("caseProject", "/case_project")
         local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
-        local code, message = t('/apioak/admin/router/' .. r_info.id .. '/env/TEST', ngx.HTTP_DELETE, {}, request_header)
+        local code, message = t('/apioak/admin/router/' .. r_info.id .. '/env/PROD', ngx.HTTP_DELETE, {}, request_header)
         ngx.status = code
         ngx.say(message)
     }
@@ -516,7 +516,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
+        local _, p_info = project.project_info("caseProject", "/case_project")
         local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
         local _, l_info = project.plugins_info("ROUTER", r_info.id, "limit-req")
 
@@ -546,7 +546,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
+        local _, p_info = project.project_info("caseProject", "/case_project")
         local _, r_info = project.routers_info(p_info.id, "/test/router", "GET")
 
         local request_header = {}
@@ -575,7 +575,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project")
+        local _, p_info = project.project_info("caseProject", "/case_project")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
