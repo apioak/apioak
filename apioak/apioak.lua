@@ -104,6 +104,9 @@ function APIOAK.http_access()
 
     local query_args = {}
     for query_key, query_val in pairs(matched.query) do
+        if query_val == true then
+            query_val = ""
+        end
         pdk.table.insert(query_args, query_key .. "=" .. query_val)
     end
     if #query_args > 0 then
