@@ -15,7 +15,7 @@ local methods = {
 
 local _M = {}
 
-function _M.test(uri, method, body, headers, port)
+function _M.test(uri, method, body, headers)
     headers = headers or {}
     if type(body) == "table" then
         body = json.encode(body)
@@ -30,12 +30,8 @@ function _M.test(uri, method, body, headers, port)
         headers["Content-Type"] = "application/x-www-form-urlencoded"
     end
 
-    if not port then
-        port = ngx.var.server_port
-    end
-
     local httpc = http.new()
-    uri = ngx.var.scheme .. "://" .. ngx.var.server_addr .. ":" .. port .. uri
+    uri = ngx.var.scheme .. "://" .. ngx.var.server_addr .. ":" .. ngx.var.server_port .. uri
     local res, err = httpc:request_uri(uri,
             {
                 method = method,
