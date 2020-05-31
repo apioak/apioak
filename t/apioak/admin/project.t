@@ -75,8 +75,8 @@ location /t {
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
         local code, message = t('/apioak/admin/project', ngx.HTTP_POST, {
-            name = "testCaseProject",
-            path = "/test_case_project",
+            name = "caseProject",
+            path = "/case_project",
             description = "test case project created description",
             upstreams = {
                 {
@@ -158,7 +158,7 @@ location /t {
 
         local _, admin    = account.user_info("test@email.com")
         local _, token    = account.get_token(admin.id)
-        local _, p_info   = project.project_info("testCaseProject", "/test_case_project")
+        local _, p_info   = project.project_info("caseProject", "/case_project")
         local _, u_p_info = project.project_upstream(p_info.id, "PROD")
         local _, u_b_info = project.project_upstream(p_info.id, "BETA")
         local _, u_t_info = project.project_upstream(p_info.id, "TEST")
@@ -166,8 +166,8 @@ location /t {
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
         local code, message = t('/apioak/admin/project/' .. p_info.id, ngx.HTTP_PUT, {
-            name = "testCaseProject",
-            path = "/test_case_project_u",
+            name = "caseProject",
+            path = "/case_project_u",
             description = "test case project created description updated",
             upstreams = {
                 {
@@ -249,7 +249,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
+        local _, p_info = project.project_info("caseProject", "/case_project_u")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
@@ -278,7 +278,7 @@ location /t {
         local _, admin  = account.user_info("test@email.com")
         local _, user   = account.user_info("project_user@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
+        local _, p_info = project.project_info("caseProject", "/case_project_u")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
@@ -310,7 +310,7 @@ location /t {
         local _, admin  = account.user_info("test@email.com")
         local _, user   = account.user_info("project_user@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
+        local _, p_info = project.project_info("caseProject", "/case_project_u")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
@@ -340,7 +340,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
+        local _, p_info = project.project_info("caseProject", "/case_project_u")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
@@ -369,7 +369,7 @@ location /t {
         local _, admin  = account.user_info("test@email.com")
         local _, user   = account.user_info("project_user@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
+        local _, p_info = project.project_info("caseProject", "/case_project_u")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
@@ -397,7 +397,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
+        local _, p_info = project.project_info("caseProject", "/case_project_u")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
@@ -434,7 +434,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
+        local _, p_info = project.project_info("caseProject", "/case_project_u")
         local _, l_info = project.plugins_info("PROJECT", p_info.id, "limit-req")
 
         local request_header = {}
@@ -471,7 +471,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
+        local _, p_info = project.project_info("caseProject", "/case_project_u")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
@@ -499,7 +499,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
+        local _, p_info = project.project_info("caseProject", "/case_project_u")
         local _, l_info = project.plugins_info("PROJECT", p_info.id, "limit-req")
 
         local request_header = {}
@@ -528,7 +528,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
+        local _, p_info = project.project_info("caseProject", "/case_project_u")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
@@ -556,7 +556,7 @@ location /t {
 
         local _, admin  = account.user_info("test@email.com")
         local _, token  = account.get_token(admin.id)
-        local _, p_info = project.project_info("testCaseProject", "/test_case_project_u")
+        local _, p_info = project.project_info("caseProject", "/case_project_u")
 
         local request_header = {}
         request_header["APIOAK-ADMIN-TOKEN"] = token
