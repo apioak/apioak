@@ -53,7 +53,8 @@ local function loading_upstreams()
             local node    = pdk.string.format("%s:%s", nodes[s].ip, nodes[s].port)
             servers[node] = nodes[s].weight
 
-            local ok, err = checker:add_target(nodes[s].ip, pdk.string.tonumber(nodes[s].port))
+            local host, port = pdk.string.parse_address(node)
+            local ok, err = checker:add_target(host, port)
             if not ok then
                 pdk.log.error("[sys.balancer] health check add target: ", "ip: ", nodes[s].ip, "port:", nodes[s].port, "err:", err)
             end
@@ -87,20 +88,16 @@ local function create_health_checker(premature)
     return
 end
 
-local function fetch_health_nodes(upstream_id)
+local function get_health_nodes(upstream_id)
 
     for _, nodes in ipairs(upstream_objects[upstream_id].handler.ids) do
 
-        local addr = pdk.string.split(nodes, ':')
-        local node_res = ngx_re_match(addr[1], "^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$")
-        if not node_res then
-            addr[1] = pdk.string.format("[%s]", addr[1])
-        end
-        local ok, err = checker:get_target_status(addr[1], pdk.string.tonumber(addr[2]))
+        local host, port = pdk.string.parse_address(nodes)
+        local ok, err = checker:get_target_status(host, port)
 
         if not ok then
             upstream_objects[upstream_id].handler:delete(nodes)
-            pdk.log.error("[sys.balancer] health check down target: ", "ip: ", addr[1], "port: ", addr[2], "err:", err)
+            pdk.log.error("[sys.balancer] health check down target: ", "ip: ", host, "port: ", port, "err:", err)
         end
     end
     return upstream_objects[upstream_id]
@@ -179,7 +176,7 @@ function _M.gogogo(oak_ctx)
         pdk.response.exit(500)
     end
 
-    upstream = fetch_health_nodes(upstream_id)
+    upstream = get_health_nodes(upstream_id)
     local state, code = get_last_failure()
     if state == "failed" then
         pdk.log.error("[sys.balancer] connection failure state: " .. state .. " code: " .. code)

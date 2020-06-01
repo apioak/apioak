@@ -463,7 +463,7 @@ OK
 location /t {
     content_by_lua_block {
         local t       = require("tools.request").test
-        local code, message = t('/case_project/test/router', ngx.HTTP_GET, {}, {}, 10080)
+        local code, message = t('/case_project/test/router')
         ngx.status = code
         ngx.say(message)
     }
