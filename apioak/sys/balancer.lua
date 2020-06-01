@@ -4,6 +4,7 @@ local ngx_sleep          = ngx.sleep
 local ngx_timer_at       = ngx.timer.at
 local ngx_worker_exiting = ngx.worker.exiting
 local ngx_var            = ngx.var
+local ngx_re_match       = ngx.re.match
 local balancer           = require("ngx.balancer")
 local balancer_chash     = require('resty.chash')
 local balancer_round     = require('resty.roundrobin')
@@ -13,40 +14,24 @@ local set_more_tries     = balancer.set_more_tries
 local set_timeouts       = balancer.set_timeouts
 
 local upstream_objects = {}
+local checker
 local upstream_latest_hash_id
 local upstream_cached_hash_id
 
+local checks_conf = {
+    active = {
+        healthy = {
+            interval = 0.1,
+            successes = 1,
+        },
+        unhealthy = {
+            interval = 5,
+            http_failures = 2,
+        }
+    },
+}
+
 local _M = {}
-
-local function automatic_sync_hash_id(premature)
-    if premature then
-        return
-    end
-
-    local i = 1
-    while not ngx_worker_exiting() and i <= 10 do
-        i = i + 1
-
-        local res, err = db.upstream.query_last_updated_hid()
-        if err then
-            pdk.log.error("[sys.balancer] automatic sync upstreams last updated timestamp reading failure, ", err)
-            break
-        end
-
-        upstream_latest_hash_id = res.hash_id
-
-        ngx_sleep(10)
-    end
-
-    if not ngx_worker_exiting() then
-        ngx_timer_at(0, automatic_sync_hash_id)
-    end
-end
-
-function _M.init_worker()
-    ngx_timer_at(0, automatic_sync_hash_id)
-end
-
 
 local function loading_upstreams()
     local res, err = db.upstream.all()
@@ -60,13 +45,19 @@ local function loading_upstreams()
 
         local servers = pdk.table.new(10, 0)
         for s = 1, #nodes do
-            local node_res = ngx.re.match(nodes[s].ip, "^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$")
+            local node_res = ngx_re_match(nodes[s].ip, "^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$")
             if not node_res then
                 nodes[s].ip = pdk.string.format("[%s]", nodes[s].ip)
             end
 
             local node    = pdk.string.format("%s:%s", nodes[s].ip, nodes[s].port)
             servers[node] = nodes[s].weight
+
+            local host, port = pdk.string.parse_address(node)
+            local ok, err = checker:add_target(host, port)
+            if not ok then
+                pdk.log.error("[sys.balancer] health check add target: ", "ip: ", nodes[s].ip, "port:", nodes[s].port, "err:", err)
+            end
         end
 
         local balancer_handle
@@ -85,6 +76,82 @@ local function loading_upstreams()
             type     = type
         }
     end
+end
+
+local function create_health_checker(premature)
+
+    if premature then
+        return
+    end
+
+    loading_upstreams()
+    return
+end
+
+local function get_health_nodes(upstream_id)
+
+    for _, nodes in ipairs(upstream_objects[upstream_id].handler.ids) do
+
+        local host, port = pdk.string.parse_address(nodes)
+        local ok, err = checker:get_target_status(host, port)
+
+        if not ok then
+            upstream_objects[upstream_id].handler:delete(nodes)
+            pdk.log.error("[sys.balancer] health check down target: ", "ip: ", host, "port: ", port, "err:", err)
+        end
+    end
+    return upstream_objects[upstream_id]
+end
+
+local function automatic_sync_hash_id(premature)
+    if premature then
+        return
+    end
+
+    local i = 1
+    while not ngx_worker_exiting() and i <= 10 do
+
+        i = i + 1
+
+        local res, err = db.upstream.query_last_updated_hid()
+        if err then
+            pdk.log.error("[sys.balancer] automatic sync upstreams last updated timestamp reading failure ", err)
+            break
+        end
+        upstream_latest_hash_id = res.hash_id
+        ngx_sleep(10)
+    end
+
+    if not ngx_worker_exiting() then
+        ngx_timer_at(0, automatic_sync_hash_id)
+    end
+end
+
+function _M.init_worker()
+    ngx_timer_at(0, create_health_checker)
+    ngx_timer_at(0, automatic_sync_hash_id)
+end
+
+function _M.init_worker_event()
+
+    local worker_events = require "resty.worker.events"
+    local health_check = require("resty.healthcheck")
+
+    local ok, err = worker_events.configure {
+        shm = "upstream_worker_event",
+        timeout = 5,
+        interval = 1,
+    }
+
+    if not ok then
+        pdk.log.error("[sys.balancer] failed to configure worker events err: ", err)
+    end
+    checker = health_check.new({
+        name = "health_check",
+        shm_name = "upstream_health_check",
+        checks = checks_conf
+    })
+    return
 end
 
 function _M.loading()
@@ -109,8 +176,7 @@ function _M.gogogo(oak_ctx)
         pdk.response.exit(500)
     end
 
-    upstream = upstream_objects[upstream_id]
-
+    upstream = get_health_nodes(upstream_id)
     local state, code = get_last_failure()
     if state == "failed" then
         pdk.log.error("[sys.balancer] connection failure state: " .. state .. " code: " .. code)
@@ -121,8 +187,8 @@ function _M.gogogo(oak_ctx)
     local timeout = upstream.timeouts
     if timeout then
         local connect_timout = timeout.connect or 0
-        local send_timeout   = timeout.send or 0
-        local read_timeout   = timeout.read or 0
+        local send_timeout = timeout.send or 0
+        local read_timeout = timeout.read or 0
         local ok, err = set_timeouts(connect_timout / 1000, send_timeout / 1000, read_timeout / 1000)
         if not ok then
             pdk.log.error("[sys.balancer] could not set upstream timeouts: ", err)

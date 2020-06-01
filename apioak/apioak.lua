@@ -55,6 +55,8 @@ function APIOAK.init_worker()
 
     sys.router.init_worker()
 
+    sys.balancer.init_worker_event()
+
     sys.balancer.init_worker()
 
     sys.cache.init_worker()
