@@ -1,4 +1,4 @@
-#!/usr/bin/env lua
+#!/usr/bin/env resty
 
 local script_path = debug.getinfo(1).source:sub(2)
 
@@ -43,7 +43,117 @@ end
 local openresty_launch = openresty_bin .. [[  -p ]] .. apioak_home .. [[ -c ]]
         .. apioak_home .. [[/conf/nginx.conf]]
 
+
+local function get_config()
+    local res, err = io.open(apioak_home .. "/conf/apioak.yaml", "r")
+    if not res then
+        print("Config Loading         ...FAIL(" .. err ..")")
+        os.exit(1)
+    else
+        print("Config Loading         ...OK")
+    end
+
+    local config_content = res:read("*a")
+    res:close()
+
+    local yaml = require("tinyyaml")
+    local config_table = yaml.parse(config_content)
+    if not config_table or type(config_table) ~= "table" then
+        print("Config Parse           ...FAIL")
+        os.exit(1)
+    else
+        print("Config Parse           ...OK")
+    end
+
+    return config_table, nil
+end
+
+
+local function validate_database()
+    local res, err = get_config()
+    if not res.database then
+        print("Config Database        ...FAIL(Undefined)")
+        os.exit(1)
+    else
+        print("Config Database        ...OK")
+    end
+
+    local db_config = res.database
+
+    local mysql  = require("resty.mysql")
+    res, err = mysql:new()
+    if not res then
+        print("Database Init          ...FAIL(".. err ..")")
+        os.exit(1)
+    else
+        print("Database Init          ...OK")
+    end
+    local db = res
+
+    res, err = db:connect({
+        host     = db_config.host     or "127.0.0.1",
+        port     = db_config.port     or 3306,
+        database = db_config.db_name  or "apioak",
+        user     = db_config.user     or "apioak",
+        password = db_config.password or ""
+    })
+
+    if not res then
+        print("Database Connect       ...FAIL(".. err ..")")
+        os.exit(1)
+    else
+        print("Database Connect       ...OK")
+    end
+
+    res, err = db:query("SELECT version() AS version")
+    if not res then
+        print("Database Query Version ...FAIL(".. err ..")")
+        os.exit(1)
+    else
+        print("Database Query Version ...OK")
+    end
+
+    local db_version = res[1].version
+    local db_version_num = tonumber(string.match(db_version, "^%d+%.%d+"))
+    if string.find(db_version, "MariaDB") then
+        if db_version_num < 10.2 then
+            print("Database Version       ...FAIL(MariaDB version be greater than 10.2)")
+            os.exit(1)
+        else
+            print("Database Version       ...OK")
+        end
+    else
+        if db_version_num < 5.7 then
+            print("Database Version       ...FAIL(MySQL version be greater than 5.7)")
+            os.exit(1)
+        else
+            print("Database Version       ...OK")
+        end
+    end
+
+    res, err = db:query("SHOW tables")
+    if not res then
+        print("Database Query Tables  ...FAIL(".. err ..")")
+        os.exit(1)
+    else
+        print("Database Query Tables  ...OK")
+    end
+
+    local db_tables = {}
+    local conf_tables = db_config.tables
+    local table_field = 'Tables_in_' .. db_config.db_name
+    for i = 1, #res do
+        table.insert(db_tables, res[i][table_field])
+    end
+    if table.sort(db_tables) == table.sort(conf_tables) then
+        print("Database Tables        ...OK")
+    else
+        print("Database Tables        ...FAIL")
+    end
+end
+
 local _M = {}
+
 
 function _M.help()
     print([[
@@ -54,33 +164,40 @@ stop:       stop the apioak server
 restart:    restart the apioak server
 reload:     reload the apioak server
 test:       test the apioak nginx config
+env:        check apioak running environment
 ]])
 end
+
 
 function _M.start()
     local cmd = openresty_launch
     os.execute(cmd)
 end
 
+
 function _M.stop()
     local cmd = openresty_launch .. [[ -s stop]]
     os.execute(cmd)
 end
+
 
 function _M.restart()
     _M.stop()
     _M.start()
 end
 
+
 function _M.reload()
     local cmd = openresty_launch .. [[ -s reload]]
     os.execute(cmd)
 end
 
+
 function _M.test()
     local cmd = openresty_launch .. [[ -t]]
     os.execute(cmd)
 end
+
 
 function _M.init()
     local logs = io.open(apioak_home .. "/logs", "rb")
@@ -91,45 +208,39 @@ function _M.init()
     end
 end
 
-function _M.init_etcd()
-    local yaml = require("tinyyaml")
-    local file, err = io.open(apioak_home .. "/conf/apioak.yaml", "r")
-    if err then
-        error(err)
+
+function _M.env()
+    local nginx_path = trim(execute_cmd("which openresty"))
+    if not nginx_path then
+        print("OpenResty PATH         ...FAIL(OpenResty not found in system PATH)")
+        os.exit(1)
+    else
+        print("OpenResty PATH         ...OK")
     end
 
-    local content = file:read("*a")
-    file:close()
 
-    local config = yaml.parse(content)
-    local etcd_config = config.etcd
-    local etcd_uri = string.format("%s/v2/keys%s", etcd_config.host, etcd_config.prefix)
-    local timeout = etcd_config.timeout
-    for _, name in ipairs({
-        "routes",
-        "upstreams",
-        "services"
-    }) do
-        local command = string.format("curl %s/%s?prev_exist=false -X PUT -d dir=true --connect-timeout %s 2>&1",
-                etcd_uri, name, timeout)
-        local res = execute_cmd(command)
-        if not res:find("index", 1, true)
-                and not res:find("createdIndex", 1, true) then
-            error(command .. "\n" .. res)
-        end
+    if ngx.config.nginx_version < 1015008 then
+        print("OpenResty Version      ...FAIL(OpenResty version must be greater than 1.15.8)")
+        os.exit(1)
+    else
+
+        print("OpenResty Version      ...OK")
     end
-    local hello_api_command = string.format("curl %s/routes/1 -X PUT -d 'value={\"uri\":\"/hello/world\",\"method\":\"GET\"}'", etcd_uri)
-    os.execute(hello_api_command)
+
+    validate_database()
 end
+
 
 local cmd_action = arg[1]
 if not cmd_action then
     return _M.help()
 end
 
+
 if not _M[cmd_action] then
     print("invalid argument: ", cmd_action, "\n")
     return
 end
+
 
 _M[cmd_action](arg[2])

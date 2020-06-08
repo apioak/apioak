@@ -7,6 +7,14 @@ database:
   timeout: 1000    # millisecond
   pool_size: 100
   max_idle_timeout: 10000 # millisecond
+  tables:
+    - oak_plugins
+    - oak_projects
+    - oak_roles
+    - oak_routers
+    - oak_tokens
+    - oak_upstreams
+    - oak_users
 
 plugins:
   - limit-req

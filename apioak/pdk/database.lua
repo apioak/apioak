@@ -48,7 +48,11 @@ end
 
 
 function _M.execute(sql)
-    local my_cli = _M.new()
+    local my_cli, my_err = _M.new()
+    if not my_cli then
+        return nil, my_err
+    end
+
     local res, err = my_cli:query(sql)
     my_cli:close()
     return res, err
