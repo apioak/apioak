@@ -1,3 +1,34 @@
+## 0.5.0 
+> Released on 2020.06.08
+
+#### Feature
+
+- Added support for ```IPV6```.
+- Added environment check function.
+- Added ```Admin API```  test cases.
+- Added ```Load balancing``` health check.
+- Added routing table memory pool recycling function.
+
+
+#### FIX
+
+- Fixed ```SQL``` injection vulnerability.
+
+
+#### Change
+
+- Added dependent library ```lua-resty-oakrouting```.
+- Added dependent library ```lua-resty-healthcheck```.
+- Removed dependent library ```lua-resty-libr3```.
+- The routing engine changed from ```libr3``` to ```oakrouting```.
+
+
+#### Document
+- Added Chinese usage documentation.
+- Updated ```MariaDB``` Chinese installation document.
+
+
+
 ## 0.4.0 
 > Released on 2020.04.06
 
