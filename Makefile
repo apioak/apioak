@@ -55,9 +55,9 @@ install:
 	$(INSTALL) README_CN.md        $(INST_OAK_PRODIR)/README_CN.md
 	$(INSTALL) COPYRIGHT           $(INST_OAK_PRODIR)/COPYRIGHT
 
-	$(DOWNLOAD) https://github.com/apioak/dashboard/releases/download/v0.4.0/dashboard-0.4.0.tar.gz
-	$(UNTAG)    dashboard-0.4.0.tar.gz -C $(INST_OAK_PRODIR)
-	$(REMOVE)   dashboard-0.4.0.tar.gz
+	$(DOWNLOAD) https://github.com/apioak/dashboard/releases/download/v0.5.0/dashboard-0.5.0.tar.gz
+	$(UNTAG)    dashboard-0.5.0.tar.gz -C $(INST_OAK_PRODIR)
+	$(REMOVE)   dashboard-0.5.0.tar.gz
 
 
 .PHONY: uninstall
