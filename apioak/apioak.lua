@@ -69,7 +69,7 @@ function APIOAK.http_access()
     local ngx_ctx = ngx.ctx
     local oak_ctx = ngx_ctx.oak_ctx
     if not oak_ctx then
-        oak_ctx = pdk.pool.fetch("oak_ctx", 0, 32)
+        oak_ctx = pdk.pool.fetch("oak_ctx", 0, 64)
         ngx_ctx.oak_ctx = oak_ctx
     end
 
@@ -144,6 +144,9 @@ end
 function APIOAK.http_log()
     local oak_ctx = ngx.ctx.oak_ctx
     run_plugin("http_log", oak_ctx)
+    if oak_ctx then
+        pdk.pool.release("oak_ctx", oak_ctx)
+    end
 end
 
 function APIOAK.http_admin()
