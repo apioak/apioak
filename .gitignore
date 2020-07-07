@@ -42,3 +42,7 @@ luac.out
 .idea
 
 *.DS_Store
+
+.vscode
+
+deps

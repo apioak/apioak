@@ -37,7 +37,6 @@ local APIOAK = {}
 
 function APIOAK.init()
     require("resty.core")
-
     if require("ffi").os == "Linux" then
         require("ngx.re").opt("jit_stack_size", 200 * 1024)
     end
@@ -60,6 +59,8 @@ function APIOAK.init_worker()
     sys.balancer.init_worker()
 
     sys.cache.init_worker()
+
+    sys.plugin.init_worker()
 end
 
 function APIOAK.http_access()
@@ -72,8 +73,8 @@ function APIOAK.http_access()
         oak_ctx = pdk.pool.fetch("oak_ctx", 0, 64)
         ngx_ctx.oak_ctx = oak_ctx
     end
-
     sys.router.parameter(oak_ctx)
+
 
     local match_succeed = sys.router.matched(oak_ctx)
     if not match_succeed then
