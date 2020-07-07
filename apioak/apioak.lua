@@ -73,8 +73,8 @@ function APIOAK.http_access()
         oak_ctx = pdk.pool.fetch("oak_ctx", 0, 64)
         ngx_ctx.oak_ctx = oak_ctx
     end
-    sys.router.parameter(oak_ctx)
 
+    sys.router.parameter(oak_ctx)
 
     local match_succeed = sys.router.matched(oak_ctx)
     if not match_succeed then

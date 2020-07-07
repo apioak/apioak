@@ -3,7 +3,7 @@ database:
   port: 3306
   db_name: apioak
   user: root
-  password: wxc5134481
+  password: 123000
   timeout: 1000    # millisecond
   pool_size: 100
   max_idle_timeout: 10000 # millisecond
