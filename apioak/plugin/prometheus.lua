@@ -2,6 +2,7 @@ local pdk = require("apioak.pdk")
 local ngx_var    = ngx.var
 
 local plugin_name = "prometheus"
+local metric = {}
 
 local _M = {
     name        = plugin_name,

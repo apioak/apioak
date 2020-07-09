@@ -2,7 +2,6 @@ local pdk = require("apioak.pdk")
 local config  = require("apioak.sys.config")
 local stringx = require("apioak.pdk.string")
 local _M = {}
-metric = {}
 
 function _M.init_worker()
 

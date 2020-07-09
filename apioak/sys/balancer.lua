@@ -54,10 +54,10 @@ local function loading_upstreams()
             servers[node] = nodes[s].weight
 
             local host, port = pdk.string.parse_address(node)
-            local ok, err = checker:add_target(host, port)
-            if not ok then
-                pdk.log.error("[sys.balancer] health check add target: ", "ip: ", nodes[s].ip, "port:", nodes[s].port, "err:", err)
-            end
+            --local ok, err = checker:add_target(host, port)
+            --if not ok then
+            --    pdk.log.error("[sys.balancer] health check add target: ", "ip: ", nodes[s].ip, "port:", nodes[s].port, "err:", err)
+            --end
         end
 
         local balancer_handle
@@ -93,12 +93,12 @@ local function get_health_nodes(upstream_id)
     for _, nodes in ipairs(upstream_objects[upstream_id].handler.ids) do
 
         local host, port = pdk.string.parse_address(nodes)
-        local ok, err = checker:get_target_status(host, port)
-
-        if not ok then
-            upstream_objects[upstream_id].handler:delete(nodes)
-            pdk.log.error("[sys.balancer] health check down target: ", "ip: ", host, "port: ", port, "err:", err)
-        end
+        --local ok, err = checker:get_target_status(host, port)
+        --
+        --if not ok then
+        --    upstream_objects[upstream_id].handler:delete(nodes)
+        --    pdk.log.error("[sys.balancer] health check down target: ", "ip: ", host, "port: ", port, "err:", err)
+        --end
     end
     return upstream_objects[upstream_id]
 end
