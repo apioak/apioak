@@ -40,5 +40,6 @@ luac.out
 *.hex
 
 .idea
-
 *.DS_Store
+.vscode
+deps
