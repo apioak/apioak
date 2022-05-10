@@ -160,6 +160,13 @@ Requests/sec:  24012.38
 请参阅 [APIOAK文档](https://github.com/apioak/apioak-document)。
 
 
+## 全景图
+
+<img src="https://landscape.cncf.io/images/left-logo.svg" width="150">&nbsp;&nbsp;<img src="https://landscape.cncf.io/images/right-logo.svg" width="200" />
+
+APIOAK 被纳入 [云原生计算基金会API网关全景图](https://landscape.cncf.io/card-mode?category=api-gateway&grouping=category)
+
+
 ## 致谢
 
 ![Thanks](doc/images/APIOAK-thanks.jpg)
