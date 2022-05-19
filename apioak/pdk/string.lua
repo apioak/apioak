@@ -1,3 +1,4 @@
+local ngx      = ngx
 local plstring = require("pl.stringx")
 
 local _M = {}

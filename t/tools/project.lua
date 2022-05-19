@@ -1,3 +1,4 @@
+local ngx             = ngx
 local pdk             = require("apioak.pdk")
 local project_table   = "oak_projects"
 local upstreams_table = "oak_upstreams"
@@ -50,7 +51,8 @@ end
 
 
 function _M.routers_info(project_id, request_path, request_method)
-    local sql = pdk.string.format("SELECT * FROM %s WHERE project_id = %s AND request_path = %s AND request_method = %s",
+    local sql = pdk.string.format(
+            "SELECT * FROM %s WHERE project_id = %s AND request_path = %s AND request_method = %s",
             routers_table,
             ngx.quote_sql_str(project_id),
             ngx.quote_sql_str(request_path),

@@ -1,4 +1,5 @@
-local pdk  = require("apioak.pdk")
+local ngx = ngx
+local pdk = require("apioak.pdk")
 
 local table_name = "oak_plugins"
 
@@ -11,7 +12,8 @@ _M.RESOURCES_TYPE_ROUTER = "ROUTER"
 _M.RESOURCES_TYPE_PROJECT = "PROJECT"
 
 function _M.query_by_res(res_type, res_id)
-    local sql = pdk.string.format("SELECT id, name, type, description, config  FROM %s WHERE res_type = %s AND res_id = %s",
+    local sql = pdk.string.format("SELECT id, name, type, description, config "
+            .. "FROM %s WHERE res_type = %s AND res_id = %s",
             table_name,
             ngx.quote_sql_str(res_type),
             ngx.quote_sql_str(res_id))
@@ -29,7 +31,8 @@ function _M.query_by_res(res_type, res_id)
 end
 
 function _M.create_by_res(res_type, res_id, params)
-    local sql = pdk.string.format("INSERT INTO %s (name, type, description, config, res_type, res_id) VALUES (%s, %s, %s, %s, %s, %s)",
+    local sql = pdk.string.format("INSERT INTO %s (name, type, description, config, res_type, res_id) "
+            .. "VALUES (%s, %s, %s, %s, %s, %s)",
             table_name,
             ngx.quote_sql_str(params.name),
             ngx.quote_sql_str(params.type),

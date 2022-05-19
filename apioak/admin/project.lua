@@ -2,6 +2,7 @@ local db         = require("apioak.db")
 local pdk        = require("apioak.pdk")
 local schema     = require("apioak.schema")
 local controller = require("apioak.admin.controller")
+local _
 
 local project_controller = controller.new("project")
 
@@ -26,7 +27,7 @@ function project_controller.created()
     for i = 1, #body.upstreams do
         local upstream      = body.upstreams[i]
         upstream.project_id = project_id
-        res, err = db.upstream.create(upstream)
+        _, err = db.upstream.create(upstream)
         if err then
             db.project.delete(project_id)
 
@@ -140,17 +141,17 @@ function project_controller.deleted(params)
         pdk.response.exit(501, { err_message = "routers in project were not deleted" })
     end
 
-    res, err = db.plugin.delete_by_res(db.plugin.RESOURCES_TYPE_PROJECT, params.project_id)
+    _, err = db.plugin.delete_by_res(db.plugin.RESOURCES_TYPE_PROJECT, params.project_id)
     if err then
         pdk.response.exit(500, { err_message = err })
     end
 
-    res, err = db.upstream.delete_by_pid(params.project_id)
+    _, err = db.upstream.delete_by_pid(params.project_id)
     if err then
         pdk.response.exit(500, { err_message = err })
     end
 
-    res, err = db.role.delete_by_pid(params.project_id)
+    _, err = db.role.delete_by_pid(params.project_id)
     if err then
         pdk.response.exit(500, { err_message = err })
     end
@@ -342,7 +343,11 @@ function project_controller.plugin_updated(params)
         end
     end
 
-    local res, err = db.plugin.update_by_res(db.plugin.RESOURCES_TYPE_PROJECT, params.project_id, params.plugin_id, body)
+    local res, err = db.plugin.update_by_res(
+            db.plugin.RESOURCES_TYPE_PROJECT,
+            params.project_id,
+            params.plugin_id,
+            body)
     if err then
         pdk.response.exit(500, { err_message = err })
     end

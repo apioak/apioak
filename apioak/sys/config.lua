@@ -1,3 +1,4 @@
+local ngx          = ngx
 local pdk          = require("apioak.pdk")
 local yaml         = require("tinyyaml")
 local io_open      = io.open

@@ -23,7 +23,8 @@ _M.get_router_etcd_key = function(env, service_id, router_id)
     if not router_id then
         return "/services/" .. SERVICE_ID_PREFIX .. tostring(service_id) .. "/" .. env .. "/routers"
     else
-        return "/services/" .. SERVICE_ID_PREFIX .. tostring(service_id) .. "/" .. env .. "/routers/" .. tostring(router_id)
+        return "/services/" .. SERVICE_ID_PREFIX .. tostring(service_id) .. "/" .. env .. "/routers/"
+                .. tostring(router_id)
     end
 end
 

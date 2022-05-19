@@ -1,5 +1,6 @@
 local config = require("apioak.sys.config")
 local mysql  = require("resty.mysql")
+local close
 
 local _M = {}
 

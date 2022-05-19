@@ -39,8 +39,6 @@ end
 function _M.say(code, body)
     if code and type(code) == "number" then
         ngx.status = code
-    else
-        code = nil
     end
     ngx_header[const.CONTENT_TYPE] = const.CONTENT_TYPE_HTML
     ngx_say(body)

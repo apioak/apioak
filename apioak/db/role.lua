@@ -1,3 +1,4 @@
+local ngx  = ngx
 local pdk  = require("apioak.pdk")
 
 local table_name = "oak_roles"

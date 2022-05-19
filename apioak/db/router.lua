@@ -1,3 +1,4 @@
+local ngx     = ngx
 local pdk     = require("apioak.pdk")
 local role    = require("apioak.db.role")
 local project = require("apioak.db.project")

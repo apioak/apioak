@@ -1,3 +1,4 @@
+local ngx          = ngx
 local pdk          = require("apioak.pdk")
 local ngx_timer_at = ngx.timer.at
 local lru_cache    = require("resty.lrucache")
