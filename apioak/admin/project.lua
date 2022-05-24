@@ -2,7 +2,6 @@ local db         = require("apioak.db")
 local pdk        = require("apioak.pdk")
 local schema     = require("apioak.schema")
 local controller = require("apioak.admin.controller")
-local _
 
 local project_controller = controller.new("project")
 
