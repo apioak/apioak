@@ -1,3 +1,4 @@
+local ngx  = ngx
 local http = require("resty.http")
 local json = require("cjson.safe")
 local type = type

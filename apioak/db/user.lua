@@ -1,3 +1,4 @@
+local ngx = ngx
 local pdk = require("apioak.pdk")
 local role = require("apioak.db.role")
 
@@ -109,7 +110,9 @@ end
 
 function _M.query_by_pid(gid)
    local sql = pdk.string.format(
-           "SELECT users.id, users.name, users.email, roles.is_admin FROM %s AS roles LEFT JOIN %s AS users ON roles.user_id = users.id WHERE roles.project_id = %s",
+           "SELECT users.id, users.name, users.email, roles.is_admin "
+                   .. "FROM %s AS roles LEFT JOIN %s AS users ON roles.user_id = users.id "
+                   .. "WHERE roles.project_id = %s",
            role.table_name, table_name, ngx.quote_sql_str(gid))
     local res, err = pdk.database.execute(sql)
 

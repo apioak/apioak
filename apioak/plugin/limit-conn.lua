@@ -1,3 +1,4 @@
+local ngx = ngx
 local pdk = require("apioak.pdk")
 local sys = require("apioak.sys")
 local limit_conn = require("resty.limit.conn")

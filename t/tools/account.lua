@@ -1,3 +1,4 @@
+local ngx         = ngx
 local json        = require("cjson.safe")
 local pdk         = require("apioak.pdk")
 local user_table  = "oak_users"

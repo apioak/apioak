@@ -44,12 +44,12 @@ function user_controller.deleted(params)
         pdk.response.exit(501, { err_message = "no permissions" })
     end
 
-    local res, err = db.role.delete_by_uid(params.user_id)
-    if err then
-        pdk.response.exit(500, { err_message = err })
+    local _, del_role_err = db.role.delete_by_uid(params.user_id)
+    if del_role_err then
+        pdk.response.exit(500, { err_message = del_role_err })
     end
 
-    res, err = db.user.delete(params.user_id)
+    local res, err = db.user.delete(params.user_id)
     if err then
         pdk.response.exit(500, { err_message = err })
     end

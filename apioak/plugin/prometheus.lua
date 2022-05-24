@@ -1,14 +1,15 @@
+local ngx = ngx
 local pdk = require("apioak.pdk")
 local ngx_var    = ngx.var
 
 local plugin_name = "prometheus"
 local metric = {}
+local prometheus
 
 local _M = {
     name        = plugin_name,
     type        = "Service Monitoring",
     description = "Lua module for monitor server.",
-    init        = init
 }
 
 local config_schema = {
@@ -59,7 +60,8 @@ function _M.http_access(oak_ctx)
     end
 
     if not prometheus or not metric then
-        pdk.log.error("prometheus: plugin is not initialized, please make sure ", "'prometheus_metrics' shared dict is present in nginx template ")
+        pdk.log.error("prometheus: plugin is not initialized, please make sure ",
+                "'prometheus_metrics' shared dict is present in nginx template ")
         pdk.response.exit(500, {"err_message : Prometheus has a system error"})
     end
 

@@ -115,7 +115,9 @@ _M.created = {
                         maxLength = 100
                     }
                 },
-                required = { "name", "position", "request_param_name", "request_param_position", "request_param_type", "request_param_description" }
+                required = { "name", "position",
+                             "request_param_name", "request_param_position", "request_param_type",
+                             "request_param_description" }
             }
         },
         constant_params = {
@@ -202,9 +204,10 @@ _M.created = {
             }
         }
     },
-    required = { "name", "enable_cors", "description", "request_path", "request_method", "request_params", "backend_path",
-                 "backend_method", "backend_params", "constant_params", "response_type",
-                 "response_success", "response_failure", "response_codes", "response_schema", "project_id" }
+    required = { "name", "enable_cors", "description", "project_id",
+                 "request_path", "request_method", "request_params",
+                 "backend_path", "backend_method", "backend_params", "constant_params",
+                 "response_type", "response_success", "response_failure", "response_codes", "response_schema", }
 }
 
 _M.updated = {
@@ -322,7 +325,9 @@ _M.updated = {
                         maxLength = 100
                     }
                 },
-                required = { "name", "position", "request_param_name", "request_param_position", "request_param_type", "request_param_description" }
+                required = { "name", "position",
+                             "request_param_name", "request_param_position", "request_param_type",
+                             "request_param_description" }
             }
         },
         constant_params = {
@@ -409,9 +414,10 @@ _M.updated = {
             }
         }
     },
-    required = { "name", "enable_cors", "description", "request_path", "request_method", "request_params", "backend_path",
-                 "backend_method", "backend_params", "constant_params", "response_type",
-                 "response_success", "response_failure", "response_codes", "response_schema", "router_id" }
+    required = { "name", "enable_cors", "description", "constant_params",  "router_id",
+                 "request_path", "request_method", "request_params",
+                 "backend_path", "backend_method", "backend_params",
+                 "response_type", "response_success", "response_failure", "response_codes", "response_schema", }
 }
 
 _M.deleted = {

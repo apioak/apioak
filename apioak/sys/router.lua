@@ -1,3 +1,4 @@
+local ngx = ngx
 local pdk = require("apioak.pdk")
 local db  = require("apioak.db")
 local pairs               = pairs
@@ -130,7 +131,9 @@ local checked_request_params = function(rule, params)
     local query_val = params[rule.request_param_name]
     if rule.required == 1 then
         if not query_val then
-            return nil, "request param \"[" .. rule.request_param_position .. "." .. rule.request_param_name .. "]\" undefined"
+            return nil, "request param \"[" ..
+                    rule.request_param_position .. "." ..
+                    rule.request_param_name .. "]\" undefined"
         end
     else
         if not query_val then

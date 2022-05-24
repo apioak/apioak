@@ -1,3 +1,4 @@
+local ngx = ngx
 local pdk = require("apioak.pdk")
 local db  = require("apioak.db")
 local ngx_sleep          = ngx.sleep
@@ -54,9 +55,12 @@ local function loading_upstreams()
             servers[node] = nodes[s].weight
 
             local host, port = pdk.string.parse_address(node)
-            local ok, err = checker:add_target(host, port)
+            local ok, add_target_err = checker:add_target(host, port)
             if not ok then
-                pdk.log.error("[sys.balancer] health check add target: ", "ip: ", nodes[s].ip, "port:", nodes[s].port, "err:", err)
+                pdk.log.error("[sys.balancer] health check add target: ",
+                        "ip: ", nodes[s].ip,
+                        "port:", nodes[s].port,
+                        "err:", add_target_err)
             end
         end
 

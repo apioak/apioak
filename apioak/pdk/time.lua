@@ -1,3 +1,5 @@
+local ngx = ngx
+
 local _M = {}
 
 _M.time      = os.time
