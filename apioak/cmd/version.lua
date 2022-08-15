@@ -25,7 +25,7 @@ local function execute(args)
       jit and jit.version or _VERSION
     ))
   else
-    print(meta._VERSION)
+    print(meta.__VERSION)
   end
 end
 
