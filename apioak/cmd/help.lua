@@ -3,6 +3,7 @@ local function execute(args)
     Usage: apioak [action] <argument>
     help:       show this message, then exit
     start:      start the apioak server
+    quit:       quit the apioak server
     stop:       stop the apioak server
     restart:    restart the apioak server
     reload:     reload the apioak server
