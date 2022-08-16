@@ -1,4 +1,3 @@
-local log = require("apioak.pdk.log")
 local stop = require("apioak.cmd.stop")
 local start = require("apioak.cmd.start")
 
