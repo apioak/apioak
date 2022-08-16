@@ -33,7 +33,7 @@ end
 local function validate_database()
     local res, err = get_config()
     if not res.database then
-        print("Config Database        ...FAIL(Undefined)")
+        print("Config Database        ...FAIL(".. err ..")")
         os.exit(1)
     else
         print("Config Database        ...OK")
