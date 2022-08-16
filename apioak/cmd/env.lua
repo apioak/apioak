@@ -6,7 +6,7 @@ Usage: apioak env
 
 
 local function get_config()
-    local res, err = io.open(common.apioak_home .. "/conf/apioak.yaml", "r")
+    local res, _ = io.open(common.apioak_home .. "/conf/apioak.yaml", "r")
     if not res then
         print("Config Loading         ...FAIL(" .. err ..")")
         os.exit(1)
@@ -31,7 +31,7 @@ end
 
 
 local function validate_database()
-    local res, err = get_config()
+    local res, _ = get_config()
     if not res.database then
         print("Config Database        ...FAIL(Undefined)")
         os.exit(1)
@@ -42,7 +42,7 @@ local function validate_database()
     local db_config = res.database
 
     local mysql  = require("resty.mysql")
-    res, err = mysql:new()
+    res, _ = mysql:new()
     if not res then
         print("Database Init          ...FAIL(".. err ..")")
         os.exit(1)
@@ -51,7 +51,7 @@ local function validate_database()
     end
     local db = res
 
-    res, err = db:connect({
+    res, _ = db:connect({
         host     = db_config.host     or "127.0.0.1",
         port     = db_config.port     or 3306,
         database = db_config.db_name  or "apioak",
@@ -66,7 +66,7 @@ local function validate_database()
         print("Database Connect       ...OK")
     end
 
-    res, err = db:query("SELECT version() AS version")
+    res, _ = db:query("SELECT version() AS version")
     if not res then
         print("Database Query Version ...FAIL(".. err ..")")
         os.exit(1)
@@ -92,7 +92,7 @@ local function validate_database()
         end
     end
 
-    res, err = db:query("SHOW tables")
+    res, _ = db:query("SHOW tables")
     if not res then
         print("Database Query Tables  ...FAIL(".. err ..")")
         os.exit(1)

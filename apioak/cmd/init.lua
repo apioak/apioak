@@ -1,10 +1,5 @@
 local pl_app = require("pl.lapp")
-local log = require "apioak.cmd.utils.log"
-
-local options = [[
- --v              verbose
- --vv             debug
-]]
+local log = require "apioak.pdk.log"
 
 local cmds_arr = {}
 local cmds = {
@@ -26,7 +21,7 @@ end
 table.sort(cmds_arr)
 
 local help = string.format([[
-Usage: apioak COMMAND [OPTIONS]
+Usage: apioak COMMAND
 The available commands are:
  %s]], table.concat(cmds_arr, "\n "))
 
@@ -47,7 +42,6 @@ return function(args)
     local cmd_exec = cmd.execute
 
     if cmd_lapp then
-        cmd_lapp = cmd_lapp .. options -- append universal options
         args = pl_app(cmd_lapp)
     end
 
@@ -63,13 +57,6 @@ return function(args)
         end
     end
 
-    -- verbose mode
-    if args.v then
-        log.set_lvl(log.levels.verbose)
-    elseif args.vv then
-        log.set_lvl(log.levels.debug)
-    end
-
     log.debug("ngx_lua: %s", ngx.config.ngx_lua_version)
     log.debug("nginx: %s", ngx.config.nginx_version)
     log.debug("Lua: %s", jit and jit.version or _VERSION)
@@ -78,7 +65,6 @@ return function(args)
         if not (args.v or args.vv) then
         err = err:match "^.-:.-:.(.*)$"
         io.stderr:write("Error: " .. err .. "\n")
-        io.stderr:write("\n  Run with --v (verbose) or --vv (debug) for more details\n")
         else
         local trace = debug.traceback(err, 2)
         io.stderr:write("Error: \n")

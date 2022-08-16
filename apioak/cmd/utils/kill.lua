@@ -1,6 +1,6 @@
 local pl_path = require "pl.path"
 local pl_utils = require "pl.utils"
-local log = require "apioak.cmd.utils.log"
+local log = require "apioak.pdk.log"
 
 local cmd_tmpl = [[kill %s `cat %s` >/dev/null 2>&1]]
 

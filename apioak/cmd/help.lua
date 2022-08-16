@@ -9,6 +9,7 @@ local function execute(args)
     reload:     reload the apioak server
     test:       test the apioak nginx config
     env:        check apioak running environment
+    version:    print apioak's version
     ]])
 end
 

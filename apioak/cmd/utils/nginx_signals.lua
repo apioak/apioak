@@ -1,4 +1,4 @@
-local common = require("apioak/cmd/utils/common") 
+local common = require("apioak/cmd/utils/common")
 
 local _M = {}
 
