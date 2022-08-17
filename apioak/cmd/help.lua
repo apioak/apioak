@@ -1,4 +1,4 @@
-local function execute(args)
+local function execute()
     print([[
     Usage: apioak [action] <argument>
     help:       show this message, then exit

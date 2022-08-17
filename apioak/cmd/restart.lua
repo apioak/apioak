@@ -5,9 +5,9 @@ local lapp = [[
 Usage: apioak restart
 ]]
 
-local function execute(args)
+local function execute()
 
-    pcall(stop.execute, args, {quiet = true})
+    pcall(stop.execute)
 
     pcall(start.execute)
 end

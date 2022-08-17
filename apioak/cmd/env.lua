@@ -113,7 +113,7 @@ local function validate_database()
     end
 end
 
-local function execute(args)
+local function execute()
     local nginx_path = common.trim(common.execute_cmd("which openresty"))
     if not nginx_path then
         print("OpenResty PATH         ...FAIL(OpenResty not found in system PATH)")

@@ -4,7 +4,7 @@ local lapp = [[
 Usage: apioak reload
 ]]
 
-local function execute(args)
+local function execute()
     nginx_signals.reload()
 end
 

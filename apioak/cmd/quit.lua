@@ -4,7 +4,7 @@ local lapp = [[
 Usage: apioak quit
 ]]
 
-local function execute(args)
+local function execute()
     nginx_signals.quit()
 end
 
