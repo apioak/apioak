@@ -3,9 +3,10 @@ name: Code Luacheck
 on:
   pull_request:
     branches: [ master ]
+  
+  workflow_dispatch:
 
 jobs:
-
   luacheck:
     name: code luacheck
     runs-on: ubuntu-latest
