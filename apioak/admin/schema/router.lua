@@ -6,7 +6,8 @@ _M.created = {
         name = {
             type = "string",
             minLength = 1,
-            maxLength = 50
+            maxLength = 50,
+            pattern = "^\\*?[0-9a-zA-Z-._]+$"
         },
         methods = {
             type = "array",
@@ -24,8 +25,9 @@ _M.created = {
             uniqueItems = true,
             items = {
                 type = "string",
-                pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                pattern = "^\\*?[0-9a-zA-Z-./]+$"
             },
+
         },
         headers = {
             type = "object",
@@ -35,11 +37,11 @@ _M.created = {
             properties = {
                 id = {
                     type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                    pattern = "^\\*?[0-9a-zA-Z-_.]+$"
                 },
                 name = {
                     type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                    pattern = "^\\*?[0-9a-zA-Z-_.]+$"
                 },
             },
         },
@@ -51,11 +53,11 @@ _M.created = {
                 properties = {
                     id = {
                         type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                        pattern = "^\\*?[0-9a-zA-Z-]+$"
                     },
                     name = {
                         type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                        pattern = "^\\*?[0-9a-zA-Z-._]+$"
                     }
                 }
             },
@@ -65,22 +67,17 @@ _M.created = {
             properties = {
                 id = {
                     type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                    pattern = "^\\*?[0-9a-zA-Z-]+$"
                 },
                 name = {
                     type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                    pattern = "^\\*?[0-9a-zA-Z-._]+$"
                 },
             },
         },
         enabled = {
             type = "boolean",
             default = true
-        },
-        prefix = {
-            type = "string",
-            minLength = 0,
-            maxLength = 50
         }
     },
     required = { "name", "paths", "service" }
@@ -89,10 +86,11 @@ _M.created = {
 _M.updated = {
     type = "object",
     properties = {
-        router_id = {
+        router_key = {
             type = "string",
             minLength = 1,
-            maxLength = 50
+            maxLength = 50,
+            pattern = "^\\*?[0-9a-zA-Z-._]+$"
         },
         methods = {
             type = "array",
@@ -110,7 +108,7 @@ _M.updated = {
             uniqueItems = true,
             items = {
                 type = "string",
-                pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                pattern = "^\\*?[0-9a-zA-Z-./]+$"
             },
         },
         headers = {
@@ -121,11 +119,11 @@ _M.updated = {
             properties = {
                 id = {
                     type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                    pattern = "^\\*?[0-9a-zA-Z-]+$"
                 },
                 name = {
                     type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                    pattern = "^\\*?[0-9a-zA-Z-_.]+$"
                 },
             },
         },
@@ -137,11 +135,11 @@ _M.updated = {
                 properties = {
                     id = {
                         type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                        pattern = "^\\*?[0-9a-zA-Z-]+$"
                     },
                     name = {
                         type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                        pattern = "^\\*?[0-9a-zA-Z-_.]+$"
                     }
                 }
             },
@@ -151,70 +149,44 @@ _M.updated = {
             properties = {
                 id = {
                     type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                    pattern = "^\\*?[0-9a-zA-Z-]+$"
                 },
                 name = {
                     type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                    pattern = "^\\*?[0-9a-zA-Z-_.]+$"
                 },
             },
         },
         enabled = {
             type = "boolean",
             default = true
-        },
-        prefix = {
-            type = "string",
-            minLength = 0,
-            maxLength = 50
         }
     },
-    required = {"router_id", "name", "paths", "service" }
-}
-
-_M.lists = {
-    type = "object",
-    properties = {
-        prefix = {
-            type = "string",
-            minLength = 0,
-            maxLength = 50
-        }
-    }
+    required = {"router_key", "name", "paths", "service" }
 }
 
 _M.detail = {
     type = "object",
     properties = {
-        router_id = {
+        router_key = {
             type = "string",
             minLength = 1,
             maxLength = 50
-        },
-        prefix = {
-            type = "string",
-            minLength = 0,
-            maxLength = 50
         }
     },
-    required = { "router_id"}
+    required = { "router_key"}
 }
 
 _M.deleted = {
     type = "object",
     properties = {
-        router_id = {
+        router_key = {
             type = "string",
             minLength = 1,
             maxLength = 50
-        },
-        prefix = {
-            type = "string",
-            minLength = 0,
-            maxLength = 50
         }
     },
-    required = { "router_id"}
+    required = { "router_key"}
 }
 
 return _M

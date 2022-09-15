@@ -8,17 +8,16 @@ _M.created = {
             minLength = 1,
             maxLength = 50
         },
-        methods = {
+        protocols = {
             type = "array",
             minItems = 1,
             uniqueItems = true,
             items = {
                 type = "string",
-                enum = { "ALL", "GET", "POST", "PUT", "DELETE", "PATH" }
+                enum = { "http", "https" }
             },
-            default = {"ALL"}
         },
-        paths = {
+        host = {
             type = "array",
             minItems = 1,
             uniqueItems = true,
@@ -27,23 +26,17 @@ _M.created = {
                 pattern = "^\\*?[0-9a-zA-Z-.]+$"
             },
         },
-        headers = {
-            type = "object",
-        },
-        service = {
-            type = "object",
-            properties = {
-                id = {
-                    type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
-                },
-                name = {
-                    type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
-                },
+        port = {
+            type = "array",
+            minItems = 1,
+            uniqueItems = true,
+            items = {
+                type = "number",
+                pattern = "^\\*?[0-9]+$"
             },
+            default = {80}
         },
-        plugin = {
+        plugins = {
             type = "array",
             uniqueItems = true,
             items = {
@@ -60,22 +53,9 @@ _M.created = {
                 }
             },
         },
-        upstream = {
-            type = "object",
-            properties = {
-                id = {
-                    type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
-                },
-                name = {
-                    type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
-                },
-            },
-        },
         enabled = {
             type = "boolean",
-            default = true
+            default = false
         },
         prefix = {
             type = "string",
@@ -83,28 +63,32 @@ _M.created = {
             maxLength = 50
         }
     },
-    required = { "name", "paths", "service" }
+    required = { "name", "protocols", "hosts" }
 }
 
 _M.updated = {
     type = "object",
     properties = {
-        router_id = {
+        id = {
             type = "string",
             minLength = 1,
             maxLength = 50
         },
-        methods = {
+        name = {
+            type = "string",
+            minLength = 1,
+            maxLength = 50
+        },
+        protocols = {
             type = "array",
             minItems = 1,
             uniqueItems = true,
             items = {
                 type = "string",
-                enum = { "ALL", "GET", "POST", "PUT", "DELETE", "PATH" }
+                enum = { "http", "https" }
             },
-            default = {"ALL"}
         },
-        paths = {
+        host = {
             type = "array",
             minItems = 1,
             uniqueItems = true,
@@ -113,23 +97,17 @@ _M.updated = {
                 pattern = "^\\*?[0-9a-zA-Z-.]+$"
             },
         },
-        headers = {
-            type = "object",
-        },
-        service = {
-            type = "object",
-            properties = {
-                id = {
-                    type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
-                },
-                name = {
-                    type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
-                },
+        port = {
+            type = "array",
+            minItems = 1,
+            uniqueItems = true,
+            items = {
+                type = "number",
+                pattern = "^\\*?[0-9]+$"
             },
+            default = {80}
         },
-        plugin = {
+        plugins = {
             type = "array",
             uniqueItems = true,
             items = {
@@ -146,22 +124,9 @@ _M.updated = {
                 }
             },
         },
-        upstream = {
-            type = "object",
-            properties = {
-                id = {
-                    type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
-                },
-                name = {
-                    type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
-                },
-            },
-        },
         enabled = {
             type = "boolean",
-            default = true
+            default = false
         },
         prefix = {
             type = "string",
@@ -169,7 +134,7 @@ _M.updated = {
             maxLength = 50
         }
     },
-    required = {"router_id", "name", "paths", "service" }
+    required = { "id", "name", "protocols", "hosts" }
 }
 
 _M.lists = {
@@ -186,7 +151,7 @@ _M.lists = {
 _M.detail = {
     type = "object",
     properties = {
-        router_id = {
+        service_id = {
             type = "string",
             minLength = 1,
             maxLength = 50
@@ -197,13 +162,13 @@ _M.detail = {
             maxLength = 50
         }
     },
-    required = { "router_id"}
+    required = { "service_id"}
 }
 
 _M.deleted = {
     type = "object",
     properties = {
-        router_id = {
+        service_id = {
             type = "string",
             minLength = 1,
             maxLength = 50
@@ -214,7 +179,7 @@ _M.deleted = {
             maxLength = 50
         }
     },
-    required = { "router_id"}
+    required = { "service_id"}
 }
 
 return _M

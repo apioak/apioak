@@ -28,7 +28,9 @@ dependencies = {
     "multipart = 0.5.5-1",
     "penlight = 1.5.4-1",
     "lua-resty-healthcheck = 1.2.0-1",
-    "lua-resty-prometheus = 1.1"
+    "lua-resty-prometheus = 1.1",
+    "lua-resty-consul = 0.3-2",
+    "lua-resty-jit-uuid = 0.0.7-2"
 }
 
 build = {

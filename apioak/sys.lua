@@ -6,4 +6,5 @@ return {
     plugin   = require("apioak.sys.plugin"),
     config   = require("apioak.sys.config"),
     balancer = require("apioak.sys.balancer"),
+    dao      = require("apioak.sys.dao")
 }
