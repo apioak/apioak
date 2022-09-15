@@ -4,4 +4,5 @@ return {
     project = require("apioak.admin.project"),
     account = require("apioak.admin.account"),
     common  = require("apioak.admin.common"),
+    service = require("apioak.admin.service")
 }

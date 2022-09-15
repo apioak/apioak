@@ -91,6 +91,16 @@ function _M.init_worker()
 
     router:put("/apioak/admin/user/{user_id}/disable", admin.user.disable)
 
+
+    -- Common Service Related APIs
+    router:post("/apioak/admin/services", admin.service.created)
+
+    router:put("/apioak/admin/services/{services_id}", admin.service.updated)
+
+    router:get("/apioak/admin/services", admin.service.lists)
+
+    router:get("/apioak/admin/services/{service_id}", admin.service.detail)
+
 end
 
 function _M.routers()

@@ -23,3 +23,13 @@ plugins:
   - key-auth
   - jwt-auth
   - prometheus
+
+consul:
+  host: 127.0.0.1
+  port: 8500
+  connect_timeout: 600000
+  read_timeout: 600000
+  ssl: false
+  ssl_verify: true
+  sni_host: nil
+

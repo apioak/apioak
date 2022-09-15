@@ -4,4 +4,6 @@ return {
     project = require("apioak.schema.project"),
     account = require("apioak.schema.account"),
     common  = require("apioak.schema.common"),
+
+    service = require("apioak.schema.service"),
 }

@@ -6,4 +6,5 @@ return {
     plugin   = require("apioak.db.plugin"),
     project  = require("apioak.db.project"),
     upstream = require("apioak.db.upstream"),
+    service  = require("apioak.db.consul.service"),
 }
