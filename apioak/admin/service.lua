@@ -63,11 +63,11 @@ function service_controller.detail(params)
     local body      = service_controller.get_body()
     body.service_id = params.service_id
 
-    service_controller.check_schema(schema.service.created, body)
+    service_controller.check_schema(schema.service.detail, body)
 
     service_controller.user_authenticate()
 
-    local  res, err = db.service.updated(params.service_id, body)
+    local  res, err = db.service.detail(params)
     if err then
         pdk.response.exit(500, { message = err })
     end
@@ -97,18 +97,11 @@ function service_controller.deleted(params)
     local body      = service_controller.get_body()
     body.service_id = params.service_id
 
-    service_controller.check_schema(schema.service.created, body)
+    service_controller.check_schema(schema.service.deleted, body)
 
     service_controller.user_authenticate()
 
-    if not service_controller.is_owner then
-        local role = service_controller.project_authenticate(params.project_id, service_controller.uid)
-        if role.is_admin ~= 1 then
-            pdk.response.exit(501, { err_message = "no permissions" })
-        end
-    end
-
-    local  res, err = db.service.updated(params.service_id, body)
+    local  res, err = db.service.deleted(params)
     if err then
         pdk.response.exit(500, { message = err })
     end

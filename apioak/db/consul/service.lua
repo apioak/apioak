@@ -1,6 +1,4 @@
-local ngx = ngx
 local pdk = require("apioak.pdk")
-local json = require("apioak.pdk.json")
 local uuid = require("resty.jit-uuid")
 
 local _M = {}
@@ -13,7 +11,7 @@ function _M.check_plugin_exists(plugin_param)
 
     local consul, err = pdk.consul.new()
 
-    if err ~= nil then
+    if err ~= nil or not consul then
         return false
     end
 
@@ -44,7 +42,7 @@ function _M.created(params)
 
     local consul, err = pdk.consul.new()
 
-    if err ~= nil then
+    if err ~= nil or not consul then
         return nil, err
     end
 
@@ -54,7 +52,7 @@ function _M.created(params)
         return nil, err -- TODO 补充插件不存在错误信息
     end
 
-    local service_id = uuid.seed()
+    local service_id = uuid.generate_v5()
     local service_body = {
         id        = service_id,
         name      = params.name,
@@ -117,7 +115,7 @@ function _M.updated(service_id, params)
 
     local consul, err = pdk.consul.new()
 
-    if err ~= nil then
+    if err ~= nil or not consul then
         return nil, err
     end
 
@@ -161,7 +159,7 @@ function _M.lists(params)
 
     local consul, err = pdk.consul.new()
 
-    if err ~= nil then
+    if err ~= nil or not consul then
         return nil, err
     end
 
@@ -175,17 +173,74 @@ function _M.lists(params)
 
     local res = {}
 
+    if not keys or not keys.body then
+        return {list = res}, nil
+    end
+
     for k, v in ipairs(keys.body) do
 
-         local d, _ = consul:get_key(v)
+         local d, err = consul:get_key(v)
+
+         if err ~= nil or not d or not d.body then
+            goto continue
+         end
 
         table.insert(res, pdk.json.decode(d.body[1].Value))
+
+        ::continue::
      end
 
     return {list = res}, nil
-    -- return res, nil
 end
 
+function _M.detail(params)
 
+    local consul, err = pdk.consul.new()
+
+    if err ~= nil or not consul then
+        return nil, err
+    end
+
+    local key = params.prefix or DEFAULT_SERVICE_PREFIX
+
+    local d, err = consul:get_key(key .. params.service_id)
+
+    if err ~= nil then
+        return nil, err
+    end
+
+    local res = {}
+    if d ~= nil and d.body ~= nil then
+        res = d.body[1].Value
+    end
+
+    return res, nil
+
+end
+
+function _M.deleted(params)
+
+    local consul, err = pdk.consul.new()
+
+    if err ~= nil or not consul then
+        return nil, err
+    end
+
+    local key = params.prefix or DEFAULT_SERVICE_PREFIX
+
+    local d, err = consul:delete_key(key .. params.service_id)
+
+    if err ~= nil then
+        return nil, err
+    end
+
+    local res = {}
+    if d ~= nil and d.body ~= nil then
+        res = d.body[1].Value
+    end
+
+    return res, nil
+
+end
 
 return _M
