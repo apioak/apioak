@@ -13,85 +13,6 @@ function router_controller.created()
 
     router_controller.user_authenticate()
 
-    local res, err = db.router.created(body)
-
-    if err then
-        pdk.response.exit(500, { message = err })
-    end
-
-    pdk.response.exit(200, {id = res.id})
-end
-
-function router_controller.updated(params)
-
-    local body      = router_controller.get_body()
-    body.router_id = params.router_id
-
-    router_controller.check_schema(schema.router.updated, body)
-
-    router_controller.user_authenticate()
-
-    local  res, err = db.router.updated(params.router_id, body)
-    if err then
-        pdk.response.exit(500, { message = err })
-    end
-
-    pdk.response.exit(200, { id = res.id })
-    
-end
-
-function router_controller.detail(params)
-
-    router_controller.check_schema(schema.router.detail, params)
-
-    router_controller.user_authenticate()
-
-    local  res, err = db.router.detail(params)
-    if err then
-        pdk.response.exit(500, { message = err })
-    end
-
-    pdk.response.exit(200, res)
-end
-
-function router_controller.lists(params)
-
-    router_controller.user_authenticate()
-
-    local  res, err = db.router.lists(params)
-
-    if err then
-        pdk.response.exit(500, { message = err })
-    end
-
-    pdk.response.exit(200, res)
-end
-
-function router_controller.deleted(params)
-
-    router_controller.check_schema(schema.router.deleted, params)
-
-    router_controller.user_authenticate()
-
-    local _, err = db.router.deleted(params)
-
-    if err then
-        pdk.response.exit(500, { message = err })
-    end
-
-    pdk.response.exit(200, {})
-end
-
-
--- *******************************************************************************
-function router_controller.created1()
-
-    local body = router_controller.get_body()
-
-    router_controller.check_schema(schema.router.created, body)
-
-    router_controller.user_authenticate()
-
     if not router_controller.is_owner then
         router_controller.project_authenticate(body.project_id, router_controller.uid)
     end
@@ -130,7 +51,7 @@ function router_controller.query(params)
     pdk.response.exit(200, { err_message = "OK", router = res[1] })
 end
 
-function router_controller.updated1(params)
+function router_controller.updated(params)
 
     local body      = router_controller.get_body()
     body.router_id  = params.router_id
@@ -155,7 +76,7 @@ function router_controller.updated1(params)
     end
 end
 
-function router_controller.deleted1(params)
+function router_controller.deleted(params)
 
     router_controller.check_schema(schema.router.deleted, params)
 

@@ -16,9 +16,8 @@ _M.created = {
                 type = "string",
                 enum = { "http", "https" }
             },
-            default = {"http"}
         },
-        hosts = {
+        host = {
             type = "array",
             minItems = 1,
             uniqueItems = true,
@@ -27,7 +26,7 @@ _M.created = {
                 pattern = "^\\*?[0-9a-zA-Z-.]+$"
             },
         },
-        ports = {
+        port = {
             type = "array",
             minItems = 1,
             uniqueItems = true,
@@ -56,7 +55,7 @@ _M.created = {
         },
         enabled = {
             type = "boolean",
-            default = true
+            default = false
         },
         prefix = {
             type = "string",
@@ -64,13 +63,13 @@ _M.created = {
             maxLength = 50
         }
     },
-    required = { "name", "hosts" }
+    required = { "name", "protocols", "hosts" }
 }
 
 _M.updated = {
     type = "object",
     properties = {
-        service_id = {
+        id = {
             type = "string",
             minLength = 1,
             maxLength = 50
@@ -88,9 +87,8 @@ _M.updated = {
                 type = "string",
                 enum = { "http", "https" }
             },
-            default = {"http"}
         },
-        hosts = {
+        host = {
             type = "array",
             minItems = 1,
             uniqueItems = true,
@@ -99,7 +97,7 @@ _M.updated = {
                 pattern = "^\\*?[0-9a-zA-Z-.]+$"
             },
         },
-        ports = {
+        port = {
             type = "array",
             minItems = 1,
             uniqueItems = true,
@@ -128,7 +126,7 @@ _M.updated = {
         },
         enabled = {
             type = "boolean",
-            default = true
+            default = false
         },
         prefix = {
             type = "string",
@@ -136,7 +134,7 @@ _M.updated = {
             maxLength = 50
         }
     },
-    required = { "service_id", "name", "hosts" }
+    required = { "id", "name", "protocols", "hosts" }
 }
 
 _M.lists = {

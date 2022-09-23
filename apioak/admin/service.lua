@@ -19,22 +19,13 @@ function service_controller.created()
         pdk.response.exit(500, { message = err })
     end
 
-    if res == nil or res.id == nil then
-        pdk.response.exit(500, { message = err })
-        return
-    end
-
-    if not res.id then
-        pdk.response.exit(500, { message = "create service FAIL" })
-    end
-
     pdk.response.exit(200, {id = res.id})
 end
 
 function service_controller.updated(params)
 
     local body      = service_controller.get_body()
-    body.id = params.service_id
+    body.service_id = params.service_id
 
     service_controller.check_schema(schema.service.updated, body)
 
@@ -45,25 +36,13 @@ function service_controller.updated(params)
         pdk.response.exit(500, { message = err })
     end
 
-    if res == nil or res.id == nil then
-        pdk.response.exit(500, { message = err })
-        return
-    end
-
-    if not res.id then
-        pdk.response.exit(500, { message = "update service FAIL" })
-    end
-
     pdk.response.exit(200, { id = res.id })
     
 end
 
 function service_controller.detail(params)
 
-    local body      = service_controller.get_body()
-    body.service_id = params.service_id
-
-    service_controller.check_schema(schema.service.detail, body)
+    service_controller.check_schema(schema.service.detail, params)
 
     service_controller.user_authenticate()
 
@@ -72,11 +51,7 @@ function service_controller.detail(params)
         pdk.response.exit(500, { message = err })
     end
 
-    if not res or not res.id then
-        pdk.response.exit(500, { message = "update service FAIL" })
-    else
-        pdk.response.exit(200, { id = res })
-    end
+    pdk.response.exit(200, res)
 end
 
 function service_controller.lists(params)
@@ -94,23 +69,17 @@ end
 
 function service_controller.deleted(params)
 
-    local body      = service_controller.get_body()
-    body.service_id = params.service_id
-
-    service_controller.check_schema(schema.service.deleted, body)
+    service_controller.check_schema(schema.service.deleted, params)
 
     service_controller.user_authenticate()
 
-    local  res, err = db.service.deleted(params)
+    local _, err = db.service.deleted(params)
+
     if err then
         pdk.response.exit(500, { message = err })
     end
 
-    if res == "" then
-        pdk.response.exit(500, { message = "update service FAIL" })
-    else
-        pdk.response.exit(200, { id = res })
-    end
+    pdk.response.exit(200, {})
 end
 
 
