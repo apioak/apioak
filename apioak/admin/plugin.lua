@@ -1,7 +1,7 @@
-local db         = require("apioak.db")
 local pdk        = require("apioak.pdk")
 local schema     = require("apioak.schema")
 local controller = require("apioak.admin.controller")
+local dao        = require("apioak.dao")
 
 local plugin_controller = controller.new("plugin")
 
@@ -13,7 +13,7 @@ function plugin_controller.created()
 
     plugin_controller.user_authenticate()
 
-    local res, err = db.plugin.created(body)
+    local res, err = dao.plugin.created(body)
 
     if err then
         pdk.response.exit(500, { message = err })
@@ -31,13 +31,13 @@ function plugin_controller.updated(params)
 
     plugin_controller.user_authenticate()
 
-    local  res, err = db.plugin.updated(params.plugin_id, body)
+    local  res, err = dao.plugin.updated(params.plugin_id, body)
     if err then
         pdk.response.exit(500, { message = err })
     end
 
     pdk.response.exit(200, { id = res.id })
-    
+
 end
 
 function plugin_controller.detail(params)
@@ -46,7 +46,7 @@ function plugin_controller.detail(params)
 
     plugin_controller.user_authenticate()
 
-    local  res, err = db.plugin.detail(params)
+    local  res, err = dao.plugin.detail(params)
     if err then
         pdk.response.exit(500, { message = err })
     end
@@ -54,11 +54,11 @@ function plugin_controller.detail(params)
     pdk.response.exit(200, res)
 end
 
-function plugin_controller.lists(params)
+function plugin_controller.lists()
 
     plugin_controller.user_authenticate()
 
-    local  res, err = db.plugin.lists(params)
+    local  res, err = dao.plugin.lists()
 
     if err then
         pdk.response.exit(500, { message = err })
@@ -73,7 +73,7 @@ function plugin_controller.deleted(params)
 
     plugin_controller.user_authenticate()
 
-    local _, err = db.plugin.deleted(params)
+    local _, err = dao.plugin.deleted(params)
 
     if err then
         pdk.response.exit(500, { message = err })

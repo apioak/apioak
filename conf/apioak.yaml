@@ -32,4 +32,5 @@ consul:
   ssl: false
   ssl_verify: true
   sni_host: nil
+  prefix: apioak
 

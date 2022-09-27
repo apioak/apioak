@@ -3,6 +3,7 @@ local resty_consul = require('resty.consul')
 
 local _M = {
     _VERSION = '0.6.0',
+    instance = {},
 }
 
 local DEFAULT_HOST            = "127.0.0.1"
@@ -10,12 +11,12 @@ local DEFAULT_PORT            = 8500
 local DEFAULT_COONECT_TIMEOUT = 60*1000 -- 60s default timeout
 local DEFAULT_READ_TIMEOUT    = 60*1000 -- 60s default timeout
 
-function _M.new()
+function _M.init()
 
     local conf, err = config.query("consul")
 
     if err or conf == nil then
-        return nil, err
+        return
     end
 
     local consul = resty_consul:new({
@@ -29,29 +30,7 @@ function _M.new()
         sni_host        = conf.sni_host or nil,
     })
 
-    return consul, nil
-
-end
-
-function _M.get_key(key)
-    local consul, err = _M.new()
-
-    if err ~= nil or not consul then
-        return nil, err
-    end
-
-    local d, err = consul:get_key(key)
-
-    if err ~= nil or not d or d == nil then
-        return nil, err
-    end
-
-    if d.status ~= 200 then
-        return nil, "get key FAIL"
-    end
-
-    return d.body[1].Value, nil
-
+    _M.instance = consul
 end
 
 return _M

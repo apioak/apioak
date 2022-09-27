@@ -14,5 +14,5 @@ return {
     pool     = require("apioak.pdk.tablepool"),
     const    = require("apioak.pdk.const"),
     database = require("apioak.pdk.database"),
-    consul   = require("apioak.pdk.consul"),
+    consul   = require("apioak.pdk.consul")
 }

@@ -61,6 +61,8 @@ function APIOAK.init_worker()
     sys.cache.init_worker()
 
     sys.plugin.init_worker()
+
+    sys.dao.init_worker()
 end
 
 function APIOAK.http_access()

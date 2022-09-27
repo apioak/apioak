@@ -1,7 +1,7 @@
-local db         = require("apioak.db")
 local pdk        = require("apioak.pdk")
 local schema     = require("apioak.schema")
 local controller = require("apioak.admin.controller")
+local dao        = require("apioak.dao")
 
 local service_controller = controller.new("service")
 
@@ -13,7 +13,7 @@ function service_controller.created()
 
     service_controller.user_authenticate()
 
-    local res, err = db.service.created(body)
+    local res, err = dao.service.created(body)
 
     if err then
         pdk.response.exit(500, { message = err })
@@ -31,7 +31,7 @@ function service_controller.updated(params)
 
     service_controller.user_authenticate()
 
-    local  res, err = db.service.updated(params.service_id, body)
+    local  res, err = dao.service.updated(params.service_id, body)
     if err then
         pdk.response.exit(500, { message = err })
     end
@@ -46,7 +46,7 @@ function service_controller.detail(params)
 
     service_controller.user_authenticate()
 
-    local  res, err = db.service.detail(params)
+    local  res, err = dao.service.detail(params)
     if err then
         pdk.response.exit(500, { message = err })
     end
@@ -54,11 +54,11 @@ function service_controller.detail(params)
     pdk.response.exit(200, res)
 end
 
-function service_controller.lists(params)
+function service_controller.lists()
 
     service_controller.user_authenticate()
 
-    local  res, err = db.service.lists(params)
+    local  res, err = dao.service.lists()
 
     if err then
         pdk.response.exit(500, { message = err })
@@ -73,7 +73,7 @@ function service_controller.deleted(params)
 
     service_controller.user_authenticate()
 
-    local _, err = db.service.deleted(params)
+    local _, err = dao.service.deleted(params)
 
     if err then
         pdk.response.exit(500, { message = err })
