@@ -25,7 +25,7 @@ _M.created = {
 _M.updated = {
     type = "object",
     properties = {
-        plugin_id = {
+        plugin_key = {
             type = "string",
             minLength = 1,
             maxLength = 50
@@ -46,31 +46,31 @@ _M.updated = {
             type = "object",
         },
     },
-    required = { "plugin_id", "name", "key", "config" }
+    required = { "plugin_key", "name", "key", "config" }
 }
 
 _M.detail = {
     type = "object",
     properties = {
-        plugin_id = {
+        plugin_key = {
             type = "string",
             minLength = 1,
             maxLength = 50
         }
     },
-    required = { "plugin_id"}
+    required = { "plugin_key"}
 }
 
 _M.deleted = {
     type = "object",
     properties = {
-        plugin_id = {
+        plugin_key = {
             type = "string",
             minLength = 1,
             maxLength = 50
         }
     },
-    required = { "plugin_id"}
+    required = { "plugin_key"}
 }
 
 return _M

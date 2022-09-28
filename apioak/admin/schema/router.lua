@@ -86,7 +86,7 @@ _M.created = {
 _M.updated = {
     type = "object",
     properties = {
-        router_id = {
+        router_key = {
             type = "string",
             minLength = 1,
             maxLength = 50,
@@ -162,31 +162,31 @@ _M.updated = {
             default = true
         }
     },
-    required = {"router_id", "name", "paths", "service" }
+    required = {"router_key", "name", "paths", "service" }
 }
 
 _M.detail = {
     type = "object",
     properties = {
-        router_id = {
+        router_key = {
             type = "string",
             minLength = 1,
             maxLength = 50
         }
     },
-    required = { "router_id"}
+    required = { "router_key"}
 }
 
 _M.deleted = {
     type = "object",
     properties = {
-        router_id = {
+        router_key = {
             type = "string",
             minLength = 1,
             maxLength = 50
         }
     },
-    required = { "router_id"}
+    required = { "router_key"}
 }
 
 return _M

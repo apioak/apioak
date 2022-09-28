@@ -25,13 +25,13 @@ end
 function plugin_controller.updated(params)
 
     local body      = plugin_controller.get_body()
-    body.plugin_id = params.plugin_id
+    body.plugin_key = params.plugin_key
 
     plugin_controller.check_schema(schema.plugin.updated, body)
 
     plugin_controller.user_authenticate()
 
-    local  res, err = dao.plugin.updated(params.plugin_id, body)
+    local  res, err = dao.plugin.updated(params.plugin_key, body)
     if err then
         pdk.response.exit(500, { message = err })
     end

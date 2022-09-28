@@ -25,13 +25,13 @@ end
 function router_controller.updated(params)
 
     local body      = router_controller.get_body()
-    body.router_id = params.router_id
+    body.router_key = params.router_key
 
     router_controller.check_schema(schema.router.updated, body)
 
     router_controller.user_authenticate()
 
-    local  res, err = dao.router.updated(params.router_id, body)
+    local  res, err = dao.router.updated(params.router_key, body)
     if err then
         pdk.response.exit(500, { message = err })
     end

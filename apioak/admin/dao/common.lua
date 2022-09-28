@@ -87,7 +87,7 @@ function _M.detail_key(key)
 
     local d, err = _M.get_key(key)
 
-    if err or not g then
+    if err or not d then
         return nil, "failed to get Key-Value detail with key [" .. key .. "], err[".. tostring(err) .. "]"
     end
 
@@ -185,7 +185,7 @@ function _M.check_kv_exists(params, prefix)
 
     if id ~= "" then
 
-        local id_key = _M.PREFIX_MAP[prefix] .. id
+        local id_key = _M.SYSTEM_PREFIX_MAP[prefix] .. id
 
         local id_res, id_err = _M.get_key(id_key)
 
@@ -196,7 +196,7 @@ function _M.check_kv_exists(params, prefix)
 
     if name ~= "" then
 
-        local name_key = _M.SYSTEM_PREFIX_MAP[prefix] .. name
+        local name_key = _M.PREFIX_MAP[prefix] .. name
 
         local name_res, name_err = _M.get_key(name_key)
 
@@ -206,7 +206,7 @@ function _M.check_kv_exists(params, prefix)
     end
 
     if id and name and id_res and name_res then
-        if name_p ~= id then
+        if id_res ~= name then
             return false, "params.id:[".. id .."] and params.name:[".. name .."] resources do not match"
         end
     end
@@ -214,9 +214,22 @@ function _M.check_kv_exists(params, prefix)
     return true, nil
 end
 
-function _M.check_mapping_exists(name, prefix)
+function _M.check_key_exists(name, prefix)
 
-    local key = _M.SYSTEM_PREFIX_MAP[prefix] .. name
+    local key = _M.PREFIX_MAP[prefix] .. name
+
+    local p, err = _M.get_key(key)
+
+    if err or not p then
+        return false
+    end
+
+    return true
+end
+
+function _M.check_mapping_exists(id, prefix)
+
+    local key = _M.SYSTEM_PREFIX_MAP[prefix] .. id
 
     local p, err = _M.get_key(key)
 

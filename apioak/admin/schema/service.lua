@@ -66,7 +66,7 @@ _M.created = {
 _M.updated = {
     type = "object",
     properties = {
-        service_id = {
+        service_key = {
             type = "string",
             minLength = 1,
             maxLength = 50
@@ -127,31 +127,31 @@ _M.updated = {
             default = true
         }
     },
-    required = { "service_id", "name", "hosts" }
+    required = { "service_key", "name", "hosts" }
 }
 
 _M.detail = {
     type = "object",
     properties = {
-        service_id = {
+        service_key = {
             type = "string",
             minLength = 1,
             maxLength = 50
         }
     },
-    required = { "service_id"}
+    required = { "service_key"}
 }
 
 _M.deleted = {
     type = "object",
     properties = {
-        service_id = {
+        service_key = {
             type = "string",
             minLength = 1,
             maxLength = 50
         }
     },
-    required = { "service_id"}
+    required = { "service_key"}
 }
 
 return _M

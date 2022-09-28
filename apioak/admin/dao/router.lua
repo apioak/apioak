@@ -9,7 +9,7 @@ local DEFAULT_METHODS = {"ALL"}
 
 function _M.created(params)
 
-    local check_router_name = common.check_mapping_exists(params.name, "routers")
+    local check_router_name = common.check_key_exists(params.name, "routers")
 
     if check_router_name then
         return nil, "the router name[".. params.name .."] already exists"
@@ -51,14 +51,14 @@ function _M.created(params)
         {
             KV = {
                 Verb  = "set",
-                Key   = common.SYSTEM_PREFIX_MAP.routers .. params.name,
-                Value = router_id,
+                Key   = common.SYSTEM_PREFIX_MAP.routers .. router_id,
+                Value = params.name,
             }
         },
         {
             KV = {
                 Verb  = "set",
-                Key   = common.PREFIX_MAP.routers .. router_id,
+                Key   = common.PREFIX_MAP.routers .. params.name,
                 Value = pdk.json.encode(router_body),
             }
         },
@@ -73,27 +73,34 @@ function _M.created(params)
     return { id = router_id }, nil
 end
 
-function _M.updated(router_id, params)
+function _M.updated(router_key, params)
+
+    if uuid.is_valid(router_key) then
+        router_key, err = common.get_key(common.SYSTEM_PREFIX_MAP.routers .. router_key)
+
+        if err or not router_key then
+            return nil, "service:[".. router_key .. "] does not exists, err [".. tostring(err) .."]"
+        end
+    end
 
     local prefix = common.PREFIX_MAP.routers
 
-    local old , err = common.get_key(prefix .. router_id)
+    local old, err = common.get_key(prefix .. router_key)
 
     if err or not old then
         return nil, "router[".. router_id .."] does not exist"
     end
+
     old = pdk.json.decode(old)
 
-    local v, err = common.get_key( common.SYSTEM_PREFIX_MAP.routers .. params.name)
+    local v, err = common.get_key( prefix .. params.name)
 
     if err then
         return nil, "check router name error"
     end
 
     if v then
-        if v ~= old.id then
-            return nil, "the router name[".. params.name .."] already exists"
-        end
+        return nil, "the router name[".. params.name .."] already exists"
     end
 
     local check_service, err = common.check_kv_exists(params.service, "services")
@@ -115,7 +122,7 @@ function _M.updated(router_id, params)
     end
 
     local router_body = {
-        id        = router_id,
+        id        = old.id,
         name      = params.name,
         methods   = params.methods or DEFAULT_METHODS,
         paths     = params.paths,
@@ -130,21 +137,21 @@ function _M.updated(router_id, params)
         {
             KV = {
                 Verb  = "delete",
-                Key   = common.SYSTEM_PREFIX_MAP.routers .. old.name,
+                Key   = common.PREFIX_MAP.routers .. old.name,
                 Value = nil,
             }
         },
         {
             KV = {
                 Verb  = "set",
-                Key   = common.SYSTEM_PREFIX_MAP.routers .. params.name,
-                Value = router_id,
+                Key   = common.SYSTEM_PREFIX_MAP.routers .. old.id,
+                Value = params.name,
             }
         },
         {
             KV = {
                 Verb  = "set",
-                Key   = common.PREFIX_MAP.routers .. router_id,
+                Key   = common.PREFIX_MAP.routers .. params.name,
                 Value = pdk.json.encode(router_body),
             }
         },
@@ -153,10 +160,10 @@ function _M.updated(router_id, params)
     local res, err = common.txn(payload)
 
     if err or not res then
-        return nil, "update service FAIL, err[".. tostring(err) .."]"
+        return nil, "update router FAIL, err[".. tostring(err) .."]"
     end
 
-    return { id = router_id }, nil
+    return { id = old.id }, nil
 end
 
 function _M.lists()
@@ -172,12 +179,22 @@ end
 
 function _M.detail(params)
 
-    local key = common.PREFIX_MAP.routers .. params.router_id
+    local name = params.router_key
+
+    if uuid.is_valid(params.router_key) then
+        name, err = common.get_key(common.SYSTEM_PREFIX_MAP.routers .. params.router_key)
+
+        if err or not name then
+            return nil, "router:[".. params.router_key .. "] does not exists, err [".. tostring(err) .."]"
+        end
+    end
+
+    local key = common.PREFIX_MAP.routers .. name
 
     local res, err = common.detail_key(key)
 
     if err or not res then
-        return nil, "router:[".. params.router_id .. "] does not exists, err [".. tostring(err) .."]"
+        return nil, "router:[".. params.router_key .. "] does not exists, err [".. tostring(err) .."]"
     end
 
     return pdk.json.decode(res), nil
@@ -185,12 +202,21 @@ end
 
 function _M.deleted(params)
 
-    local key = common.PREFIX_MAP.routers .. params.router_id
+    local name = params.router_key
+
+    if uuid.is_valid(params.router_key) then
+        name, err = common.get_key(common.SYSTEM_PREFIX_MAP.routers .. params.router_key)
+
+        if err or not name then
+            return nil, "router:[".. params.router_key .. "] does not exists, err [".. tostring(err) .."]"
+        end
+    end
+    local key = common.PREFIX_MAP.routers .. name
 
     local g, err = common.get_key(key)
 
     if err or not g then
-        return nil, "Key-Value:[" .. key .. "] does not exists], err:[".. tostring(err) .."]"
+        return nil, "router:[" .. params.router_key .. "] does not exists], err:[".. tostring(err) .."]"
     end
 
     g = pdk.json.decode(g)
@@ -199,14 +225,14 @@ function _M.deleted(params)
         {
             KV = {
                 Verb  = "delete",
-                Key   = common.SYSTEM_PREFIX_MAP.routers .. g["name"],
+                Key   = common.SYSTEM_PREFIX_MAP.routers .. g.id,
                 Value = nil,
             }
         },
         {
             KV = {
                 Verb  = "delete",
-                Key   = common.PREFIX_MAP.routers .. params.router_id,
+                Key   = common.PREFIX_MAP.routers .. name,
                 Value = nil,
             }
         }

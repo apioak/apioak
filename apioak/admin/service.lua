@@ -25,13 +25,13 @@ end
 function service_controller.updated(params)
 
     local body      = service_controller.get_body()
-    body.service_id = params.service_id
+    body.service_key = params.service_key
 
     service_controller.check_schema(schema.service.updated, body)
 
     service_controller.user_authenticate()
 
-    local  res, err = dao.service.updated(params.service_id, body)
+    local  res, err = dao.service.updated(params.service_key, body)
     if err then
         pdk.response.exit(500, { message = err })
     end

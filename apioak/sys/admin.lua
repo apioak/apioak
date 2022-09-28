@@ -95,35 +95,35 @@ function _M.init_worker()
     -- New Service Related APIs
     router:post("/apioak/admin/services", admin.service.created)
 
-    router:put("/apioak/admin/services/{service_id}", admin.service.updated)
+    router:put("/apioak/admin/services/{service_key}", admin.service.updated)
 
     router:get("/apioak/admin/services", admin.service.lists)
 
-    router:get("/apioak/admin/services/{service_id}", admin.service.detail)
+    router:get("/apioak/admin/services/{service_key}", admin.service.detail)
 
-    router:delete("/apioak/admin/services/{service_id}", admin.service.deleted)
+    router:delete("/apioak/admin/services/{service_key}", admin.service.deleted)
 
     -- New Router Related APIs
     router:post("/apioak/admin/routers", admin.router.created)
 
-    router:put("/apioak/admin/routers/{router_id}", admin.router.updated)
+    router:put("/apioak/admin/routers/{router_key}", admin.router.updated)
 
     router:get("/apioak/admin/routers", admin.router.lists)
 
-    router:get("/apioak/admin/routers/{router_id}", admin.router.detail)
+    router:get("/apioak/admin/routers/{router_key}", admin.router.detail)
 
-    router:delete("/apioak/admin/routers/{router_id}", admin.router.deleted)
+    router:delete("/apioak/admin/routers/{router_key}", admin.router.deleted)
 
     -- New Plugins Related APIs
     router:post("/apioak/admin/plugins", admin.plugin.created)
 
-    router:put("/apioak/admin/plugins/{plugin_id}", admin.plugin.updated)
+    router:put("/apioak/admin/plugins/{plugin_key}", admin.plugin.updated)
 
     router:get("/apioak/admin/plugins", admin.plugin.lists)
 
-    router:get("/apioak/admin/plugins/{plugin_id}", admin.plugin.detail)
+    router:get("/apioak/admin/plugins/{plugin_key}", admin.plugin.detail)
 
-    router:delete("/apioak/admin/plugins/{plugin_id}", admin.plugin.deleted)
+    router:delete("/apioak/admin/plugins/{plugin_key}", admin.plugin.deleted)
 
 end
 
