@@ -87,12 +87,8 @@ function _M.detail_key(key)
 
     local d, err = _M.get_key(key)
 
-    if err then
-        return nil, "failed to get Key-Value detail with key [" .. key .. "], err[".. err .. "]"
-    end
-
-    if not d then
-        return nil, "failed to get Key-Value detail with key [" .. key .. "]"
+    if err or not g then
+        return nil, "failed to get Key-Value detail with key [" .. key .. "], err[".. tostring(err) .. "]"
     end
 
     return d, nil
@@ -103,17 +99,14 @@ function _M.delete_key(key)
 
     local g, err = _M.get_key(key)
 
-    if err then
-        return nil, "Key-Value:[" .. key .. "] does not exists], err:[".. err .."]"
-    end
-    if not g then
-        return nil, "Key-Value:[" .. key .. "] does not exists]"
+    if err or not g then
+        return nil, "Key-Value:[" .. key .. "] does not exists], err:[".. tostring(err) .."]"
     end
 
     local d, err = pdk.consul.instance:delete_key(key)
 
     if err or not d then
-        return nil, "failed to delete Key-Value with key [" .. key .. "], err[".. err .. "]"
+        return nil, "failed to delete Key-Value with key [" .. key .. "], err[".. tostring(err) .. "]"
     end
 
     return {}, nil
@@ -124,12 +117,8 @@ function _M.txn(payload)
 
     local res, err = pdk.consul.instance:txn(payload)
 
-    if err then
-        return nil, "exec txn error, payload:[".. pdk.json.encode(payload) .."], err:[".. err .."]"
-    end
-
-    if not res then
-        return nil, "exec txn error, payload:[".. pdk.json.encode(payload) .."]"
+    if err or not res then
+        return nil, "exec txn error, payload:[".. pdk.json.encode(payload) .."], err:[".. tostring(err) .."]"
     end
 
     local ret = {}
@@ -200,12 +189,8 @@ function _M.check_kv_exists(params, prefix)
 
         local id_res, id_err = _M.get_key(id_key)
 
-        if id_err then
-            return false, "failed to get ".. prefix .." with id [".. params.id .."], err:[".. id_err .."]"
-        end
-
-        if not id_res then
-            return false, "failed to get ".. prefix .." with id [".. params.id .."]"
+        if id_err or not id_res then
+            return false, "failed to get ".. prefix .." with id [".. params.id .."], err:[".. tostring(id_err) .."]"
         end
     end
 
@@ -215,12 +200,8 @@ function _M.check_kv_exists(params, prefix)
 
         local name_res, name_err = _M.get_key(name_key)
 
-        if name_err then
-            return false, "failed to get ".. prefix .." with name [".. params.name .."], err:[".. name_err .."]"
-        end
-
-        if not name_res then
-            return false, "failed to get ".. prefix .." with name [".. params.name .."]"
+        if name_err or not name_res then
+            return false, "failed to get ".. prefix .." with name [".. params.name .."], err:[".. tostring(name_err) .."]"
         end
     end
 
