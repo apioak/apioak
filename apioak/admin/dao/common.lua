@@ -172,7 +172,7 @@ function _M.batch_check_kv_exists(params, prefix)
             end
 
             if not res then
-                return res, nil
+                return false, nil
             end
 
         until true

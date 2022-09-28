@@ -6,7 +6,8 @@ _M.created = {
         name = {
             type = "string",
             minLength = 1,
-            maxLength = 50
+            maxLength = 50,
+            pattern = "^\\*?[0-9a-zA-Z-._]+$"
         },
         methods = {
             type = "array",
@@ -52,11 +53,11 @@ _M.created = {
                 properties = {
                     id = {
                         type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                        pattern = "^\\*?[0-9a-zA-Z-]+$"
                     },
                     name = {
                         type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                        pattern = "^\\*?[0-9a-zA-Z-._]+$"
                     }
                 }
             },
@@ -66,11 +67,11 @@ _M.created = {
             properties = {
                 id = {
                     type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                    pattern = "^\\*?[0-9a-zA-Z-]+$"
                 },
                 name = {
                     type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                    pattern = "^\\*?[0-9a-zA-Z-._]+$"
                 },
             },
         },
@@ -88,7 +89,8 @@ _M.updated = {
         router_id = {
             type = "string",
             minLength = 1,
-            maxLength = 50
+            maxLength = 50,
+            pattern = "^\\*?[0-9a-zA-Z-._]+$"
         },
         methods = {
             type = "array",
@@ -117,7 +119,7 @@ _M.updated = {
             properties = {
                 id = {
                     type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-_.]+$"
+                    pattern = "^\\*?[0-9a-zA-Z-]+$"
                 },
                 name = {
                     type = "string",
@@ -133,11 +135,11 @@ _M.updated = {
                 properties = {
                     id = {
                         type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                        pattern = "^\\*?[0-9a-zA-Z-]+$"
                     },
                     name = {
                         type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                        pattern = "^\\*?[0-9a-zA-Z-_.]+$"
                     }
                 }
             },
@@ -147,11 +149,11 @@ _M.updated = {
             properties = {
                 id = {
                     type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                    pattern = "^\\*?[0-9a-zA-Z-]+$"
                 },
                 name = {
                     type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                    pattern = "^\\*?[0-9a-zA-Z-_.]+$"
                 },
             },
         },

@@ -6,7 +6,8 @@ _M.created = {
         name = {
             type = "string",
             minLength = 1,
-            maxLength = 50
+            maxLength = 50,
+            pattern = "^\\*?[0-9a-zA-Z-_.]+$"
         },
         protocols = {
             type = "array",
@@ -45,11 +46,11 @@ _M.created = {
                 properties = {
                     id = {
                         type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                        pattern = "^\\*?[0-9a-zA-Z-]+$"
                     },
                     name = {
                         type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                        pattern = "^\\*?[0-9a-zA-Z-_.]+$"
                     }
                 }
             },
@@ -112,11 +113,11 @@ _M.updated = {
                 properties = {
                     id = {
                         type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                        pattern = "^\\*?[0-9a-zA-Z-]+$"
                     },
                     name = {
                         type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                        pattern = "^\\*?[0-9a-zA-Z-_.]+$"
                     }
                 }
             },
