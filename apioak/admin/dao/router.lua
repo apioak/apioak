@@ -67,7 +67,7 @@ function _M.created(params)
     local res, err = common.txn(payload)
 
     if err or not res then
-        return nil, "create service FAIL [".. err .."]"
+        return nil, "create service FAIL [".. tostring(err) .."]"
     end
 
     return { id = router_id }, nil
@@ -176,12 +176,8 @@ function _M.detail(params)
 
     local res, err = common.detail_key(key)
 
-    if err then
-        return nil, "router:[".. params.router_id .. "] does not exists, err [".. err .."]"
-    end
-
-    if not res then
-        return nil, "router:[".. params.router_id .. "] does not exists"
+    if err or not res then
+        return nil, "router:[".. params.router_id .. "] does not exists, err [".. tostring(err) .."]"
     end
 
     return pdk.json.decode(res), nil

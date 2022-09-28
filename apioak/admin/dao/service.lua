@@ -148,12 +148,8 @@ function _M.detail(params)
 
     local res, err = common.detail_key(key)
 
-    if err then
-        return nil, "service:[".. params.service_id .. "] does not exists, err [".. err .."]"
-    end
-
-    if not res then
-        return nil, "service:[".. params.service_id .. "] does not exists"
+    if err or not res then
+        return nil, "service:[".. params.service_id .. "] does not exists, err [".. tostring(err) .."]"
     end
 
     return pdk.json.decode(res), nil
