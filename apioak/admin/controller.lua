@@ -37,59 +37,58 @@ local controller = function(name)
 
     cls.user_authenticate = function()
 
-        return true
-        --local token = cls.get_header(pdk.const.REQUEST_ADMIN_TOKEN_KEY)
-        --if not token then
-        --    pdk.response.exit(401, { message = "property header \"" ..
-        --            pdk.const.REQUEST_ADMIN_TOKEN_KEY .. "\" is required" })
-        --end
-        --
-        --local res, err = db.token.query_by_token(token)
-        --if err then
-        --    pdk.response.exit(500, { message = err })
-        --end
-        --
-        --if #res == 0 then
-        --    pdk.response.exit(401, { message = "property token \"" ..
-        --            token .. "\" invalid" })
-        --end
-        --
-        --local exp_at = pdk.time.strtotime(res[1].expired_at)
-        --local now_at = pdk.time.time()
-        --if exp_at < now_at then
-        --    pdk.response.exit(401, { message = "property token \"" ..
-        --            token .. "\" expired" })
-        --end
-        --
-        --if (exp_at - now_at) < 3600 then
-        --    db.token.continue_by_token(token)
-        --end
-        --
-        --res, err = db.user.query_by_id(res[1].user_id)
-        --if err then
-        --    pdk.response.exit(500, { message = err })
-        --end
-        --
-        --if #res == 0 then
-        --    pdk.response.exit(401, { message = "account does not exist" })
-        --end
-        --
-        --local user = res[1]
-        --
-        --if user.is_enable == 0 then
-        --    pdk.response.exit(401, { message = "account is disabled" })
-        --end
-        --
-        --cls.uid   = user.id
-        --cls.token = token
-        --
-        --if user.is_owner == 1 then
-        --    cls.is_owner = true
-        --else
-        --    cls.is_owner = false
-        --end
-        --
-        --return user
+        local token = cls.get_header(pdk.const.REQUEST_ADMIN_TOKEN_KEY)
+        if not token then
+            pdk.response.exit(401, { message = "property header \"" ..
+                    pdk.const.REQUEST_ADMIN_TOKEN_KEY .. "\" is required" })
+        end
+
+        local res, err = db.token.query_by_token(token)
+        if err then
+            pdk.response.exit(500, { message = err })
+        end
+
+        if #res == 0 then
+            pdk.response.exit(401, { message = "property token \"" ..
+                    token .. "\" invalid" })
+        end
+
+        local exp_at = pdk.time.strtotime(res[1].expired_at)
+        local now_at = pdk.time.time()
+        if exp_at < now_at then
+            pdk.response.exit(401, { message = "property token \"" ..
+                    token .. "\" expired" })
+        end
+
+        if (exp_at - now_at) < 3600 then
+            db.token.continue_by_token(token)
+        end
+
+        res, err = db.user.query_by_id(res[1].user_id)
+        if err then
+            pdk.response.exit(500, { message = err })
+        end
+
+        if #res == 0 then
+            pdk.response.exit(401, { message = "account does not exist" })
+        end
+
+        local user = res[1]
+
+        if user.is_enable == 0 then
+            pdk.response.exit(401, { message = "account is disabled" })
+        end
+
+        cls.uid   = user.id
+        cls.token = token
+
+        if user.is_owner == 1 then
+            cls.is_owner = true
+        else
+            cls.is_owner = false
+        end
+
+        return user
     end
 
     cls.project_authenticate = function(project_id, user_id)

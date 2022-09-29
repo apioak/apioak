@@ -11,7 +11,7 @@ function plugin_controller.created()
 
     plugin_controller.check_schema(schema.plugin.created, body)
 
-    plugin_controller.user_authenticate()
+    -- plugin_controller.user_authenticate()
 
     local res, err = dao.plugin.created(body)
 
@@ -29,7 +29,7 @@ function plugin_controller.updated(params)
 
     plugin_controller.check_schema(schema.plugin.updated, body)
 
-    plugin_controller.user_authenticate()
+    -- plugin_controller.user_authenticate()
 
     local  res, err = dao.plugin.updated(params.plugin_key, body)
     if err then
@@ -44,7 +44,7 @@ function plugin_controller.detail(params)
 
     plugin_controller.check_schema(schema.plugin.detail, params)
 
-    plugin_controller.user_authenticate()
+    -- plugin_controller.user_authenticate()
 
     local  res, err = dao.plugin.detail(params)
     if err then
@@ -56,7 +56,7 @@ end
 
 function plugin_controller.lists()
 
-    plugin_controller.user_authenticate()
+    -- plugin_controller.user_authenticate()
 
     local  res, err = dao.plugin.lists()
 
@@ -71,7 +71,7 @@ function plugin_controller.deleted(params)
 
     plugin_controller.check_schema(schema.plugin.deleted, params)
 
-    plugin_controller.user_authenticate()
+    -- plugin_controller.user_authenticate()
 
     local _, err = dao.plugin.deleted(params)
 

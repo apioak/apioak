@@ -11,7 +11,7 @@ function router_controller.created()
 
     router_controller.check_schema(schema.router.created, body)
 
-    router_controller.user_authenticate()
+    -- router_controller.user_authenticate()
 
     local res, err = dao.router.created(body)
 
@@ -29,7 +29,7 @@ function router_controller.updated(params)
 
     router_controller.check_schema(schema.router.updated, body)
 
-    router_controller.user_authenticate()
+    -- router_controller.user_authenticate()
 
     local  res, err = dao.router.updated(params.router_key, body)
     if err then
@@ -44,7 +44,7 @@ function router_controller.detail(params)
 
     router_controller.check_schema(schema.router.detail, params)
 
-    router_controller.user_authenticate()
+    -- router_controller.user_authenticate()
 
     local  res, err = dao.router.detail(params)
     if err then
@@ -56,7 +56,7 @@ end
 
 function router_controller.lists()
 
-    router_controller.user_authenticate()
+    -- router_controller.user_authenticate()
 
     local  res, err = dao.router.lists()
 
@@ -71,7 +71,7 @@ function router_controller.deleted(params)
 
     router_controller.check_schema(schema.router.deleted, params)
 
-    router_controller.user_authenticate()
+    -- router_controller.user_authenticate()
 
     local _, err = dao.router.deleted(params)
 
