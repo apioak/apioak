@@ -62,11 +62,13 @@ end
 function _M.updated(service_key, params)
 
     if uuid.is_valid(service_key) then
-        service_key, err = common.get_key(common.SYSTEM_PREFIX_MAP.services .. service_key)
+        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.services .. service_key)
 
-        if err or not service_key then
+        if err or not tmp then
             return nil, "service:[".. service_key .. "] does not exists, err [".. tostring(err) .."]"
         end
+
+        service_key = tmp
     end
 
     local prefix = common.PREFIX_MAP.services
@@ -153,11 +155,13 @@ function _M.detail(params)
     local name = params.service_key
 
     if uuid.is_valid(params.service_key) then
-        name, err = common.get_key(common.SYSTEM_PREFIX_MAP.services .. params.service_key)
+        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.services .. params.service_key)
 
-        if err or not name then
+        if err or not tmp then
             return nil, "service:[".. params.service_key .. "] does not exists, err [".. tostring(err) .."]"
         end
+
+        name = tmp
     end
 
     local key = common.PREFIX_MAP.services .. name
@@ -176,11 +180,13 @@ function _M.deleted(params)
     local name = params.service_key
 
     if uuid.is_valid(params.service_key) then
-        name, err = common.get_key(common.SYSTEM_PREFIX_MAP.services .. params.service_key)
+        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.services .. params.service_key)
 
-        if err or not name then
+        if err or not tmp then
             return nil, "service:[".. params.service_key .. "] does not exists, err [".. tostring(err) .."]"
         end
+
+        name = tmp
     end
 
     local key = common.PREFIX_MAP.services .. name

@@ -183,14 +183,19 @@ function _M.check_kv_exists(params, prefix)
         return true, nil
     end
 
+    local id_res, id_err = "", nil
+
+    local name_res, name_err = "", nil
+
     if id ~= "" then
 
         local id_key = _M.SYSTEM_PREFIX_MAP[prefix] .. id
 
-        local id_res, id_err = _M.get_key(id_key)
+        id_res, id_err = _M.get_key(id_key)
 
         if id_err or not id_res then
-            return false, "failed to get ".. prefix .." with id [".. params.id .."], err:[".. tostring(id_err) .."]"
+            return false, "failed to get ".. prefix ..
+                    " with id [".. params.id .."], err:[".. tostring(id_err) .."]"
         end
     end
 
@@ -198,16 +203,19 @@ function _M.check_kv_exists(params, prefix)
 
         local name_key = _M.PREFIX_MAP[prefix] .. name
 
-        local name_res, name_err = _M.get_key(name_key)
+        name_res, name_err = _M.get_key(name_key)
 
         if name_err or not name_res then
-            return false, "failed to get ".. prefix .." with name [".. params.name .."], err:[".. tostring(name_err) .."]"
+            return false, "failed to get ".. prefix ..
+                    " with name [".. params.name .."], err:[".. tostring(name_err) .."]"
         end
     end
 
-    if id and name and id_res and name_res then
-        if id_res ~= name then
-            return false, "params.id:[".. id .."] and params.name:[".. name .."] resources do not match"
+    if id ~= "" and name ~= "" and not id_err and not name_err then
+        if id_res and name_res then
+            if id_res ~= name then
+                return false, "params.id:[".. id .."] and params.name:[".. name .."] resources do not match"
+            end
         end
     end
 

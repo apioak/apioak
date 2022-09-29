@@ -50,11 +50,13 @@ end
 function _M.updated(plugin_key, params)
 
     if uuid.is_valid(plugin_key) then
-        plugin_key, err = common.get_key(common.SYSTEM_PREFIX_MAP.plugins .. plugin_key)
+        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.plugins .. plugin_key)
 
-        if err or not plugin_key then
+        if err or not tmp then
             return nil, "plugin:[".. plugin_key .. "] does not exists, err [".. tostring(err) .."]"
         end
+        plugin_key = tmp
+
     end
 
     local prefix = common.PREFIX_MAP.plugins
@@ -134,11 +136,13 @@ function _M.detail(params)
     local name = params.plugin_key
 
     if uuid.is_valid(params.plugin_key) then
-        name, err = common.get_key(common.SYSTEM_PREFIX_MAP.plugins .. params.plugin_key)
+        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.plugins .. params.plugin_key)
 
-        if err or not name then
+        if err or not tmp then
             return nil, "plugin:[".. params.plugin_key .. "] does not exists, err [".. tostring(err) .."]"
         end
+
+        name = tmp
     end
 
     local key = common.PREFIX_MAP.plugins .. name
@@ -157,11 +161,13 @@ function _M.deleted(params)
     local name = params.plugin_key
 
     if uuid.is_valid(params.plugin_key) then
-        name, err = common.get_key(common.SYSTEM_PREFIX_MAP.plugins .. params.plugin_key)
+        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.plugins .. params.plugin_key)
 
-        if err or not name then
+        if err or not tmp then
             return nil, "plugin:[".. params.plugin_key .. "] does not exists, err [".. tostring(err) .."]"
         end
+
+        name = tmp
     end
 
     local key = common.PREFIX_MAP.plugins .. name

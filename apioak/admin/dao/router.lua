@@ -76,11 +76,13 @@ end
 function _M.updated(router_key, params)
 
     if uuid.is_valid(router_key) then
-        router_key, err = common.get_key(common.SYSTEM_PREFIX_MAP.routers .. router_key)
+        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.routers .. router_key)
 
-        if err or not router_key then
+        if err or not tmp then
             return nil, "service:[".. router_key .. "] does not exists, err [".. tostring(err) .."]"
         end
+
+        router_key = tmp
     end
 
     local prefix = common.PREFIX_MAP.routers
@@ -88,7 +90,7 @@ function _M.updated(router_key, params)
     local old, err = common.get_key(prefix .. router_key)
 
     if err or not old then
-        return nil, "router[".. router_id .."] does not exist"
+        return nil, "router[".. router_key .."] does not exist"
     end
 
     old = pdk.json.decode(old)
@@ -182,11 +184,13 @@ function _M.detail(params)
     local name = params.router_key
 
     if uuid.is_valid(params.router_key) then
-        name, err = common.get_key(common.SYSTEM_PREFIX_MAP.routers .. params.router_key)
+        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.routers .. params.router_key)
 
-        if err or not name then
+        if err or not tmp then
             return nil, "router:[".. params.router_key .. "] does not exists, err [".. tostring(err) .."]"
         end
+
+        name = tmp
     end
 
     local key = common.PREFIX_MAP.routers .. name
@@ -205,11 +209,13 @@ function _M.deleted(params)
     local name = params.router_key
 
     if uuid.is_valid(params.router_key) then
-        name, err = common.get_key(common.SYSTEM_PREFIX_MAP.routers .. params.router_key)
+        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.routers .. params.router_key)
 
-        if err or not name then
+        if err or not tmp then
             return nil, "router:[".. params.router_key .. "] does not exists, err [".. tostring(err) .."]"
         end
+
+        name = tmp
     end
     local key = common.PREFIX_MAP.routers .. name
 

@@ -37,7 +37,6 @@ function service_controller.updated(params)
     end
 
     pdk.response.exit(200, { id = res.id })
-    
 end
 
 function service_controller.detail(params)
