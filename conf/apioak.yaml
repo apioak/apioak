@@ -22,7 +22,6 @@ plugins:
   - limit-conn
   - key-auth
   - jwt-auth
-  - prometheus
 
 consul:
   host: 127.0.0.1
