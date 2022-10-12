@@ -1,3 +1,5 @@
 #!/usr/bin/env resty
 
+require("apioak.cmd.utils.common")
+
 require("apioak.cmd.init")(arg)

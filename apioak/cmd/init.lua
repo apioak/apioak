@@ -26,8 +26,6 @@ The available commands are:
  %s]], table.concat(cmds_arr, "\n "))
 
 return function(args)
-
-
     local cmd_name = table.remove(args, 1)
     if not cmd_name then
         pl_app(help)

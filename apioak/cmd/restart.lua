@@ -1,4 +1,4 @@
-local stop = require("apioak.cmd.stop")
+local stop  = require("apioak.cmd.stop")
 local start = require("apioak.cmd.start")
 
 local lapp = [[
