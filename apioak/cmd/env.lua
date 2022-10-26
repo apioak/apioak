@@ -177,7 +177,7 @@ local function execute()
         print("OpenResty Version      ...OK")
     end
 
-    --validate_database()
+    validate_database()
     validate_consul()
 end
 
