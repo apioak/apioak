@@ -113,6 +113,52 @@ local function validate_database()
     end
 end
 
+local function validate_consul()
+    local res, err = get_config()
+    if not res.database then
+        print("Config Database        ...FAIL(".. err ..")")
+        os.exit(1)
+    else
+        print("Config Database        ...OK")
+    end
+
+    local conf = res.consul
+
+    local resty_consul = require("resty.consul")
+    local consul = resty_consul:new({
+        host            = conf.host or DEFAULT_HOST,
+        port            = conf.port or DEFAULT_PORT,
+        connect_timeout = conf.connect_timeout or DEFAULT_COONECT_TIMEOUT, -- 60s
+        read_timeout    = conf.read_timeout or DEFAULT_READ_TIMEOUT, -- 60s
+        default_args    = {},
+        ssl             = conf.ssl or false,
+        ssl_verify      = conf.ssl_verify or true,
+        sni_host        = conf.sni_host or nil,
+    })
+
+    local agent_config, err = consul:get('/agent/self')
+
+    if not agent_config then
+        print("Database Connect       ...FAIL(".. err ..")")
+        os.exit(1)
+    else
+        print("Database Connect       ...OK")
+    end
+
+    if agent_config.status ~= 200 then
+        print("Database Config        ...FAIL(" .. agent_config.status .. ": " .. string.gsub(agent_config.body, "\n", "") ..")")
+        os.exit(1)
+    end
+
+    local consul_version_num = tonumber(string.match(agent_config.body.Config.Version, "^%d+%.%d+"))
+    if consul_version_num < 1.13 then
+        print("Database Version       ...FAIL(consul version be greater than 1.13)")
+        os.exit(1)
+    else
+        print("Database Version       ...OK")
+    end
+end
+
 local function execute()
     local nginx_path = common.trim(common.execute_cmd("which openresty"))
     if not nginx_path then
@@ -131,7 +177,8 @@ local function execute()
         print("OpenResty Version      ...OK")
     end
 
-    validate_database()
+    --validate_database()
+    validate_consul()
 end
 
 return {
