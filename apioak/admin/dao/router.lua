@@ -15,15 +15,19 @@ function _M.created(params)
         return nil, "the router name[".. params.name .."] already exists"
     end
 
+    if not params.service.id and not params.service.name then
+        return nil, "the router must be bound to a service"
+    end
+
     local check_service, err = common.check_kv_exists(params.service, "services")
 
     if err or not check_service then
         return nil, err
     end
 
-    local check_plugin, err = common.batch_check_kv_exists(params.plugins, "plugins")
+    local check_plugins, err = common.batch_check_kv_exists(params.plugins, "plugins")
 
-    if err or not check_plugin then
+    if err or not check_plugins then
         return nil, err
     end
 
@@ -103,6 +107,10 @@ function _M.updated(router_key, params)
 
     if v then
         return nil, "the router name[".. params.name .."] already exists"
+    end
+
+    if not params.service.id and not params.service.name then
+        return nil, "the router must be bound to a service"
     end
 
     local check_service, err = common.check_kv_exists(params.service, "services")

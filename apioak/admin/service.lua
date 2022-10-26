@@ -11,8 +11,6 @@ function service_controller.created()
 
     service_controller.check_schema(schema.service.created, body)
 
-    -- service_controller.user_authenticate()
-
     local res, err = dao.service.created(body)
 
     if err then
@@ -29,8 +27,6 @@ function service_controller.updated(params)
 
     service_controller.check_schema(schema.service.updated, body)
 
-    -- service_controller.user_authenticate()
-
     local  res, err = dao.service.updated(params.service_key, body)
     if err then
         pdk.response.exit(500, { message = err })
@@ -43,8 +39,6 @@ function service_controller.detail(params)
 
     service_controller.check_schema(schema.service.detail, params)
 
-    -- service_controller.user_authenticate()
-
     local  res, err = dao.service.detail(params)
     if err then
         pdk.response.exit(500, { message = err })
@@ -54,8 +48,6 @@ function service_controller.detail(params)
 end
 
 function service_controller.lists()
-
-    -- service_controller.user_authenticate()
 
     local  res, err = dao.service.lists()
 
@@ -69,8 +61,6 @@ end
 function service_controller.deleted(params)
 
     service_controller.check_schema(schema.service.deleted, params)
-
-    -- service_controller.user_authenticate()
 
     local _, err = dao.service.deleted(params)
 

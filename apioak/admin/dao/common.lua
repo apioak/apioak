@@ -67,17 +67,13 @@ function _M.list_keys(prefix)
         return {list = res}, nil
     end
 
-    for _, v in ipairs(keys.body) do
+    for i = 1, #keys.body do
 
-        local d, err = _M.get_key(v)
+        local d, err = _M.get_key(keys.body[i])
 
-        repeat
-            if err or not d then
-                break
-            end
-
+        if err == nil and d then
             table.insert(res, pdk.json.decode(d))
-        until true
+        end
      end
 
     return {list = res}, nil
@@ -87,8 +83,12 @@ function _M.detail_key(key)
 
     local d, err = _M.get_key(key)
 
-    if err or not d then
+    if err then
         return nil, "failed to get Key-Value detail with key [" .. key .. "], err[".. tostring(err) .. "]"
+    end
+
+    if not d then
+        return nil, "failed to get Key-Value detail with key [" .. key .. "]"
     end
 
     return d, nil
@@ -99,14 +99,22 @@ function _M.delete_key(key)
 
     local g, err = _M.get_key(key)
 
-    if err or not g then
+    if err then
         return nil, "Key-Value:[" .. key .. "] does not exists], err:[".. tostring(err) .."]"
+    end
+
+    if not g then
+        return nil, "Key-Value:[" .. key .. "] does not exists]"
     end
 
     local d, err = pdk.consul.instance:delete_key(key)
 
-    if err or not d then
+    if err then
         return nil, "failed to delete Key-Value with key [" .. key .. "], err[".. tostring(err) .. "]"
+    end
+
+    if not d then
+        return nil, "failed to delete Key-Value with key [" .. key .. "]"
     end
 
     return {}, nil
@@ -117,18 +125,22 @@ function _M.txn(payload)
 
     local res, err = pdk.consul.instance:txn(payload)
 
-    if err or not res then
+    if err then
         return nil, "exec txn error, payload:[".. pdk.json.encode(payload) .."], err:[".. tostring(err) .."]"
+    end
+
+    if not res then
+        return nil, "exec txn error, payload:[".. pdk.json.encode(payload) .."]"
     end
 
     local ret = {}
 
-    if type(res.body.Results) ~= "table" then
+    if type(res.body) ~= "table" or type(res.body.Results) ~= "table" then
         return ret, "exec txn error"
     end
 
-    for index, value in ipairs(res.body.Results) do
-        ret[index] = value
+    for i = 1, #res.body.Results do
+        ret[i] = res.body.Results[i]
     end
 
     return ret, nil
@@ -146,11 +158,11 @@ function _M.batch_check_kv_exists(params, prefix)
 
     for _, value in ipairs(params) do
 
-        local id   = value.id or ""
-        local name = value.name or ""
+        local id   = value.id or nil
+        local name = value.name or nil
 
         repeat
-            if id == "" and name == "" then
+            if not id and not name then
                 break
             end
 
@@ -176,42 +188,50 @@ function _M.check_kv_exists(params, prefix)
         return false, "params format error, err:[table expected, got ".. type(params) .."]"
     end
 
-    local id   = params.id or ""
-    local name = params.name or ""
+    local id   = params.id or nil
+    local name = params.name or nil
 
     if not id and not name then
         return true, nil
     end
 
-    local id_res, id_err = "", nil
+    local id_res, id_err = nil, nil
 
-    local name_res, name_err = "", nil
+    local name_res, name_err = nil, nil
 
-    if id ~= "" then
+    if id then
 
         local id_key = _M.SYSTEM_PREFIX_MAP[prefix] .. id
 
         id_res, id_err = _M.get_key(id_key)
 
-        if id_err or not id_res then
+        if id_err then
             return false, "failed to get ".. prefix ..
                     " with id [".. params.id .."], err:[".. tostring(id_err) .."]"
         end
+
+        if not id_res then
+            return false, "failed to get ".. prefix .. " with id [".. params.id .."]"
+        end
     end
 
-    if name ~= "" then
+    if name then
 
         local name_key = _M.PREFIX_MAP[prefix] .. name
 
         name_res, name_err = _M.get_key(name_key)
 
-        if name_err or not name_res then
+        if name_err then
             return false, "failed to get ".. prefix ..
                     " with name [".. params.name .."], err:[".. tostring(name_err) .."]"
         end
+
+        if not name_res then
+            return false, "failed to get ".. prefix .. " with name [".. params.name .."]"
+        end
     end
 
-    if id ~= "" and name ~= "" and not id_err and not name_err then
+    if id and name and not id_err and not name_err then
         if id_res and name_res then
             if id_res ~= name then
                 return false, "params.id:[".. id .."] and params.name:[".. name .."] resources do not match"
@@ -228,7 +248,11 @@ function _M.check_key_exists(name, prefix)
 
     local p, err = _M.get_key(key)
 
-    if err or not p then
+    if err then
+        return false
+    end
+
+    if not p then
         return false
     end
 
@@ -241,7 +265,11 @@ function _M.check_mapping_exists(id, prefix)
 
     local p, err = _M.get_key(key)
 
-    if err or not p then
+    if err then
+        return false
+    end
+
+    if not p then
         return false
     end
 

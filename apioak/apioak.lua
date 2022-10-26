@@ -79,6 +79,9 @@ function APIOAK.http_access()
     sys.router.parameter(oak_ctx)
 
     local match_succeed = sys.router.matched(oak_ctx)
+
+
+
     if not match_succeed then
         pdk.response.exit(404, { err_message = "\"URI\" Undefined" })
     end

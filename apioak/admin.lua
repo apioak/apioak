@@ -4,6 +4,7 @@ return {
     account = require("apioak.admin.account"),
     common  = require("apioak.admin.common"),
     service = require("apioak.admin.service"),
-    router = require("apioak.admin.router"),
+    router_o = require("apioak.admin.router_o"),
+    router  = require("apioak.admin.router"),
     plugin  = require("apioak.admin.plugin"),
 }

@@ -167,7 +167,9 @@ function _M.matched(oak_ctx)
 
     local match_uri = pdk.string.format("/%s%s", oak_ctx.matched.header[pdk.const.REQUEST_API_ENV_KEY],
             ngx_var.uri)
+
     local match_ok = router_objects:dispatch(match_uri, pdk.request.get_method(), oak_ctx)
+
     if not match_ok then
         return false
     end

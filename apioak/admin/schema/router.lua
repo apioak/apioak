@@ -45,7 +45,7 @@ _M.created = {
                 },
             },
         },
-        plugin = {
+        plugins = {
             type = "array",
             uniqueItems = true,
             items = {
@@ -127,7 +127,7 @@ _M.updated = {
                 },
             },
         },
-        plugin = {
+        plugins = {
             type = "array",
             uniqueItems = true,
             items = {

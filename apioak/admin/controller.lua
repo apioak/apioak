@@ -16,7 +16,7 @@ local controller = function(name)
     cls.get_body = function(key)
         local body, err = pdk.request.body()
         if err then
-            pdk.response.exit(500, { message = err })
+            pdk.response.exit(500, { message = err, err_message = err })
         end
         if key then
             return body[key]
@@ -31,7 +31,7 @@ local controller = function(name)
     cls.check_schema = function(schema, body)
         local _, err = pdk.schema.check(schema, body)
         if err then
-            pdk.response.exit(500, { message = err })
+            pdk.response.exit(500, { message = err, err_message = err })
         end
     end
 
@@ -39,24 +39,24 @@ local controller = function(name)
 
         local token = cls.get_header(pdk.const.REQUEST_ADMIN_TOKEN_KEY)
         if not token then
-            pdk.response.exit(401, { message = "property header \"" ..
+            pdk.response.exit(401, { err_message = "property header \"" ..
                     pdk.const.REQUEST_ADMIN_TOKEN_KEY .. "\" is required" })
         end
 
         local res, err = db.token.query_by_token(token)
         if err then
-            pdk.response.exit(500, { message = err })
+            pdk.response.exit(500, { err_message = err })
         end
 
         if #res == 0 then
-            pdk.response.exit(401, { message = "property token \"" ..
+            pdk.response.exit(401, { err_message = "property token \"" ..
                     token .. "\" invalid" })
         end
 
         local exp_at = pdk.time.strtotime(res[1].expired_at)
         local now_at = pdk.time.time()
         if exp_at < now_at then
-            pdk.response.exit(401, { message = "property token \"" ..
+            pdk.response.exit(401, { err_message = "property token \"" ..
                     token .. "\" expired" })
         end
 
@@ -66,17 +66,17 @@ local controller = function(name)
 
         res, err = db.user.query_by_id(res[1].user_id)
         if err then
-            pdk.response.exit(500, { message = err })
+            pdk.response.exit(500, { err_message = err })
         end
 
         if #res == 0 then
-            pdk.response.exit(401, { message = "account does not exist" })
+            pdk.response.exit(401, { err_message = "account does not exist" })
         end
 
         local user = res[1]
 
         if user.is_enable == 0 then
-            pdk.response.exit(401, { message = "account is disabled" })
+            pdk.response.exit(401, { err_message = "account is disabled" })
         end
 
         cls.uid   = user.id
@@ -94,11 +94,11 @@ local controller = function(name)
     cls.project_authenticate = function(project_id, user_id)
         local res, err = db.role.query(project_id, user_id)
         if err then
-            pdk.response.exit(500, { message = err })
+            pdk.response.exit(500, { err_message = err })
         end
 
         if #res == 0 then
-            pdk.response.exit(501, { message = "no project permissions" })
+            pdk.response.exit(501, { err_message = "no project permissions" })
         end
 
         return res[1]
@@ -107,11 +107,11 @@ local controller = function(name)
     cls.router_authenticate = function(router_id, user_id)
         local res, err = db.router.query(router_id)
         if err then
-            pdk.response.exit(500, { message = err })
+            pdk.response.exit(500, { err_message = err })
         end
 
         if #res == 0 then
-            pdk.response.exit(501, { message = "no router permissions" })
+            pdk.response.exit(501, { err_message = "no router permissions" })
         end
 
         return cls.project_authenticate(res[1].project_id, user_id)
