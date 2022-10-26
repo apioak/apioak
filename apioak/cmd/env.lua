@@ -126,10 +126,10 @@ local function validate_consul()
 
     local resty_consul = require("resty.consul")
     local consul = resty_consul:new({
-        host            = conf.host or DEFAULT_HOST,
-        port            = conf.port or DEFAULT_PORT,
-        connect_timeout = conf.connect_timeout or DEFAULT_COONECT_TIMEOUT, -- 60s
-        read_timeout    = conf.read_timeout or DEFAULT_READ_TIMEOUT, -- 60s
+        host            = conf.host or '127.0.0.1',
+        port            = conf.port or 8500,
+        connect_timeout = conf.connect_timeout or 60*1000, -- 60s
+        read_timeout    = conf.read_timeout or 60*1000, -- 60s
         default_args    = {},
         ssl             = conf.ssl or false,
         ssl_verify      = conf.ssl_verify or true,
@@ -146,7 +146,8 @@ local function validate_consul()
     end
 
     if agent_config.status ~= 200 then
-        print("Database Config        ...FAIL(" .. agent_config.status .. ": " .. string.gsub(agent_config.body, "\n", "") ..")")
+        print("Database Config        ...FAIL(" .. agent_config.status ..
+                ": " .. string.gsub(agent_config.body, "\n", "") ..")")
         os.exit(1)
     end
 
