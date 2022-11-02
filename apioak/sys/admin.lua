@@ -128,7 +128,13 @@ function _M.init_worker()
     -- Upstream Related APIs
     router:post("/apioak/admin/upstreams", admin.upstream.created)
 
+    router:put("/apioak/admin/upstreams/{upstream_key}", admin.upstream.updated)
+
     router:get("/apioak/admin/upstreams", admin.upstream.lists)
+
+    router:get("/apioak/admin/upstreams/{upstream_key}", admin.upstream.detail)
+
+    router:delete("/apioak/admin/upstreams/{upstream_key}", admin.upstream.deleted)
 
 end
 
