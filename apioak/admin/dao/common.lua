@@ -17,17 +17,19 @@ end
 _M.SYSTEM_PREFIX = _M.APIOAK_PREFIX() .. "system/mapping/"
 
 _M.SYSTEM_PREFIX_MAP = {
-    services  = _M.SYSTEM_PREFIX .. "services/",
-    routers   = _M.SYSTEM_PREFIX .. "routers/",
-    plugins   = _M.SYSTEM_PREFIX .. "plugins/",
-    upstreams = _M.SYSTEM_PREFIX .. "upstreams/",
+    services  = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_SERVICES .. "/",
+    routers   = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_ROUTERS .. "/",
+    plugins   = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_PLUGINS .. "/",
+    upstreams = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_UPSTREAMS .. "/",
+    nodes     = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_NODES .. "/",
 }
 
 _M.PREFIX_MAP = {
-    services  = _M.APIOAK_PREFIX() .. "services/",
-    routers   = _M.APIOAK_PREFIX() .. "routers/",
-    plugins   = _M.APIOAK_PREFIX() .. "plugins/",
-    upstreams = _M.APIOAK_PREFIX() .. "upstreams/",
+    services  = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_SERVICES .. "/",
+    routers   = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_ROUTERS .. "/",
+    plugins   = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_PLUGINS .. "/",
+    upstreams = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_UPSTREAMS .. "/",
+    nodes     = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_NODES .. "/",
 }
 
 function _M.get_key(key)
@@ -167,6 +169,9 @@ function _M.batch_check_kv_exists(params, prefix)
             end
 
             local res, err = _M.check_kv_exists(value, prefix)
+
+            -- 如果查找的数据不存在、查找出现错误、传递的不是一对数据  则返回false 标识错误
+            -- id和名称为空、存在查询的数据、传递的数据是一对的  则返回 true 标识正确
 
             if err then
                 return false, err

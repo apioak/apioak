@@ -34,4 +34,14 @@ _M.CONTENT_TYPE_HTML   = "text/html"
 
 _M.CONTENT_TYPE_XML    = "text/xml"
 
+_M.CONSUL_PRFX_SERVICES = "services"
+
+_M.CONSUL_PRFX_ROUTERS = "routers"
+
+_M.CONSUL_PRFX_PLUGINS = "plugins"
+
+_M.CONSUL_PRFX_UPSTREAMS = "upstreams"
+
+_M.CONSUL_PRFX_NODES = "nodes"
+
 return _M

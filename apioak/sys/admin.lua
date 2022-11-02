@@ -125,6 +125,11 @@ function _M.init_worker()
 
     router:delete("/apioak/admin/bete/plugins/{plugin_key}", admin.plugin.deleted)
 
+    -- Upstream Related APIs
+    router:post("/apioak/admin/upstreams", admin.upstream.created)
+
+    router:get("/apioak/admin/upstreams", admin.upstream.lists)
+
 end
 
 function _M.routers()

@@ -31,7 +31,9 @@ local controller = function(name)
     cls.check_schema = function(schema, body)
         local _, err = pdk.schema.check(schema, body)
         if err then
-            pdk.response.exit(500, { message = err, err_message = err })
+            pdk.log.error("schema check error: body[", pdk.json.encode(body, true), "], err[",
+                          pdk.json.encode(err, true), "]")
+            pdk.response.exit(400, { message = "Parameter error", err_message = err })
         end
     end
 
