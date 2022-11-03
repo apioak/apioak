@@ -37,4 +37,36 @@ function certificate_controller.lists()
     pdk.response.exit(200, res)
 end
 
+
+function certificate_controller.updated(params)
+
+    local body = certificate_controller.get_body()
+    body.certificate_key = params.certificate_key
+
+    certificate_controller.check_schema(schema.certificate.updated, body)
+
+    local detail, err = dao.certificate.detail(body.certificate_key)
+
+    if err then
+        pdk.response.exit(400, { message = err })
+    end
+
+    if (body.name ~= nil) and (body.name ~= detail.name) then
+
+        local name_detail, _ = dao.certificate.detail(body.name)
+
+        if name_detail ~= nil then
+            pdk.response.exit(400, { message = "the certificate name[" .. body.name .. "] already exists" })
+        end
+    end
+
+    local res, err = dao.certificate.updated(body, detail)
+
+    if err then
+        pdk.response.exit(500, { message = err })
+    end
+
+    pdk.response.exit(200, { id = res.id })
+end
+
 return certificate_controller
