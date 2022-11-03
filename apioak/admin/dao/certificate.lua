@@ -124,4 +124,32 @@ function _M.updated(params, detail)
     return { id = detail.id }, nil
 end
 
+function _M.deleted(detail)
+
+    local payload = {
+        {
+            KV = {
+                Verb  = "delete",
+                Key   = common.SYSTEM_PREFIX_MAP.certificates .. detail.id,
+                Value = nil,
+            }
+        },
+        {
+            KV = {
+                Verb  = "delete",
+                Key   = common.PREFIX_MAP.certificates .. detail.name,
+                Value = nil,
+            }
+        }
+    }
+
+    local res, err = common.txn(payload)
+
+    if err or not res then
+        return nil, "delete certificate FAIL, err[".. tostring(err) .."]"
+    end
+
+    return {}, nil
+end
+
 return _M

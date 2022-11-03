@@ -145,6 +145,8 @@ function _M.init_worker()
 
     router:get("/apioak/admin/certificates/{certificate_key}", admin.certificates.detail)
 
+    router:delete("/apioak/admin/certificates/{certificate_key}", admin.certificates.deleted)
+
 end
 
 function _M.routers()

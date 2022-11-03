@@ -80,4 +80,24 @@ function certificate_controller.detail(params)
     pdk.response.exit(200, detail)
 end
 
+function certificate_controller.deleted(params)
+
+    certificate_controller.check_schema(schema.certificate.updated, params)
+
+    local detail, err = dao.certificate.detail(params.certificate_key)
+
+    if err then
+        pdk.response.exit(400, { message = err })
+    end
+
+    local res, err = dao.certificate.deleted(detail)
+
+    if err then
+        pdk.response.exit(500, { message = err })
+    end
+
+    pdk.response.exit(200, res)
+end
+
+
 return certificate_controller
