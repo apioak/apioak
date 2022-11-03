@@ -25,4 +25,16 @@ function certificate_controller.created()
     pdk.response.exit(200, { id = res.id })
 end
 
+
+function certificate_controller.lists()
+
+    local res, err = dao.certificate.lists()
+
+    if err then
+        pdk.response.exit(500, { message = err })
+    end
+
+    pdk.response.exit(200, res)
+end
+
 return certificate_controller

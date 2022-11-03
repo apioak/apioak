@@ -139,6 +139,8 @@ function _M.init_worker()
     -- Certificates Related APIs
     router:post("/apioak/admin/certificates", admin.certificates.created)
 
+    router:get("/apioak/admin/certificates", admin.certificates.lists)
+
 end
 
 function _M.routers()
