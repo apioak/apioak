@@ -25,7 +25,6 @@ function certificate_controller.created()
     pdk.response.exit(200, { id = res.id })
 end
 
-
 function certificate_controller.lists()
 
     local res, err = dao.certificate.lists()
@@ -36,7 +35,6 @@ function certificate_controller.lists()
 
     pdk.response.exit(200, res)
 end
-
 
 function certificate_controller.updated(params)
 
@@ -67,6 +65,19 @@ function certificate_controller.updated(params)
     end
 
     pdk.response.exit(200, { id = res.id })
+end
+
+function certificate_controller.detail(params)
+
+    certificate_controller.check_schema(schema.certificate.updated, params)
+
+    local detail, err = dao.certificate.detail(params.certificate_key)
+
+    if err then
+        pdk.response.exit(400, { message = err })
+    end
+
+    pdk.response.exit(200, detail)
 end
 
 return certificate_controller

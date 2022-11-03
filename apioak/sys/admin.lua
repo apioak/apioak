@@ -143,6 +143,8 @@ function _M.init_worker()
 
     router:get("/apioak/admin/certificates", admin.certificates.lists)
 
+    router:get("/apioak/admin/certificates/{certificate_key}", admin.certificates.detail)
+
 end
 
 function _M.routers()
