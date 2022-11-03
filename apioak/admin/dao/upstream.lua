@@ -1,6 +1,6 @@
-local common = require("apioak.admin.dao.common")
-local uuid   = require("resty.jit-uuid")
 local pdk    = require("apioak.pdk")
+local uuid   = require("resty.jit-uuid")
+local common = require("apioak.admin.dao.common")
 
 local _M = {}
 

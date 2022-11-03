@@ -136,6 +136,9 @@ function _M.init_worker()
 
     router:delete("/apioak/admin/upstreams/{upstream_key}", admin.upstream.deleted)
 
+    -- Certificates Related APIs
+    router:post("/apioak/admin/certificates", admin.certificates.created)
+
 end
 
 function _M.routers()

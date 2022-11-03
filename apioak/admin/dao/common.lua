@@ -17,19 +17,21 @@ end
 _M.SYSTEM_PREFIX = _M.APIOAK_PREFIX() .. "system/mapping/"
 
 _M.SYSTEM_PREFIX_MAP = {
-    services  = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_SERVICES .. "/",
-    routers   = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_ROUTERS .. "/",
-    plugins   = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_PLUGINS .. "/",
-    upstreams = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_UPSTREAMS .. "/",
-    nodes     = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_NODES .. "/",
+    services     = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_SERVICES .. "/",
+    routers      = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_ROUTERS .. "/",
+    plugins      = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_PLUGINS .. "/",
+    upstreams    = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_UPSTREAMS .. "/",
+    nodes        = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_NODES .. "/",
+    certificates = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_CERTIFICATES .. "/",
 }
 
 _M.PREFIX_MAP = {
-    services  = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_SERVICES .. "/",
-    routers   = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_ROUTERS .. "/",
-    plugins   = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_PLUGINS .. "/",
-    upstreams = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_UPSTREAMS .. "/",
-    nodes     = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_NODES .. "/",
+    services     = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_SERVICES .. "/",
+    routers      = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_ROUTERS .. "/",
+    plugins      = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_PLUGINS .. "/",
+    upstreams    = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_UPSTREAMS .. "/",
+    nodes        = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_NODES .. "/",
+    certificates = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_CERTIFICATES .. "/",
 }
 
 function _M.get_key(key)

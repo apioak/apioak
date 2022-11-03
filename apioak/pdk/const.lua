@@ -44,4 +44,6 @@ _M.CONSUL_PRFX_UPSTREAMS = "upstreams"
 
 _M.CONSUL_PRFX_NODES = "nodes"
 
+_M.CONSUL_PRFX_CERTIFICATES = "certificates"
+
 return _M

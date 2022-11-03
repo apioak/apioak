@@ -1,7 +1,7 @@
-local pdk = require("apioak.pdk")
-local schema = require("apioak.schema")
+local dao        = require("apioak.dao")
+local pdk        = require("apioak.pdk")
+local schema     = require("apioak.schema")
 local controller = require("apioak.admin.controller")
-local dao = require("apioak.dao")
 
 local upstream_controller = controller.new("upstream")
 
