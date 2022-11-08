@@ -8,7 +8,6 @@ return {
     router        = require("apioak.admin.router"),
     plugin        = require("apioak.admin.plugin"),
     upstream      = require("apioak.admin.upstream"),
-    upstream      = require("apioak.admin.upstream"),
     certificates  = require("apioak.admin.certificate"),
     upstream_node = require("apioak.admin.upstream_node"),
 }
