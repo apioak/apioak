@@ -44,4 +44,37 @@ function upstream_node_controller.lists()
     pdk.response.exit(200, res)
 end
 
+function upstream_node_controller.updated(params)
+
+    local body = upstream_node_controller.get_body()
+    body.upstream_node_key = params.upstream_node_key
+
+    upstream_node_controller.check_schema(schema.upstream_node.created, body)
+
+    -- @todo 这里需要判断如果健康检查打开，则tcp必填 或者 http和method同时必填 的逻辑，或者是json_schema做关联关系的校验
+
+    local detail, err = dao.upstream_node.detail(body.upstream_node_key)
+
+    if err then
+        pdk.response.exit(400, { message = err })
+    end
+
+    if (body.name ~= nil) and (body.name ~= detail.name) then
+
+        local name_detail, _ = dao.upstream_node.detail(body.name)
+
+        if name_detail ~= nil then
+            pdk.response.exit(400, { message = "the upstream_node name[" .. body.name .. "] already exists" })
+        end
+    end
+
+    local res, err = dao.upstream_node.updated(body, detail)
+
+    if err then
+        pdk.response.exit(500, { message = err })
+    end
+
+    pdk.response.exit(200, { id = res.id })
+end
+
 return upstream_node_controller

@@ -68,4 +68,97 @@ function _M.lists()
     return res, nil
 end
 
+function _M.updated(params, detail)
+
+    local old_name = detail.name
+
+    if params.name then
+        detail.name = params.name
+    end
+    if params.address then
+        detail.address = params.address
+    end
+    if params.port then
+        detail.port = params.port
+    end
+    if params.weight then
+        detail.weight = params.weight
+    end
+    if params.health then
+        detail.health = params.health
+    end
+    if params.check.enabled then
+        detail.check.enabled = params.check.enabled
+    end
+    if params.check.tcp then
+        detail.check.tcp = params.check.tcp
+    end
+    if params.check.method then
+        detail.check.method = params.check.method
+    end
+    if params.check.http then
+        detail.check.http = params.check.http
+    end
+    if params.check.interval then
+        detail.check.interval = params.check.interval
+    end
+    if params.check.timeout then
+        detail.check.timeout = params.check.timeout
+    end
+
+    local payload = {
+        {
+            KV = {
+                Verb  = "delete",
+                Key   = common.PREFIX_MAP.upstream_nodes .. old_name,
+                Value = nil,
+            }
+        },
+        {
+            KV = {
+                Verb  = "set",
+                Key   = common.SYSTEM_PREFIX_MAP.upstream_nodes .. detail.id,
+                Value = detail.name,
+            }
+        },
+        {
+            KV = {
+                Verb  = "set",
+                Key   = common.PREFIX_MAP.upstream_nodes .. detail.name,
+                Value = pdk.json.encode(detail),
+            }
+        },
+    }
+
+    local res, err = common.txn(payload)
+
+    if err or not res then
+        return nil, "update upstream_node FAIL, err[".. tostring(err) .."]"
+    end
+
+    return { id = detail.id }, nil
+end
+
+function _M.detail(key)
+
+    if uuid.is_valid(key) then
+
+        local name, err = common.get_key(common.SYSTEM_PREFIX_MAP.upstream_nodes .. key)
+
+        if err or not name then
+            return nil, "upstream_node key:[".. key .. "] does not exist"
+        end
+
+        key = name
+    end
+
+    local detail, err = common.get_key(common.PREFIX_MAP.upstream_nodes .. key)
+
+    if err or not detail then
+        return nil, "upstream_node detail:[".. key .."] does not exist"
+    end
+
+    return  pdk.json.decode(detail), nil
+end
+
 return _M
