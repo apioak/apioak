@@ -77,4 +77,17 @@ function upstream_node_controller.updated(params)
     pdk.response.exit(200, { id = res.id })
 end
 
+function upstream_node_controller.detail(params)
+
+    upstream_node_controller.check_schema(schema.upstream_node.updated, params)
+
+    local res, err = dao.upstream_node.detail(params.upstream_node_key)
+
+    if err then
+        pdk.response.exit(400, { message = err })
+    end
+
+    pdk.response.exit(200, res)
+end
+
 return upstream_node_controller
