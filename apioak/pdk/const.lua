@@ -42,8 +42,6 @@ _M.CONSUL_PRFX_PLUGINS = "plugins"
 
 _M.CONSUL_PRFX_UPSTREAMS = "upstreams"
 
-_M.CONSUL_PRFX_NODES = "nodes"
-
 _M.CONSUL_PRFX_CERTIFICATES = "certificates"
 
 _M.CONSUL_PRFX_UPSTREAM_NODES = "upstream_nodes"

@@ -21,7 +21,6 @@ _M.SYSTEM_PREFIX_MAP = {
     routers        = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_ROUTERS .. "/",
     plugins        = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_PLUGINS .. "/",
     upstreams      = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_UPSTREAMS .. "/",
-    nodes          = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_NODES .. "/",
     certificates   = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_CERTIFICATES .. "/",
     upstream_nodes = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_UPSTREAM_NODES .. "/",
 }
@@ -31,7 +30,6 @@ _M.PREFIX_MAP = {
     routers        = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_ROUTERS .. "/",
     plugins        = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_PLUGINS .. "/",
     upstreams      = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_UPSTREAMS .. "/",
-    nodes          = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_NODES .. "/",
     certificates   = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_CERTIFICATES .. "/",
     upstream_nodes = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_UPSTREAM_NODES .. "/",
 }

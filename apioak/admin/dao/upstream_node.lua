@@ -161,4 +161,77 @@ function _M.detail(key)
     return  pdk.json.decode(detail), nil
 end
 
+local upstream_relation = function(detail)
+
+    local list, err = common.list_keys(common.PREFIX_MAP.upstreams)
+
+    if err then
+        return nil, err
+    end
+
+    list = list['list']
+
+    local relation_upstream = {}
+    for i = 1, #list do
+        local nodes = list[i].nodes
+
+        if #nodes > 0 then
+            for j = 1, #nodes do
+                if nodes[j].id ~= nil and nodes[j].id == detail.id then
+                    table.insert(relation_upstream, list[i])
+                    break
+                end
+
+                if nodes[j].name ~= nil and nodes[j].name == detail.name then
+                    table.insert(relation_upstream, list[i])
+                    break
+                end
+            end
+        end
+    end
+
+    if #relation_upstream == 0 then
+        relation_upstream = nil
+    end
+
+    return relation_upstream, nil
+end
+
+function _M.deleted(detail)
+
+    local relation_upstream, err = upstream_relation(detail)
+    if err then
+        return nil, "upstream_relation FAIL [".. err .."]"
+    end
+
+    if relation_upstream then
+        return nil, "the upstream_node is being used by upstream"
+    end
+
+    local payload = {
+        {
+            KV = {
+                Verb  = "delete",
+                Key   = common.SYSTEM_PREFIX_MAP.upstream_nodes .. detail.id,
+                Value = nil,
+            }
+        },
+        {
+            KV = {
+                Verb  = "delete",
+                Key   = common.PREFIX_MAP.upstream_nodes .. detail.name,
+                Value = nil,
+            }
+        }
+    }
+
+    local res, err = common.txn(payload)
+
+    if err or not res then
+        return nil, "delete upstream_node FAIL, err[".. tostring(err) .."]"
+    end
+
+    return {}, nil
+end
+
 return _M

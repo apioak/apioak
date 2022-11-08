@@ -18,7 +18,8 @@ function upstream_controller.created()
         pdk.response.exit(400, { message = "the upstream name[" .. body.name .. "] already exists" })
     end
 
-    local check_nodes, check_nodes_err = dao.common.batch_check_kv_exists(body.nodes, pdk.const.CONSUL_PRFX_NODES)
+    local check_nodes, check_nodes_err = dao.common.batch_check_kv_exists(
+            body.nodes, pdk.const.CONSUL_PRFX_UPSTREAM_NODES)
 
     if check_nodes_err or not check_nodes then
         pdk.response.exit(400, { message = "the upstream nodes is abnormal" })
@@ -68,7 +69,8 @@ function upstream_controller.updated(params)
 
     if body.nodes then
 
-        local check_nodes, check_nodes_err = dao.common.batch_check_kv_exists(body.nodes, pdk.const.CONSUL_PRFX_NODES)
+        local check_nodes, check_nodes_err = dao.common.batch_check_kv_exists(
+                body.nodes, pdk.const.CONSUL_PRFX_UPSTREAM_NODES)
 
         if check_nodes_err or not check_nodes then
             pdk.response.exit(400, { message = "the upstream nodes is abnormal" })
@@ -88,13 +90,13 @@ function upstream_controller.detail(params)
 
     upstream_controller.check_schema(schema.upstream.updated, params)
 
-    local res, err = dao.upstream.detail(params.upstream_key)
+    local detail, err = dao.upstream.detail(params.upstream_key)
 
     if err then
         pdk.response.exit(400, { message = err })
     end
 
-    pdk.response.exit(200, res)
+    pdk.response.exit(200, detail)
 end
 
 function upstream_controller.deleted(params)

@@ -81,10 +81,29 @@ function upstream_node_controller.detail(params)
 
     upstream_node_controller.check_schema(schema.upstream_node.updated, params)
 
-    local res, err = dao.upstream_node.detail(params.upstream_node_key)
+    local detail, err = dao.upstream_node.detail(params.upstream_node_key)
 
     if err then
         pdk.response.exit(400, { message = err })
+    end
+
+    pdk.response.exit(200, detail)
+end
+
+function upstream_node_controller.deleted(params)
+
+    upstream_node_controller.check_schema(schema.upstream_node.updated, params)
+
+    local detail, err = dao.upstream_node.detail(params.upstream_node_key)
+
+    if err then
+        pdk.response.exit(400, { message = err })
+    end
+
+    local res, err = dao.upstream_node.deleted(detail)
+
+    if err then
+        pdk.response.exit(500, { message = err })
     end
 
     pdk.response.exit(200, res)
