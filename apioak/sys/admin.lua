@@ -125,6 +125,7 @@ function _M.init_worker()
 
     router:delete("/apioak/admin/bete/plugins/{plugin_key}", admin.plugin.deleted)
 
+
     -- Upstream Related APIs
     router:post("/apioak/admin/upstreams", admin.upstream.created)
 
@@ -135,6 +136,11 @@ function _M.init_worker()
     router:get("/apioak/admin/upstreams/{upstream_key}", admin.upstream.detail)
 
     router:delete("/apioak/admin/upstreams/{upstream_key}", admin.upstream.deleted)
+
+
+    -- Upstream nodes Related APIs
+    router:post("/apioak/admin/upstream/nodes", admin.upstream_node.created)
+
 
     -- Certificates Related APIs
     router:post("/apioak/admin/certificates", admin.certificates.created)

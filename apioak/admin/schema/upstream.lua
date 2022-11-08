@@ -17,9 +17,10 @@ _M.created = {
             enum    = { upstream.DEFAULT_ALGORITHM }
         },
         nodes           = {
-            type     = "array",
-            minItems = 1,
-            items    = {
+            type        = "array",
+            uniqueItems = true,
+            minItems    = 1,
+            items       = {
                 type       = "object",
                 properties = {
                     id   = {
@@ -96,9 +97,10 @@ _M.updated = {
             enum = { upstream.DEFAULT_ALGORITHM }
         },
         nodes           = {
-            type     = "array",
-            minItems = 1,
-            items    = {
+            type        = "array",
+            uniqueItems = true,
+            minItems    = 1,
+            items       = {
                 type       = "object",
                 properties = {
                     id   = {
@@ -138,28 +140,6 @@ _M.updated = {
             type    = "number",
             minimum = 0,
             maximum = 3600000,
-        }
-    },
-    required   = { "upstream_key" }
-}
-
-_M.detail = {
-    type       = "object",
-    properties = {
-        upstream_key = {
-            type  = "string",
-            anyOf = {
-                {
-                    minLength = 3,
-                    maxLength = 35,
-                    pattern   = "^\\*?[0-9a-zA-Z-_.]+$",
-                },
-                {
-                    minLength = 36,
-                    maxLength = 36,
-                    pattern   = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
-                }
-            }
         }
     },
     required   = { "upstream_key" }

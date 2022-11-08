@@ -1,9 +1,9 @@
-local pdk  = require("apioak.pdk")
-local config  = require("apioak.sys.config")
+local pdk = require("apioak.pdk")
+local config = require("apioak.sys.config")
 
 local _M = {}
 
-_M.APIOAK_PREFIX = function ()
+_M.APIOAK_PREFIX = function()
 
     local conf, err = config.query("consul")
 
@@ -17,21 +17,23 @@ end
 _M.SYSTEM_PREFIX = _M.APIOAK_PREFIX() .. "system/mapping/"
 
 _M.SYSTEM_PREFIX_MAP = {
-    services     = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_SERVICES .. "/",
-    routers      = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_ROUTERS .. "/",
-    plugins      = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_PLUGINS .. "/",
-    upstreams    = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_UPSTREAMS .. "/",
-    nodes        = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_NODES .. "/",
-    certificates = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_CERTIFICATES .. "/",
+    services       = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_SERVICES .. "/",
+    routers        = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_ROUTERS .. "/",
+    plugins        = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_PLUGINS .. "/",
+    upstreams      = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_UPSTREAMS .. "/",
+    nodes          = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_NODES .. "/",
+    certificates   = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_CERTIFICATES .. "/",
+    upstream_nodes = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_UPSTREAM_NODES .. "/",
 }
 
 _M.PREFIX_MAP = {
-    services     = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_SERVICES .. "/",
-    routers      = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_ROUTERS .. "/",
-    plugins      = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_PLUGINS .. "/",
-    upstreams    = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_UPSTREAMS .. "/",
-    nodes        = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_NODES .. "/",
-    certificates = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_CERTIFICATES .. "/",
+    services       = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_SERVICES .. "/",
+    routers        = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_ROUTERS .. "/",
+    plugins        = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_PLUGINS .. "/",
+    upstreams      = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_UPSTREAMS .. "/",
+    nodes          = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_NODES .. "/",
+    certificates   = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_CERTIFICATES .. "/",
+    upstream_nodes = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_UPSTREAM_NODES .. "/",
 }
 
 function _M.get_key(key)
@@ -64,11 +66,11 @@ function _M.list_keys(prefix)
     local res = {}
 
     if not keys or not keys.body then
-        return {list = res}, nil
+        return { list = res }, nil
     end
 
     if type(keys.body) ~= "table" then
-        return {list = res}, nil
+        return { list = res }, nil
     end
 
     for i = 1, #keys.body do
@@ -78,9 +80,9 @@ function _M.list_keys(prefix)
         if err == nil and d then
             table.insert(res, pdk.json.decode(d))
         end
-     end
+    end
 
-    return {list = res}, nil
+    return { list = res }, nil
 end
 
 function _M.detail_key(key)
@@ -88,7 +90,7 @@ function _M.detail_key(key)
     local d, err = _M.get_key(key)
 
     if err then
-        return nil, "failed to get Key-Value detail with key [" .. key .. "], err[".. tostring(err) .. "]"
+        return nil, "failed to get Key-Value detail with key [" .. key .. "], err[" .. tostring(err) .. "]"
     end
 
     if not d then
@@ -104,7 +106,7 @@ function _M.delete_key(key)
     local g, err = _M.get_key(key)
 
     if err then
-        return nil, "Key-Value:[" .. key .. "] does not exists], err:[".. tostring(err) .."]"
+        return nil, "Key-Value:[" .. key .. "] does not exists], err:[" .. tostring(err) .. "]"
     end
 
     if not g then
@@ -114,7 +116,7 @@ function _M.delete_key(key)
     local d, err = pdk.consul.instance:delete_key(key)
 
     if err then
-        return nil, "failed to delete Key-Value with key [" .. key .. "], err[".. tostring(err) .. "]"
+        return nil, "failed to delete Key-Value with key [" .. key .. "], err[" .. tostring(err) .. "]"
     end
 
     if not d then
@@ -130,11 +132,11 @@ function _M.txn(payload)
     local res, err = pdk.consul.instance:txn(payload)
 
     if err then
-        return nil, "exec txn error, payload:[".. pdk.json.encode(payload) .."], err:[".. tostring(err) .."]"
+        return nil, "exec txn error, payload:[" .. pdk.json.encode(payload) .. "], err:[" .. tostring(err) .. "]"
     end
 
     if not res then
-        return nil, "exec txn error, payload:[".. pdk.json.encode(payload) .."]"
+        return nil, "exec txn error, payload:[" .. pdk.json.encode(payload) .. "]"
     end
 
     local ret = {}
@@ -153,7 +155,7 @@ end
 function _M.batch_check_kv_exists(params, prefix)
 
     if type(params) ~= "table" then
-        return false, "params format error, err:[table expected, got ".. type(params) .."]"
+        return false, "params format error, err:[table expected, got " .. type(params) .. "]"
     end
 
     if params.len == 0 then
@@ -162,7 +164,7 @@ function _M.batch_check_kv_exists(params, prefix)
 
     for _, value in ipairs(params) do
 
-        local id   = value.id or nil
+        local id = value.id or nil
         local name = value.name or nil
 
         repeat
@@ -192,10 +194,10 @@ end
 function _M.check_kv_exists(params, prefix)
 
     if type(params) ~= "table" then
-        return false, "params format error, err:[table expected, got ".. type(params) .."]"
+        return false, "params format error, err:[table expected, got " .. type(params) .. "]"
     end
 
-    local id   = params.id or nil
+    local id = params.id or nil
     local name = params.name or nil
 
     if not id and not name then
@@ -213,12 +215,12 @@ function _M.check_kv_exists(params, prefix)
         id_res, id_err = _M.get_key(id_key)
 
         if id_err then
-            return false, "failed to get ".. prefix ..
-                    " with id [".. params.id .."], err:[".. tostring(id_err) .."]"
+            return false, "failed to get " .. prefix ..
+                    " with id [" .. params.id .. "], err:[" .. tostring(id_err) .. "]"
         end
 
         if not id_res then
-            return false, "failed to get ".. prefix .. " with id [".. params.id .."]"
+            return false, "failed to get " .. prefix .. " with id [" .. params.id .. "]"
         end
     end
 
@@ -229,19 +231,19 @@ function _M.check_kv_exists(params, prefix)
         name_res, name_err = _M.get_key(name_key)
 
         if name_err then
-            return false, "failed to get ".. prefix ..
-                    " with name [".. params.name .."], err:[".. tostring(name_err) .."]"
+            return false, "failed to get " .. prefix ..
+                    " with name [" .. params.name .. "], err:[" .. tostring(name_err) .. "]"
         end
 
         if not name_res then
-            return false, "failed to get ".. prefix .. " with name [".. params.name .."]"
+            return false, "failed to get " .. prefix .. " with name [" .. params.name .. "]"
         end
     end
 
     if id and name and not id_err and not name_err then
         if id_res and name_res then
             if id_res ~= name then
-                return false, "params.id:[".. id .."] and params.name:[".. name .."] resources do not match"
+                return false, "params.id:[" .. id .. "] and params.name:[" .. name .. "] resources do not match"
             end
         end
     end

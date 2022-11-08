@@ -10,9 +10,10 @@ _M.created = {
             pattern   = "^\\*?[0-9a-zA-Z-_.]+$",
         },
         snis = {
-            type     = "array",
-            minItems = 1,
-            items    = {
+            type        = "array",
+            minItems    = 1,
+            uniqueItems = true,
+            items       = {
                 type      = "string",
                 minLength = 3,
                 maxLength = 35,
@@ -20,12 +21,16 @@ _M.created = {
             }
         },
         cert = {
-            type    = "string",
-            pattern = "^\\*?[0-9a-zA-Z-_.|/+=]+$",
+            type      = "string",
+            minLength = 128,
+            maxLength = 64 * 1024,
+            pattern   = "^\\*?[0-9a-zA-Z-_.|/+=]+$",
         },
         key  = {
-            type    = "string",
-            pattern = "^\\*?[0-9a-zA-Z-_.|/+=]+$",
+            type      = "string",
+            minLength = 128,
+            maxLength = 64 * 1024,
+            pattern   = "^\\*?[0-9a-zA-Z-_.|/+=]+$",
         }
     },
     required   = { "name", "snis", "cert", "key" }
@@ -56,9 +61,10 @@ _M.updated = {
             pattern   = "^\\*?[0-9a-zA-Z-_.]+$",
         },
         snis            = {
-            type     = "array",
-            minItems = 1,
-            items    = {
+            type        = "array",
+            uniqueItems = true,
+            minItems    = 1,
+            items       = {
                 type      = "string",
                 minLength = 3,
                 maxLength = 35,

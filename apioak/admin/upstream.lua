@@ -89,7 +89,7 @@ end
 
 function upstream_controller.detail(params)
 
-    upstream_controller.check_schema(schema.upstream.detail, params)
+    upstream_controller.check_schema(schema.upstream.updated, params)
 
     local res, err = dao.upstream.detail(params.upstream_key)
 
@@ -103,7 +103,7 @@ end
 
 function upstream_controller.deleted(params)
 
-    upstream_controller.check_schema(schema.upstream.detail, params)
+    upstream_controller.check_schema(schema.upstream.updated, params)
 
     local detail, err = dao.upstream.detail(params.upstream_key)
 
