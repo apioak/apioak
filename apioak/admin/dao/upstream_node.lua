@@ -58,4 +58,14 @@ function _M.created(params)
     return { id = id }, nil
 end
 
+function _M.lists()
+    local res, err = common.list_keys(common.PREFIX_MAP.upstream_nodes)
+
+    if err then
+        return nil, "get upstream_node list FAIL [".. err .."]"
+    end
+
+    return res, nil
+end
+
 return _M

@@ -18,6 +18,12 @@ function upstream_node_controller.created()
     --    end
     --end
 
+    local check_name = dao.common.check_key_exists(body.name, pdk.const.CONSUL_PRFX_UPSTREAM_NODES)
+
+    if check_name then
+        pdk.response.exit(400, { message = "the upstream_node name[" .. body.name .. "] already exists" })
+    end
+
     local res, err = dao.upstream_node.created(body)
 
     if err then
@@ -25,6 +31,17 @@ function upstream_node_controller.created()
     end
 
     pdk.response.exit(200, { id = res.id })
+end
+
+function upstream_node_controller.lists()
+
+    local res, err = dao.upstream_node.lists()
+
+    if err then
+        pdk.response.exit(500, { message = err })
+    end
+
+    pdk.response.exit(200, res)
 end
 
 return upstream_node_controller

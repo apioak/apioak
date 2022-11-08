@@ -33,7 +33,6 @@ function upstream_controller.created()
     pdk.response.exit(200, { id = res.id })
 end
 
-
 function upstream_controller.lists()
 
     local res, err = dao.upstream.lists()
@@ -44,7 +43,6 @@ function upstream_controller.lists()
 
     pdk.response.exit(200, res)
 end
-
 
 function upstream_controller.updated(params)
 
@@ -86,7 +84,6 @@ function upstream_controller.updated(params)
     pdk.response.exit(200, { id = res.id })
 end
 
-
 function upstream_controller.detail(params)
 
     upstream_controller.check_schema(schema.upstream.updated, params)
@@ -99,7 +96,6 @@ function upstream_controller.detail(params)
 
     pdk.response.exit(200, res)
 end
-
 
 function upstream_controller.deleted(params)
 

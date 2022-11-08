@@ -141,6 +141,8 @@ function _M.init_worker()
     -- Upstream nodes Related APIs
     router:post("/apioak/admin/upstream/nodes", admin.upstream_node.created)
 
+    router:get("/apioak/admin/upstream/nodes", admin.upstream_node.lists)
+
 
     -- Certificates Related APIs
     router:post("/apioak/admin/certificates", admin.certificates.created)
