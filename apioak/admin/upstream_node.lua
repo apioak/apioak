@@ -11,12 +11,11 @@ function upstream_node_controller.created()
 
     upstream_node_controller.check_schema(schema.upstream_node.created, body)
 
-    -- @todo 这里需要判断如果健康检查打开，则tcp必填 或者 http和method同时必填 的逻辑，或者是json_schema做关联关系的校验
-    --if body.check.enabled == true then
-    --    if (body.check.tcp == "") or ((body.check.http == "") and (body.check.method == "")) then
-    --        pdk.response.exit(440, { message = "Parameter error" })
-    --    end
-    --end
+    if body.check.enabled == true then
+        if (body.check.tcp == nil) and ((body.check.http == nil) or (body.check.method == nil)) then
+            pdk.response.exit(400, { message = "Parameter error" })
+        end
+    end
 
     local check_name = dao.common.check_key_exists(body.name, pdk.const.CONSUL_PRFX_UPSTREAM_NODES)
 
@@ -51,7 +50,11 @@ function upstream_node_controller.updated(params)
 
     upstream_node_controller.check_schema(schema.upstream_node.created, body)
 
-    -- @todo 这里需要判断如果健康检查打开，则tcp必填 或者 http和method同时必填 的逻辑，或者是json_schema做关联关系的校验
+    if body.check.enabled == true then
+        if (body.check.tcp == nil) and ((body.check.http == nil) or (body.check.method == nil)) then
+            pdk.response.exit(400, { message = "Parameter error" })
+        end
+    end
 
     local detail, err = dao.upstream_node.detail(body.upstream_node_key)
 

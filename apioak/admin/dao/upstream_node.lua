@@ -4,13 +4,13 @@ local common = require("apioak.admin.dao.common")
 
 local _M = {}
 
-_M.DEFAULT_HEALTH = "HEALTH"
-_M.DEFAULT_UNHEALTH = "UNHEALTH"
-_M.DEFAULT_ENABLED = false
-_M.DEFAULT_WEIGHT = 1
 _M.DEFAULT_PORT = 80
+_M.DEFAULT_WEIGHT = 1
 _M.DEFAULT_TIMEOUT = 1
 _M.DEFAULT_INTERVAL = 5
+_M.DEFAULT_ENABLED_FALSE = false
+_M.DEFAULT_HEALTH = "HEALTH"
+_M.DEFAULT_UNHEALTH = "UNHEALTH"
 
 function _M.created(params)
     local id = uuid.generate_v4()
@@ -23,7 +23,7 @@ function _M.created(params)
         health  = params.health or _M.DEFAULT_HEALTH,
         weight  = params.weight or _M.DEFAULT_WEIGHT,
         check   = {
-            enabled  = params.check.enabled or _M.DEFAULT_ENABLED,
+            enabled  = params.check.enabled or _M.DEFAULT_ENABLED_FALSE,
             tcp      = params.check.tcp or "",
             method   = params.check.method or "",
             http     = params.check.http or "",

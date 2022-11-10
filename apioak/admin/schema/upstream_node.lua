@@ -43,7 +43,7 @@ _M.created = {
             properties = {
                 enabled  = {
                     type    = "boolean",
-                    default = upstream_node.DEFAULT_ENABLED,
+                    default = upstream_node.DEFAULT_ENABLED_FALSE,
                 },
                 tcp      = {
                     type      = "string",
