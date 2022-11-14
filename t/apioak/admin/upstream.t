@@ -111,7 +111,7 @@ OK
 
 
 
-=== TEST 4: upstream list
+=== TEST 4: upstream list success
 --- config
 location /t {
     content_by_lua_block {
@@ -132,7 +132,7 @@ OK
 
 
 
-=== TEST 5: upstream detail (upstream name: test-nginx-upstream-created)
+=== TEST 5: upstream detail success (upstream name: test-nginx-upstream-created)
 --- config
 location /t {
     content_by_lua_block {

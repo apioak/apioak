@@ -23,14 +23,12 @@ _M.created = {
         cert = {
             type      = "string",
             minLength = 128,
-            maxLength = 64 * 1024,
-            pattern   = "^\\*?[0-9a-zA-Z-_.|/+=]+$",
+            maxLength = 64 * 1024
         },
         key  = {
             type      = "string",
             minLength = 128,
-            maxLength = 64 * 1024,
-            pattern   = "^\\*?[0-9a-zA-Z-_.|/+=]+$",
+            maxLength = 64 * 1024
         }
     },
     required   = { "name", "snis", "cert", "key" }
@@ -71,13 +69,15 @@ _M.updated = {
                 pattern   = "^(?=^.{3,255}$)[a-zA-Z0-9-*-.][-a-zA-Z0-9]{0,62}(\\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$",
             }
         },
-        cert            = {
-            type    = "string",
-            pattern = "^\\*?[0-9a-zA-Z-_.|/+=]+$",
+        cert = {
+            type      = "string",
+            minLength = 128,
+            maxLength = 64 * 1024
         },
-        key             = {
-            type    = "string",
-            pattern = "^\\*?[0-9a-zA-Z-_.|/+=]+$",
+        key  = {
+            type      = "string",
+            minLength = 128,
+            maxLength = 64 * 1024
         }
     },
     required   = { "certificate_key" }

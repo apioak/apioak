@@ -57,4 +57,11 @@ function _M.test(uri, method, body, headers)
     return res.status, "FAIL", json.decode(res.body)
 end
 
+function _M.read_file(path)
+    local file = assert(io.open(path, "r"))
+    local content = file:read("*al")
+    file:close()
+    return content
+end
+
 return _M
