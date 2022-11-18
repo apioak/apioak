@@ -16,6 +16,17 @@ function certificate_controller.created()
         pdk.response.exit(400, { message = "the certificate name[" .. body.name .. "] already exists" })
     end
 
+    local exist_sni, exist_sni_err = dao.certificate.exist_sni(body.snis)
+
+    if exist_sni_err ~= nil then
+        pdk.response.exit(500, { message = "sni detection failed [" .. exist_sni_err .. "]" })
+    end
+
+    if exist_sni and (#exist_sni > 0) then
+        pdk.response.exit(400, {
+            message = "exists certificate sni [" .. table.concat(exist_sni, ",") .. "] " })
+    end
+
     local res, err = dao.certificate.created(body)
 
     if err then
@@ -54,9 +65,21 @@ function certificate_controller.updated(params)
         local name_detail, _ = dao.certificate.detail(body.name)
 
         if name_detail ~= nil then
-            pdk.response.exit(400, { message = "the certificate name[" .. body.name .. "] already exists" })
+            pdk.response.exit(400, { message = "the certificate name[" .. body.name .. "] already exist" })
         end
     end
+
+    local exist_sni, exist_sni_err = dao.certificate.exist_sni(body.snis)
+
+    if exist_sni_err ~= nil then
+        pdk.response.exit(500, { message = "sni detection failed err:" .. exist_sni_err })
+    end
+
+    if exist_sni and (#exist_sni > 0) then
+        pdk.response.exit(400, {
+            message = "exists certificate sni [" .. table.concat(exist_sni, ",") .. "] " })
+    end
+
 
     local res, err = dao.certificate.updated(body, detail)
 

@@ -15,6 +15,7 @@ description = {
 }
 
 dependencies = {
+    "lua-resty-worker-events = 2.0.1-1",
     "lua-resty-balancer = 0.02rc5",
     "lua-resty-jwt = 0.2.0",
     "lua-resty-oakrouting = 0.1.0-1",

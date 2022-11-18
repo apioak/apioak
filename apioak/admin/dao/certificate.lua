@@ -152,4 +152,36 @@ function _M.deleted(detail)
     return {}, nil
 end
 
+function _M.exist_sni(params)
+
+    if #params == 0 then
+        return {}, nil
+    end
+
+    local sni_map = {}
+    for i = 1, #params do
+        sni_map[params[i]] = 0
+    end
+
+    local list, err = common.list_keys(common.PREFIX_MAP.certificates)
+
+    if err then
+        return nil, "get certificate list FAIL [".. err .."]"
+    end
+
+    local exist_sni = {}
+
+    for i = 1, #list['list'] do
+        if #list['list'][i]['snis'] > 0 then
+            for j = 1, #list['list'][i]['snis'] do
+                if sni_map[list['list'][i]['snis'][j]] then
+                    table.insert(exist_sni, list['list'][i]['snis'][j])
+                end
+            end
+        end
+    end
+
+    return exist_sni, nil
+end
+
 return _M

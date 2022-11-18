@@ -44,6 +44,12 @@ function APIOAK.init()
     require("jit.opt").start("minstitch=2", "maxtrace=4000",
             "maxrecord=8000", "sizemcode=64",
             "maxmcode=4000", "maxirconst=1000")
+
+    local process = require("ngx.process")
+    local ok, err = process.enable_privileged_agent()
+    if not ok then
+        pdk.log.error("failed to enable privileged process, error: ", err)
+    end
 end
 
 function APIOAK.init_worker()
@@ -52,17 +58,17 @@ function APIOAK.init_worker()
 
     sys.admin.init_worker()
 
-    sys.router.init_worker()
-
-    sys.balancer.init_worker_event()
-
-    sys.balancer.init_worker()
+    sys.dao.init_worker()
 
     sys.cache.init_worker()
 
-    sys.plugin.init_worker()
+    sys.router.init_worker()
 
-    sys.dao.init_worker()
+    --sys.balancer.init_worker_event()
+
+    sys.balancer.init_worker()
+
+    sys.plugin.init_worker()
 end
 
 function APIOAK.http_access()

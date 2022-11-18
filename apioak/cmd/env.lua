@@ -116,10 +116,10 @@ end
 local function validate_consul()
     local res, err = get_config()
     if not res.database then
-        print("Config Database        ...FAIL(".. err ..")")
+        print("Config Consul          ...FAIL(".. err ..")")
         os.exit(1)
     else
-        print("Config Database        ...OK")
+        print("Config Consul          ...OK")
     end
 
     local conf = res.consul
@@ -139,24 +139,24 @@ local function validate_consul()
     local agent_config, err = consul:get('/agent/self')
 
     if not agent_config then
-        print("Database Connect       ...FAIL(".. err ..")")
+        print("Consul Connect         ...FAIL(".. err ..")")
         os.exit(1)
     else
-        print("Database Connect       ...OK")
+        print("Consul Connect         ...OK")
     end
 
     if agent_config.status ~= 200 then
-        print("Database Config        ...FAIL(" .. agent_config.status ..
+        print("Consul Config          ...FAIL(" .. agent_config.status ..
                 ": " .. string.gsub(agent_config.body, "\n", "") ..")")
         os.exit(1)
     end
 
     local consul_version_num = tonumber(string.match(agent_config.body.Config.Version, "^%d+%.%d+"))
     if consul_version_num < 1.13 then
-        print("Database Version       ...FAIL(consul version be greater than 1.13)")
+        print("Consul Version         ...FAIL(consul version be greater than 1.13)")
         os.exit(1)
     else
-        print("Database Version       ...OK")
+        print("Consul Version         ...OK")
     end
 end
 
