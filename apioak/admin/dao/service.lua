@@ -159,4 +159,49 @@ function _M.deleted(detail)
     return {}, nil
 end
 
+function _M.exist_host(hosts, filter_id)
+
+    if #hosts == 0 then
+        return {}, nil
+    end
+
+    local hosts_map = {}
+    for i = 1, #hosts do
+        hosts_map[hosts[i]] = 0
+    end
+
+    local list, err = common.list_keys(common.PREFIX_MAP.services)
+
+    if err then
+        return nil, "get services list FAIL [".. err .."]"
+    end
+
+    local exist_hosts = {}
+
+    for i = 1, #list['list'] do
+
+        repeat
+
+            if list['list'][i]['id'] == filter_id then
+                break
+            end
+
+            if #list['list'][i]['hosts'] > 0 then
+                for j = 1, #list['list'][i]['hosts'] do
+                    if hosts_map[list['list'][i]['hosts'][j]] then
+                        table.insert(exist_hosts, list['list'][i]['hosts'][j])
+                    end
+                end
+            end
+
+        until true
+    end
+
+    if #exist_hosts == 0 then
+        return nil, nil
+    end
+
+    return exist_hosts, nil
+end
+
 return _M

@@ -17,6 +17,17 @@ function service_controller.created()
         pdk.response.exit(400, { message = "the service name[" .. body.name .. "] already exists" })
     end
 
+    local exist_hosts, exist_hosts_err = dao.service.exist_host(body.hosts)
+
+    if exist_hosts_err ~= nil then
+        pdk.response.exit(500, { message = "host detection failed [" .. exist_hosts_err .. "]" })
+    end
+
+    if exist_hosts and (#exist_hosts > 0) then
+        pdk.response.exit(400, {
+            message = "exists hosts [" .. table.concat(exist_hosts, ",") .. "] " })
+    end
+
     if body.plugins then
         local check_plugin, err = dao.common.batch_check_kv_exists(body.plugins, pdk.const.CONSUL_PRFX_PLUGINS)
 
@@ -58,6 +69,17 @@ function service_controller.updated(params)
         if name_detail ~= nil then
             pdk.response.exit(400, { message = "the service name[" .. body.name .. "] already exists" })
         end
+    end
+
+    local exist_hosts, exist_hosts_err = dao.service.exist_host(body.hosts, detail.id)
+
+    if exist_hosts_err ~= nil then
+        pdk.response.exit(500, { message = "host detection failed [" .. exist_hosts_err .. "]" })
+    end
+
+    if exist_hosts and (#exist_hosts > 0) then
+        pdk.response.exit(400, {
+            message = "exists hosts [" .. table.concat(exist_hosts, ",") .. "] " })
     end
 
     if body.plugins then

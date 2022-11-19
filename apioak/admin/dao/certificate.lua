@@ -152,15 +152,15 @@ function _M.deleted(detail)
     return {}, nil
 end
 
-function _M.exist_sni(params, filter_id)
+function _M.exist_sni(snis, filter_id)
 
-    if #params == 0 then
+    if #snis == 0 then
         return {}, nil
     end
 
     local sni_map = {}
-    for i = 1, #params do
-        sni_map[params[i]] = 0
+    for i = 1, #snis do
+        sni_map[snis[i]] = 0
     end
 
     local list, err = common.list_keys(common.PREFIX_MAP.certificates)
@@ -169,7 +169,7 @@ function _M.exist_sni(params, filter_id)
         return nil, "get certificate list FAIL [".. err .."]"
     end
 
-    local exist_sni = {}
+    local exist_snis = {}
 
     for i = 1, #list['list'] do
 
@@ -182,7 +182,7 @@ function _M.exist_sni(params, filter_id)
             if #list['list'][i]['snis'] > 0 then
                 for j = 1, #list['list'][i]['snis'] do
                     if sni_map[list['list'][i]['snis'][j]] then
-                        table.insert(exist_sni, list['list'][i]['snis'][j])
+                        table.insert(exist_snis, list['list'][i]['snis'][j])
                     end
                 end
             end
@@ -190,7 +190,11 @@ function _M.exist_sni(params, filter_id)
         until true
     end
 
-    return exist_sni, nil
+    if #exist_snis == 0 then
+        return nil, nil
+    end
+
+    return exist_snis, nil
 end
 
 return _M
