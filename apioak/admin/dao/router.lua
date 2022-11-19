@@ -220,4 +220,50 @@ function _M.exist_path(paths, filter_id)
     return exist_paths, nil
 end
 
+function _M.router_list_by_service(detail)
+
+    if not detail.id and not detail.name then
+        return nil, nil
+    end
+
+    local list, err = common.list_keys(common.PREFIX_MAP.routers)
+
+    if err then
+        return nil, "get paths list FAIL [".. err .."]"
+    end
+
+    local router_list = {}
+
+    for i = 1, #list['list'] do
+
+        local router_info = list['list'][i]
+
+        repeat
+
+            if not router_info['service'] then
+                break
+            end
+
+            local router_service = router_info['service']
+
+            if not router_service.id and not router_service.name then
+                break
+            end
+
+            if router_service.id and (router_service.id ~= detail.id) then
+                break
+            end
+
+            if router_service.name and (router_service.name ~= detail.name) then
+                break
+            end
+
+            table.insert(router_list, router_info)
+
+        until true
+    end
+
+    return router_list
+end
+
 return _M

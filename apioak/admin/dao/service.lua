@@ -133,10 +133,6 @@ end
 
 function _M.deleted(detail)
 
-    if not detail or type(detail) ~= "table" or detail == {} then
-        return nil, "parameter exception when deleting service: [", pdk.json.encode(detail, true),"]"
-    end
-
     local payload = {
         {
             KV = {
