@@ -1,80 +1,48 @@
+local router = require "apioak.admin.dao.router"
+local common = require "apioak.admin.schema.common"
+
 local _M = {}
+
+local paths = {
+    type = "array",
+    minItems = 1,
+    uniqueItems = true,
+    items = {
+        type = "string",
+        pattern = "^\\/\\*?[0-9a-zA-Z-.=?_*/{}]+$"
+    }
+}
+
+local headers = {
+    type = "object"
+}
 
 _M.created = {
     type = "object",
     properties = {
-        name = {
-            type = "string",
-            minLength = 1,
-            maxLength = 50,
-            pattern = "^\\*?[0-9a-zA-Z-._]+$"
-        },
+        name = common.name,
         methods = {
             type = "array",
             minItems = 1,
             uniqueItems = true,
             items = {
                 type = "string",
-                enum = { "ALL", "GET", "POST", "PUT", "DELETE", "PATH" }
-            },
-            default = {"ALL"}
-        },
-        paths = {
-            type = "array",
-            minItems = 1,
-            uniqueItems = true,
-            items = {
-                type = "string",
-                pattern = "^\\*?[0-9a-zA-Z-./]+$"
-            },
-
-        },
-        headers = {
-            type = "object",
-        },
-        service = {
-            type = "object",
-            properties = {
-                id = {
-                    type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-_.]+$"
-                },
-                name = {
-                    type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-_.]+$"
-                },
-            },
-        },
-        plugins = {
-            type = "array",
-            uniqueItems = true,
-            items = {
-                type = "object",
-                properties = {
-                    id = {
-                        type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-]+$"
-                    },
-                    name = {
-                        type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-._]+$"
-                    }
+                enum = {
+                    router.METHODS_ALL,
+                    router.METHODS_GET,
+                    router.METHODS_POST,
+                    router.METHODS_PUT,
+                    router.METHODS_DELETE,
+                    router.PATH
                 }
             },
+            default = { router.METHODS_ALL }
         },
-        upstream = {
-            type = "object",
-            properties = {
-                id = {
-                    type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-]+$"
-                },
-                name = {
-                    type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-._]+$"
-                },
-            },
-        },
+        paths = paths,
+        headers = headers,
+        service = common.items_object_id_or_name,
+        plugins = common.items_array_id_or_name,
+        upstream = common.items_object_id_or_name,
         enabled = {
             type = "boolean",
             default = true
@@ -86,93 +54,39 @@ _M.created = {
 _M.updated = {
     type = "object",
     properties = {
-        router_key = {
-            type = "string",
-            minLength = 1,
-            maxLength = 50,
-            pattern = "^\\*?[0-9a-zA-Z-._]+$"
-        },
+        router_key = common.param_key,
         methods = {
             type = "array",
             minItems = 1,
             uniqueItems = true,
             items = {
                 type = "string",
-                enum = { "ALL", "GET", "POST", "PUT", "DELETE", "PATH" }
-            },
-            default = {"ALL"}
-        },
-        paths = {
-            type = "array",
-            minItems = 1,
-            uniqueItems = true,
-            items = {
-                type = "string",
-                pattern = "^\\*?[0-9a-zA-Z-./]+$"
-            },
-        },
-        headers = {
-            type = "object",
-        },
-        service = {
-            type = "object",
-            properties = {
-                id = {
-                    type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-]+$"
-                },
-                name = {
-                    type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-_.]+$"
-                },
-            },
-        },
-        plugins = {
-            type = "array",
-            uniqueItems = true,
-            items = {
-                type = "object",
-                properties = {
-                    id = {
-                        type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-]+$"
-                    },
-                    name = {
-                        type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-_.]+$"
-                    }
+                enum = {
+                    router.METHODS_ALL,
+                    router.METHODS_GET,
+                    router.METHODS_POST,
+                    router.METHODS_PUT,
+                    router.METHODS_DELETE,
+                    router.PATH
                 }
-            },
+            }
         },
-        upstream = {
-            type = "object",
-            properties = {
-                id = {
-                    type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-]+$"
-                },
-                name = {
-                    type = "string",
-                    pattern = "^\\*?[0-9a-zA-Z-_.]+$"
-                },
-            },
-        },
+        paths = paths,
+        headers = headers,
+        service = common.items_object_id_or_name,
+        plugins = common.items_array_id_or_name,
+        upstream = common.items_object_id_or_name,
         enabled = {
             type = "boolean",
-            default = true
         }
     },
-    required = {"router_key", "name", "paths", "service" }
+    required = { "router_key" }
 }
 
 _M.detail = {
     type = "object",
     properties = {
-        router_key = {
-            type = "string",
-            minLength = 1,
-            maxLength = 50
-        }
+        router_key = common.items_object_id_or_name
     },
     required = { "router_key"}
 }
@@ -180,11 +94,7 @@ _M.detail = {
 _M.deleted = {
     type = "object",
     properties = {
-        router_key = {
-            type = "string",
-            minLength = 1,
-            maxLength = 50
-        }
+        router_key = common.items_object_id_or_name
     },
     required = { "router_key"}
 }

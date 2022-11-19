@@ -1,71 +1,18 @@
 local upstream = require "apioak.admin.dao.upstream"
+local common   = require "apioak.admin.schema.common"
 
 local _M = {}
-
-local upstream_key = {
-    type  = "string",
-    anyOf = {
-        {
-            minLength = 3,
-            maxLength = 35,
-            pattern   = "^\\*?[0-9a-zA-Z-_.]+$",
-        },
-        {
-            minLength = 36,
-            maxLength = 36,
-            pattern   = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
-        }
-    }
-}
-
-local name = {
-    type      = "string",
-    minLength = 3,
-    maxLength = 35,
-    pattern   = "^\\*?[0-9a-zA-Z-_.]+$",
-}
-
-local nodes = {
-    type        = "array",
-    uniqueItems = true,
-    minItems    = 1,
-    items       = {
-        type       = "object",
-        properties = {
-            id   = {
-                type      = "string",
-                minLength = 36,
-                maxLength = 36,
-                pattern   = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
-            },
-            name = {
-                type      = "string",
-                minLength = 3,
-                maxLength = 35,
-                pattern   = "^\\*?[0-9a-zA-Z-_.]+$",
-            }
-        },
-        anyOf      = {
-            {
-                required = { "id" }
-            },
-            {
-                required = { "name" }
-            }
-        }
-    }
-}
 
 _M.created = {
     type       = "object",
     properties = {
-        name            = name,
+        name            = common.name,
         algorithm       = {
             type    = "string",
             default = upstream.DEFAULT_ALGORITHM,
             enum    = { upstream.DEFAULT_ALGORITHM }
         },
-        nodes           = nodes,
+        nodes           = common.items_array_id_or_name,
         connect_timeout = {
             type    = "number",
             minimum = 0,
@@ -91,13 +38,13 @@ _M.created = {
 _M.updated = {
     type       = "object",
     properties = {
-        upstream_key    = upstream_key,
-        name            = name,
+        upstream_key    = common.param_key,
+        name            = common.name,
         algorithm       = {
             type = "string",
             enum = { upstream.DEFAULT_ALGORITHM }
         },
-        nodes           = nodes,
+        nodes           = common.items_array_id_or_name,
         connect_timeout = {
             type    = "number",
             minimum = 0,

@@ -4,45 +4,21 @@ local uuid   = require("resty.jit-uuid")
 
 local _M = {}
 
-
-local DEFAULT_METHODS = {"ALL"}
+_M.METHODS_ALL    = "ALL"
+_M.METHODS_GET    = "GET"
+_M.METHODS_PUT    = "PUT"
+_M.METHODS_POST   = "POST"
+_M.METHODS_PATH   = "PATH"
+_M.METHODS_DELETE = "DELETE"
 
 function _M.created(params)
-
-    local check_router_name = common.check_key_exists(params.name, "routers")
-
-    if check_router_name then
-        return nil, "the router name[".. params.name .."] already exists"
-    end
-
-    if not params.service.id and not params.service.name then
-        return nil, "the router must be bound to a service"
-    end
-
-    local check_service, err = common.check_kv_exists(params.service, "services")
-
-    if err or not check_service then
-        return nil, err
-    end
-
-    local check_plugins, err = common.batch_check_kv_exists(params.plugins, "plugins")
-
-    if err or not check_plugins then
-        return nil, err
-    end
-
-    --local check_upstream, err = common.check_kv_exists(params.upstream, "upstreams")
-    --
-    --if err or not check_upstream then
-    --    return nil, err
-    --end
 
     local router_id = uuid.generate_v4()
 
     local router_body = {
         id        = router_id,
         name      = params.name,
-        methods   = params.methods or DEFAULT_METHODS,
+        methods   = params.methods or { _M.METHODS_ALL },
         paths     = params.paths,
         headers   = params.headers or {},
         service   = params.service,
@@ -71,98 +47,61 @@ function _M.created(params)
     local res, err = common.txn(payload)
 
     if err or not res then
-        return nil, "create service FAIL [".. tostring(err) .."]"
+        return nil, "create router FAIL [".. tostring(err) .."]"
     end
 
     return { id = router_id }, nil
 end
 
-function _M.updated(router_key, params)
+function _M.updated(params, detail)
 
-    if uuid.is_valid(router_key) then
-        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.routers .. router_key)
+    local old_name = detail.name
 
-        if err or not tmp then
-            return nil, "service:[".. router_key .. "] does not exists, err [".. tostring(err) .."]"
-        end
-
-        router_key = tmp
+    if params.name then
+        detail.name = params.name
     end
-
-    local prefix = common.PREFIX_MAP.routers
-
-    local old, err = common.get_key(prefix .. router_key)
-
-    if err or not old then
-        return nil, "router[".. router_key .."] does not exist"
+    if params.methods then
+        detail.methods = params.methods
     end
-
-    old = pdk.json.decode(old)
-
-    local v, err = common.get_key( prefix .. params.name)
-
-    if err then
-        return nil, "check router name error"
+    if params.paths then
+        detail.paths = params.paths
     end
-
-    if v then
-        return nil, "the router name[".. params.name .."] already exists"
+    if params.headers then
+        detail.headers = params.headers
     end
-
-    if not params.service.id and not params.service.name then
-        return nil, "the router must be bound to a service"
+    if params.service then
+        detail.service = params.service
     end
-
-    local check_service, err = common.check_kv_exists(params.service, "services")
-
-    if err or not check_service then
-        return nil, err
+    if params.plugins then
+        detail.plugins = params.plugins
     end
-
-    local check_plugin, err = common.batch_check_kv_exists(params.plugins, "plugins")
-
-    if err or not check_plugin then
-        return nil, err
+    if params.upstream then
+        detail.upstream = params.upstream
     end
-
-    local check_upstream, err = common.check_kv_exists(params.upstream, "upstreams")
-
-    if err or not check_upstream then
-        return nil, err
+    if params.enabled then
+        detail.enabled = params.enabled
     end
-
-    local router_body = {
-        id        = old.id,
-        name      = params.name,
-        methods   = params.methods or DEFAULT_METHODS,
-        paths     = params.paths,
-        headers   = params.headers or {},
-        service   = params.service,
-        plugins   = params.plugins or {},
-        upstream  = params.upstream or {},
-        enabled   = params.enabled or true
-    }
 
     local payload = {
         {
             KV = {
                 Verb  = "delete",
-                Key   = common.PREFIX_MAP.routers .. old.name,
+                Key   = common.PREFIX_MAP.routers .. old_name,
                 Value = nil,
             }
         },
         {
             KV = {
                 Verb  = "set",
-                Key   = common.SYSTEM_PREFIX_MAP.routers .. old.id,
-                Value = params.name,
+                Key   = common.SYSTEM_PREFIX_MAP.routers .. detail.id,
+                Value = detail.name,
             }
         },
         {
             KV = {
                 Verb  = "set",
-                Key   = common.PREFIX_MAP.routers .. params.name,
-                Value = pdk.json.encode(router_body),
+                Key   = common.PREFIX_MAP.routers .. detail.name,
+                Value = pdk.json.encode(detail),
             }
         },
     }
@@ -173,7 +112,7 @@ function _M.updated(router_key, params)
         return nil, "update router FAIL, err[".. tostring(err) .."]"
     end
 
-    return { id = old.id }, nil
+    return { id = detail.id }, nil
 end
 
 function _M.lists()
@@ -187,66 +126,41 @@ function _M.lists()
     return res, nil
 end
 
-function _M.detail(params)
+function _M.detail(key)
 
-    local name = params.router_key
-
-    if uuid.is_valid(params.router_key) then
-        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.routers .. params.router_key)
+    if uuid.is_valid(key) then
+        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.routers .. key)
 
         if err or not tmp then
-            return nil, "router:[".. params.router_key .. "] does not exists, err [".. tostring(err) .."]"
+            return nil, "router:[".. key .. "] does not exists, err [".. tostring(err) .."]"
         end
 
-        name = tmp
+        key = tmp
     end
 
-    local key = common.PREFIX_MAP.routers .. name
-
-    local res, err = common.detail_key(key)
+    local res, err = common.detail_key(common.PREFIX_MAP.routers .. key)
 
     if err or not res then
-        return nil, "router:[".. params.router_key .. "] does not exists, err [".. tostring(err) .."]"
+        return nil, "router:[".. key .. "] does not exists, err [".. tostring(err) .."]"
     end
 
     return pdk.json.decode(res), nil
 end
 
-function _M.deleted(params)
-
-    local name = params.router_key
-
-    if uuid.is_valid(params.router_key) then
-        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.routers .. params.router_key)
-
-        if err or not tmp then
-            return nil, "router:[".. params.router_key .. "] does not exists, err [".. tostring(err) .."]"
-        end
-
-        name = tmp
-    end
-    local key = common.PREFIX_MAP.routers .. name
-
-    local g, err = common.get_key(key)
-
-    if err or not g then
-        return nil, "router:[" .. params.router_key .. "] does not exists], err:[".. tostring(err) .."]"
-    end
-
-    g = pdk.json.decode(g)
+function _M.deleted(detail)
 
     local payload = {
         {
             KV = {
                 Verb  = "delete",
-                Key   = common.SYSTEM_PREFIX_MAP.routers .. g.id,
+                Key   = common.SYSTEM_PREFIX_MAP.routers .. detail.id,
                 Value = nil,
             }
         },
         {
             KV = {
                 Verb  = "delete",
-                Key   = common.PREFIX_MAP.routers .. name,
+                Key   = common.PREFIX_MAP.routers .. detail.name,
                 Value = nil,
             }
         }
@@ -259,6 +173,51 @@ function _M.deleted(params)
     end
 
     return {}, nil
+end
+
+function _M.exist_path(paths, filter_id)
+
+    if #paths == 0 then
+        return {}, nil
+    end
+
+    local paths_map = {}
+    for i = 1, #paths do
+        paths_map[paths[i]] = 0
+    end
+
+    local list, err = common.list_keys(common.PREFIX_MAP.routers)
+
+    if err then
+        return nil, "get paths list FAIL [".. err .."]"
+    end
+
+    local exist_paths = {}
+
+    for i = 1, #list['list'] do
+
+        repeat
+
+            if list['list'][i]['id'] == filter_id then
+                break
+            end
+
+            if #list['list'][i]['paths'] > 0 then
+                for j = 1, #list['list'][i]['paths'] do
+                    if paths_map[list['list'][i]['paths'][j]] then
+                        table.insert(exist_paths, list['list'][i]['paths'][j])
+                    end
+                end
+            end
+
+        until true
+    end
+
+    if #exist_paths == 0 then
+        return nil, nil
+    end
+
+    return exist_paths, nil
 end
 
 return _M

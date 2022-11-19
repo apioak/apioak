@@ -1,7 +1,7 @@
-local pdk        = require("apioak.pdk")
-local schema     = require("apioak.schema")
+local pdk = require("apioak.pdk")
+local schema = require("apioak.schema")
 local controller = require("apioak.admin.controller")
-local dao        = require("apioak.dao")
+local dao = require("apioak.dao")
 
 local router_controller = controller.new("router")
 
@@ -11,38 +11,169 @@ function router_controller.created()
 
     router_controller.check_schema(schema.router.created, body)
 
+    local check_name = dao.common.check_key_exists(body.name, pdk.const.CONSUL_PRFX_ROUTERS)
+
+    if check_name then
+        pdk.response.exit(400, { message = "the router name[" .. body.name .. "] already exists" })
+    end
+
+    local check_service, err = dao.common.check_kv_exists(body.service, pdk.const.CONSUL_PRFX_SERVICES)
+
+    if err then
+        pdk.log.error("detect service exceptions: [", err, "]")
+        pdk.response.exit(500, { message = "detect service exceptions" })
+    end
+
+    if not check_service then
+        pdk.response.exit(400, { message = "detect service not found" })
+    end
+
+    if body.plugins then
+
+        local check_plugin, err = dao.common.batch_check_kv_exists(body.plugins, pdk.const.CONSUL_PRFX_PLUGINS)
+
+        if err then
+            pdk.log.error("detect plugin exceptions: [", err, "]")
+            pdk.response.exit(500, { message = "detect plugin exceptions" })
+        end
+
+        if not check_plugin then
+            pdk.response.exit(400, { message = "detect plugin not found" })
+        end
+    end
+
+    if body.upstream then
+
+        local check_upstream, err = dao.common.check_kv_exists(body.upstream, pdk.const.CONSUL_PRFX_UPSTREAMS)
+
+        if err then
+            pdk.log.error("detect upstream exceptions: [", err, "]")
+            pdk.response.exit(500, { message = "detect upstream exceptions" })
+        end
+
+        if not check_upstream then
+            pdk.response.exit(400, { message = "detect upstream not found" })
+        end
+    end
+
+    local exist_paths, exist_paths_err = dao.router.exist_path(body.paths)
+
+    if exist_paths_err ~= nil then
+        pdk.log.error("exception when checking if path exists: [", exist_paths_err, "]")
+        pdk.response.exit(500, { message = "exception when checking if path exists" })
+    end
+
+    if exist_paths and (#exist_paths > 0) then
+        pdk.response.exit(400, {
+            message = "exists paths [" .. table.concat(exist_paths, ",") .. "]" })
+    end
+
     local res, err = dao.router.created(body)
 
     if err then
-        pdk.response.exit(500, { message = err })
+        pdk.log.error("create router exception: [", err, "]")
+        pdk.response.exit(500, { message = "create router exception" })
     end
 
-    pdk.response.exit(200, {id = res.id})
+    pdk.response.exit(200, { id = res.id })
 end
 
 function router_controller.updated(params)
 
-    local body      = router_controller.get_body()
+    local body = router_controller.get_body()
     body.router_key = params.router_key
 
     router_controller.check_schema(schema.router.updated, body)
 
-    local  res, err = dao.router.updated(params.router_key, body)
+    local detail, err = dao.router.detail(params.router_key)
+
     if err then
-        pdk.response.exit(500, { message = err })
+        pdk.log.error("get route details exception: [", err, "]")
+        pdk.response.exit(500, { message = "get route details exception" })
+    end
+
+    if body.name and (body.name ~= detail.name) then
+
+        local name_detail, _ = dao.service.detail(body.name)
+
+        if name_detail then
+            pdk.response.exit(400, { message = "the router name[" .. body.name .. "] already exists" })
+        end
+    end
+
+    local exist_paths, exist_paths_err = dao.router.exist_path(body.paths, detail.id)
+
+    if exist_paths_err then
+        pdk.log.error("exception when checking if path exists: [", exist_paths_err, "]")
+        pdk.response.exit(500, { message = "exception when checking if path exists" })
+    end
+
+    if exist_paths and (#exist_paths > 0) then
+        pdk.response.exit(400, {
+            message = "exists paths [" .. table.concat(exist_paths, ",") .. "]" })
+    end
+
+    if body.service then
+
+        local check_service, err = dao.common.check_kv_exists(body.service, pdk.const.CONSUL_PRFX_SERVICES)
+
+        if err then
+            pdk.log.error("detect service exceptions: [", err, "]")
+            pdk.response.exit(500, { message = "detect service exceptions" })
+        end
+
+        if not check_service then
+            pdk.response.exit(400, { message = "detect service not found" })
+        end
+    end
+
+    if body.plugins then
+
+        local check_plugin, err = dao.common.batch_check_kv_exists(body.plugins, pdk.const.CONSUL_PRFX_PLUGINS)
+
+        if err then
+            pdk.log.error("detect plugin exceptions: [", err, "]")
+            pdk.response.exit(500, { message = "detect plugin exceptions" })
+        end
+
+        if not check_plugin then
+            pdk.response.exit(400, { message = "detect plugin not found" })
+        end
+    end
+
+    if body.upstream then
+
+        local check_upstream, err = dao.common.check_kv_exists(body.upstream, pdk.const.CONSUL_PRFX_UPSTREAMS)
+
+        if err then
+            pdk.log.error("detect upstream exceptions: [", err, "]")
+            pdk.response.exit(500, { message = "detect upstream exceptions" })
+        end
+
+        if not check_upstream then
+            pdk.response.exit(400, { message = "detect upstream not found" })
+        end
+    end
+
+    local res, err = dao.router.updated(body, detail)
+
+    if err then
+        pdk.log.error("update route exception: [", err, "]")
+        pdk.response.exit(500, { message = "update route exception" })
     end
 
     pdk.response.exit(200, { id = res.id })
-
 end
 
 function router_controller.detail(params)
 
     router_controller.check_schema(schema.router.detail, params)
 
-    local  res, err = dao.router.detail(params)
+    local res, err = dao.router.detail(params.router_key)
+
     if err then
-        pdk.response.exit(500, { message = err })
+        pdk.log.error("get route details exception: [", err, "]")
+        pdk.response.exit(500, { message = "get route details exception" })
     end
 
     pdk.response.exit(200, res)
@@ -50,10 +181,11 @@ end
 
 function router_controller.lists()
 
-    local  res, err = dao.router.lists()
+    local res, err = dao.router.lists()
 
     if err then
-        pdk.response.exit(500, { message = err })
+        pdk.log.error("get route list exception: [", err, "]")
+        pdk.response.exit(500, { message = "get route list exception" })
     end
 
     pdk.response.exit(200, res)
@@ -63,14 +195,25 @@ function router_controller.deleted(params)
 
     router_controller.check_schema(schema.router.deleted, params)
 
-    local _, err = dao.router.deleted(params)
+    local detail, err = dao.router.detail(params.router_key)
 
     if err then
-        pdk.response.exit(500, { message = err })
+        pdk.log.error("get route details exception: [", err, "]")
+        pdk.response.exit(500, { message = "get route details exception" })
+    end
+
+    if not detail then
+        pdk.response.exit(400, { message = "the router not found" })
+    end
+
+    local _, err = dao.router.deleted(detail)
+
+    if err then
+        pdk.log.error("remove route exception: [", err, "]")
+        pdk.response.exit(500, { message = "remove route exception" })
     end
 
     pdk.response.exit(200, {})
 end
-
 
 return router_controller

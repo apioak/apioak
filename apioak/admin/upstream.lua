@@ -21,8 +21,12 @@ function upstream_controller.created()
     local check_nodes, check_nodes_err = dao.common.batch_check_kv_exists(
             body.nodes, pdk.const.CONSUL_PRFX_UPSTREAM_NODES)
 
-    if check_nodes_err or not check_nodes then
-        pdk.response.exit(400, { message = "the upstream nodes is abnormal" })
+    if check_nodes_err then
+        pdk.response.exit(500, { message = "detect upstream node exceptions" })
+    end
+
+    if not check_nodes then
+        pdk.response.exit(400, { message = "the upstream nodes not found" })
     end
 
     local res, err = dao.upstream.created(body)

@@ -20,12 +20,12 @@ function service_controller.created()
     local exist_hosts, exist_hosts_err = dao.service.exist_host(body.hosts)
 
     if exist_hosts_err ~= nil then
-        pdk.response.exit(500, { message = "host detection failed [" .. exist_hosts_err .. "]" })
+        pdk.log.error("exception when checking if host exists: [", exist_hosts_err, "]")
+        pdk.response.exit(500, { message = "exception when checking if host exists" })
     end
 
     if exist_hosts and (#exist_hosts > 0) then
-        pdk.response.exit(400, {
-            message = "exists hosts [" .. table.concat(exist_hosts, ",") .. "] " })
+        pdk.response.exit(400, {message = "exists hosts [" .. table.concat(exist_hosts, ",") .. "]"})
     end
 
     if body.plugins then

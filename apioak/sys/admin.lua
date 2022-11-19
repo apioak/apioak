@@ -93,7 +93,7 @@ function _M.init_worker()
 
     --------------------------------------------------------
 
-    -- New Service Related APIs
+    -- New Services Related APIs
     router:post("/apioak/admin/services", admin.service.created)
 
     router:put("/apioak/admin/services/{service_key}", admin.service.updated)
@@ -104,16 +104,16 @@ function _M.init_worker()
 
     router:delete("/apioak/admin/services/{service_key}", admin.service.deleted)
 
-    -- New Router Related APIs
-    router:post("/apioak/admin/bete/routers", admin.router.created)
+    -- New Routers Related APIs
+    router:post("/apioak/admin/routers", admin.router.created)
 
-    router:put("/apioak/admin/bete/routers/{router_key}", admin.router.updated)
+    router:put("/apioak/admin/routers/{router_key}", admin.router.updated)
 
-    router:get("/apioak/admin/bete/routers", admin.router.lists)
+    router:get("/apioak/admin/routers", admin.router.lists)
 
-    router:get("/apioak/admin/bete/routers/{router_key}", admin.router.detail)
+    router:get("/apioak/admin/routers/{router_key}", admin.router.detail)
 
-    router:delete("/apioak/admin/bete/routers/{router_key}", admin.router.deleted)
+    router:delete("/apioak/admin/routers/{router_key}", admin.router.deleted)
 
     -- New Plugins Related APIs
     router:post("/apioak/admin/bete/plugins", admin.plugin.created)
@@ -127,7 +127,7 @@ function _M.init_worker()
     router:delete("/apioak/admin/bete/plugins/{plugin_key}", admin.plugin.deleted)
 
 
-    -- Upstream Related APIs
+    -- Upstreams Related APIs
     router:post("/apioak/admin/upstreams", admin.upstream.created)
 
     router:put("/apioak/admin/upstreams/{upstream_key}", admin.upstream.updated)
