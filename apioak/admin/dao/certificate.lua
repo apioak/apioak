@@ -152,7 +152,7 @@ function _M.deleted(detail)
     return {}, nil
 end
 
-function _M.exist_sni(params)
+function _M.exist_sni(params, filter_id)
 
     if #params == 0 then
         return {}, nil
@@ -172,13 +172,22 @@ function _M.exist_sni(params)
     local exist_sni = {}
 
     for i = 1, #list['list'] do
-        if #list['list'][i]['snis'] > 0 then
-            for j = 1, #list['list'][i]['snis'] do
-                if sni_map[list['list'][i]['snis'][j]] then
-                    table.insert(exist_sni, list['list'][i]['snis'][j])
+
+        repeat
+
+            if list['list'][i]['id'] == filter_id then
+                break
+            end
+
+            if #list['list'][i]['snis'] > 0 then
+                for j = 1, #list['list'][i]['snis'] do
+                    if sni_map[list['list'][i]['snis'][j]] then
+                        table.insert(exist_sni, list['list'][i]['snis'][j])
+                    end
                 end
             end
-        end
+
+        until true
     end
 
     return exist_sni, nil

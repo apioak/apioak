@@ -69,7 +69,7 @@ function certificate_controller.updated(params)
         end
     end
 
-    local exist_sni, exist_sni_err = dao.certificate.exist_sni(body.snis)
+    local exist_sni, exist_sni_err = dao.certificate.exist_sni(body.snis, detail.id)
 
     if exist_sni_err ~= nil then
         pdk.response.exit(500, { message = "sni detection failed err:" .. exist_sni_err })
