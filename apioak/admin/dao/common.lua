@@ -172,9 +172,6 @@ function _M.batch_check_kv_exists(params, prefix)
 
             local res, err = _M.check_kv_exists(value, prefix)
 
-            -- 如果查找的数据不存在、查找出现错误、传递的不是一对数据  则返回false 标识错误
-            -- id和名称为空、存在查询的数据、传递的数据是一对的  则返回 true 标识正确
-
             if err then
                 return false, err
             end

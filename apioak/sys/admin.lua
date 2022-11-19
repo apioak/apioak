@@ -91,17 +91,18 @@ function _M.init_worker()
 
     router:put("/apioak/admin/user/{user_id}/disable", admin.user.disable)
 
+    --------------------------------------------------------
 
     -- New Service Related APIs
-    router:post("/apioak/admin/bete/services", admin.service.created)
+    router:post("/apioak/admin/services", admin.service.created)
 
-    router:put("/apioak/admin/bete/services/{service_key}", admin.service.updated)
+    router:put("/apioak/admin/services/{service_key}", admin.service.updated)
 
-    router:get("/apioak/admin/bete/services", admin.service.lists)
+    router:get("/apioak/admin/services", admin.service.lists)
 
-    router:get("/apioak/admin/bete/services/{service_key}", admin.service.detail)
+    router:get("/apioak/admin/services/{service_key}", admin.service.detail)
 
-    router:delete("/apioak/admin/bete/services/{service_key}", admin.service.deleted)
+    router:delete("/apioak/admin/services/{service_key}", admin.service.deleted)
 
     -- New Router Related APIs
     router:post("/apioak/admin/bete/routers", admin.router.created)

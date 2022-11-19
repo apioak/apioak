@@ -11,6 +11,24 @@ function service_controller.created()
 
     service_controller.check_schema(schema.service.created, body)
 
+    local check_name = dao.common.check_key_exists(body.name, pdk.const.CONSUL_PRFX_SERVICES)
+
+    if check_name then
+        pdk.response.exit(400, { message = "the service name[" .. body.name .. "] already exists" })
+    end
+
+    if body.plugins then
+        local check_plugin, err = dao.common.batch_check_kv_exists(body.plugins, pdk.const.CONSUL_PRFX_PLUGINS)
+
+        if err then
+            pdk.response.exit(400, { message = err })
+        end
+
+        if not check_plugin then
+            pdk.response.exit(400, { message = "the plugin is abnormal" })
+        end
+    end
+
     local res, err = dao.service.created(body)
 
     if err then
@@ -22,12 +40,39 @@ end
 
 function service_controller.updated(params)
 
-    local body      = service_controller.get_body()
+    local body = service_controller.get_body()
     body.service_key = params.service_key
 
     service_controller.check_schema(schema.service.updated, body)
 
-    local  res, err = dao.service.updated(params.service_key, body)
+    local detail, err = dao.service.detail(params.service_key)
+
+    if err then
+        pdk.response.exit(400, { message = err })
+    end
+
+    if (body.name ~= nil) and (body.name ~= detail.name) then
+
+        local name_detail, _ = dao.service.detail(body.name)
+
+        if name_detail ~= nil then
+            pdk.response.exit(400, { message = "the service name[" .. body.name .. "] already exists" })
+        end
+    end
+
+    if body.plugins then
+        local check_plugin, err = dao.common.batch_check_kv_exists(body.plugins, pdk.const.CONSUL_PRFX_PLUGINS)
+
+        if err then
+            pdk.response.exit(400, { message = err })
+        end
+
+        if not check_plugin then
+            pdk.response.exit(400, { message = "the plugin is abnormal" })
+        end
+    end
+
+    local  res, err = dao.service.updated(body, detail)
     if err then
         pdk.response.exit(500, { message = err })
     end
@@ -39,7 +84,7 @@ function service_controller.detail(params)
 
     service_controller.check_schema(schema.service.detail, params)
 
-    local  res, err = dao.service.detail(params)
+    local  res, err = dao.service.detail(params.service_key)
     if err then
         pdk.response.exit(500, { message = err })
     end
@@ -62,7 +107,13 @@ function service_controller.deleted(params)
 
     service_controller.check_schema(schema.service.deleted, params)
 
-    local _, err = dao.service.deleted(params)
+    local detail, err = dao.service.detail(params.service_key)
+
+    if err then
+        pdk.response.exit(400, { message = err })
+    end
+
+    local _, err = dao.service.deleted(detail)
 
     if err then
         pdk.response.exit(500, { message = err })

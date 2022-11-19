@@ -1,60 +1,87 @@
+local service = require "apioak.admin.dao.service"
+
 local _M = {}
+
+local service_key = {
+    type  = "string",
+    anyOf = {
+        {
+            minLength = 3,
+            maxLength = 35,
+            pattern   = "^\\*?[0-9a-zA-Z-_.]+$",
+        },
+        {
+            minLength = 36,
+            maxLength = 36,
+            pattern   = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        }
+    }
+}
+
+local name = {
+    type = "string",
+    minLength = 3,
+    maxLength = 35,
+    pattern = "^\\*?[0-9a-zA-Z-_.]+$"
+}
+
+local hosts = {
+    type = "array",
+    minItems = 1,
+    uniqueItems = true,
+    items = {
+        type = "string",
+        minLength = 3,
+        pattern = "^(?=^.{3,255}$)[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$"
+    },
+}
+
+local plugins = {
+    type = "array",
+    uniqueItems = true,
+    items       = {
+        type       = "object",
+        properties = {
+            id   = {
+                type      = "string",
+                minLength = 36,
+                maxLength = 36,
+                pattern   = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+            },
+            name = {
+                type      = "string",
+                minLength = 3,
+                maxLength = 35,
+                pattern   = "^\\*?[0-9a-zA-Z-_.]+$",
+            }
+        },
+        anyOf      = {
+            {
+                required = { "id" }
+            },
+            {
+                required = { "name" }
+            }
+        }
+    }
+}
 
 _M.created = {
     type = "object",
     properties = {
-        name = {
-            type = "string",
-            minLength = 1,
-            maxLength = 50,
-            pattern = "^\\*?[0-9a-zA-Z-_.]+$"
-        },
+        name = name,
         protocols = {
             type = "array",
             minItems = 1,
             uniqueItems = true,
             items = {
                 type = "string",
-                enum = { "http", "https" }
+                enum = { service.PROTOCOLS_HTTP, service.PROTOCOLS_HTTPS }
             },
-            default = {"http"}
+            default = { service.PROTOCOLS_HTTP }
         },
-        hosts = {
-            type = "array",
-            minItems = 1,
-            uniqueItems = true,
-            items = {
-                type = "string",
-                pattern = "^\\*?[0-9a-zA-Z-.]+$"
-            },
-        },
-        ports = {
-            type = "array",
-            minItems = 1,
-            uniqueItems = true,
-            items = {
-                type = "number",
-                pattern = "^\\*?[0-9]+$"
-            },
-            default = {80}
-        },
-        plugins = {
-            type = "array",
-            uniqueItems = true,
-            items = {
-                type = "object",
-                properties = {
-                    id = {
-                        type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-]+$"
-                    },
-                    name = {
-                        type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-_.]+$"
-                    }
-                }
-            },
-        },
+        hosts = hosts,
+        plugins = plugins,
         enabled = {
             type = "boolean",
             default = true
@@ -66,78 +93,30 @@ _M.created = {
 _M.updated = {
     type = "object",
     properties = {
-        service_key = {
-            type = "string",
-            minLength = 1,
-            maxLength = 50
-        },
-        name = {
-            type = "string",
-            minLength = 1,
-            maxLength = 50
-        },
+        service_key = service_key,
+        name = name,
         protocols = {
             type = "array",
             minItems = 1,
             uniqueItems = true,
             items = {
                 type = "string",
-                enum = { "http", "https" }
-            },
-            default = {"http"}
-        },
-        hosts = {
-            type = "array",
-            minItems = 1,
-            uniqueItems = true,
-            items = {
-                type = "string",
-                pattern = "^\\*?[0-9a-zA-Z-.]+$"
+                enum = { service.PROTOCOLS_HTTP, service.PROTOCOLS_HTTPS }
             },
         },
-        ports = {
-            type = "array",
-            minItems = 1,
-            uniqueItems = true,
-            items = {
-                type = "number",
-                pattern = "^\\*?[0-9]+$"
-            },
-            default = {80}
-        },
-        plugins = {
-            type = "array",
-            uniqueItems = true,
-            items = {
-                type = "object",
-                properties = {
-                    id = {
-                        type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-]+$"
-                    },
-                    name = {
-                        type = "string",
-                        pattern = "^\\*?[0-9a-zA-Z-_.]+$"
-                    }
-                }
-            },
-        },
+        hosts = hosts,
+        plugins = plugins,
         enabled = {
-            type = "boolean",
-            default = true
+            type = "boolean"
         }
     },
-    required = { "service_key", "name", "hosts" }
+    required = { "service_key"}
 }
 
 _M.detail = {
     type = "object",
     properties = {
-        service_key = {
-            type = "string",
-            minLength = 1,
-            maxLength = 50
-        }
+        service_key = service_key
     },
     required = { "service_key"}
 }
@@ -145,11 +124,7 @@ _M.detail = {
 _M.deleted = {
     type = "object",
     properties = {
-        service_key = {
-            type = "string",
-            minLength = 1,
-            maxLength = 50
-        }
+        service_key = service_key
     },
     required = { "service_key"}
 }

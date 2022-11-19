@@ -9,6 +9,7 @@ _M.DEFAULT_TIMEOUT   = 6000
 
 
 function _M.created(params)
+
     local id = uuid.generate_v4()
 
     local data = {

@@ -4,31 +4,18 @@ local common = require("apioak.admin.dao.common")
 
 local _M = {}
 
-local DEFAULT_PROTOCOLS = {"http"}
-local DEFAULT_PORT = {"80"}
+_M.PROTOCOLS_HTTP = "http"
+_M.PROTOCOLS_HTTPS = "https"
 
 function _M.created(params)
-
-    local check_service_name = common.check_key_exists(params.name, "services")
-
-    if check_service_name then
-        return nil, "the service name[".. params.name .."] already exists"
-    end
-
-    local check_plugin, err = common.batch_check_kv_exists(params.plugins, "plugins")
-
-    if err or not check_plugin then
-        return nil, err
-    end
 
     local service_id = uuid.generate_v4()
 
     local service_body = {
         id        = service_id,
         name      = params.name,
-        protocols = params.protocols or DEFAULT_PROTOCOLS,
+        protocols = params.protocols or { _M.PROTOCOLS_HTTP },
         hosts     = params.hosts,
-        ports     = params.ports or DEFAULT_PORT,
         plugins   = params.plugins or {},
         enabled   = params.enabled or true
     }
@@ -59,73 +46,46 @@ function _M.created(params)
     return { id = service_id }, nil
 end
 
-function _M.updated(service_key, params)
+function _M.updated(params, detail)
 
-    if uuid.is_valid(service_key) then
-        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.services .. service_key)
+    local old_name = detail.name
 
-        if err or not tmp then
-            return nil, "service:[".. service_key .. "] does not exists, err [".. tostring(err) .."]"
-        end
-
-        service_key = tmp
+    if params.name then
+        detail.name = params.name
     end
-
-    local prefix = common.PREFIX_MAP.services
-
-    local old, err = common.get_key(prefix .. service_key)
-
-    if err or not old then
-        return nil, "service[".. service_key .."] does not exist"
+    if params.protocols then
+        detail.protocols = params.protocols
     end
-    old = pdk.json.decode(old)
-
-    local new, err = common.get_key( prefix .. params.name)
-
-    if err then
-        return nil, "check service name error"
+    if params.hosts then
+        detail.hosts = params.hosts
     end
-
-    if new then
-        return nil, "the service name[".. params.name .."] already exists"
+    if params.plugins then
+        detail.plugins = params.plugins
     end
-
-    local check_plugin, err = common.batch_check_kv_exists(params.plugins, "plugins")
-
-    if err or not check_plugin then
-        return nil, err
+    if params.enabled then
+        detail.enabled = params.enabled
     end
-
-    local service_body = {
-        id        = old.id,
-        name      = params.name,
-        protocols = params.protocols or DEFAULT_PROTOCOLS,
-        hosts     = params.hosts,
-        ports     = params.ports or DEFAULT_PORT,
-        plugins   = params.plugins or {},
-        enabled   = params.enabled or true
-    }
 
     local payload = {
         {
             KV = {
                 Verb  = "delete",
-                Key   = common.PREFIX_MAP.services .. old.name,
+                Key   = common.PREFIX_MAP.services .. old_name,
                 Value = nil,
             }
         },
         {
             KV = {
                 Verb  = "set",
-                Key   = common.SYSTEM_PREFIX_MAP.services .. old.id,
-                Value = params.name,
+                Key   = common.SYSTEM_PREFIX_MAP.services .. detail.id,
+                Value = detail.name,
             }
         },
         {
             KV = {
                 Verb  = "set",
-                Key   = common.PREFIX_MAP.services .. params.name,
-                Value = pdk.json.encode(service_body),
+                Key   = common.PREFIX_MAP.services .. detail.name,
+                Value = pdk.json.encode(detail),
             }
         },
     }
@@ -136,7 +96,7 @@ function _M.updated(service_key, params)
         return nil, "update service FAIL, err[".. tostring(err) .."]"
     end
 
-    return { id = old.id }, nil
+    return { id = detail.id }, nil
 end
 
 function _M.lists()
@@ -150,67 +110,41 @@ function _M.lists()
     return res, nil
 end
 
-function _M.detail(params)
+function _M.detail(key)
 
-    local name = params.service_key
-
-    if uuid.is_valid(params.service_key) then
-        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.services .. params.service_key)
+    if uuid.is_valid(key) then
+        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.services .. key)
 
         if err or not tmp then
-            return nil, "service:[".. params.service_key .. "] does not exists, err [".. tostring(err) .."]"
+            return nil, "service detail:[".. key .. "] does not exists"
         end
 
-        name = tmp
+        key = tmp
     end
 
-    local key = common.PREFIX_MAP.services .. name
-
-    local res, err = common.detail_key(key)
+    local res, err = common.detail_key(common.PREFIX_MAP.services .. key)
 
     if err or not res then
-        return nil, "service:[".. params.service_key .. "] does not exists, err [".. tostring(err) .."]"
+        return nil, "service detail:[".. key .. "] does not exists"
     end
 
     return pdk.json.decode(res), nil
 end
 
-function _M.deleted(params)
-
-    local name = params.service_key
-
-    if uuid.is_valid(params.service_key) then
-        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.services .. params.service_key)
-
-        if err or not tmp then
-            return nil, "service:[".. params.service_key .. "] does not exists, err [".. tostring(err) .."]"
-        end
-
-        name = tmp
-    end
-
-    local key = common.PREFIX_MAP.services .. name
-
-    local g, err = common.get_key(key)
-
-    if err or not g then
-        return nil, "Key-Value:[" .. params.service_key .. "] does not exists], err:[".. tostring(err) .."]"
-    end
-
-    g = pdk.json.decode(g)
+function _M.deleted(detail)
 
     local payload = {
         {
             KV = {
                 Verb  = "delete",
-                Key   = common.SYSTEM_PREFIX_MAP.services .. g.id,
+                Key   = common.SYSTEM_PREFIX_MAP.services .. detail.id,
                 Value = nil,
             }
         },
         {
             KV = {
                 Verb  = "delete",
-                Key   = common.PREFIX_MAP.services .. name,
+                Key   = common.PREFIX_MAP.services .. detail.name,
                 Value = nil,
             }
         }
