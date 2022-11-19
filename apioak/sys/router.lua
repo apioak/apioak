@@ -3,7 +3,6 @@ local pdk     = require("apioak.pdk")
 local db      = require("apioak.db")
 local process = require("ngx.process")
 local events  = require("resty.worker.events")
-local common  = require("apioak.admin.dao.common")
 local pairs               = pairs
 local oakrouting          = require("resty.oakrouting")
 local ngx_var             = ngx.var
@@ -129,7 +128,6 @@ end
 local function worker_sync_router_event_register()
 
     local handler = function(data, event, source, pid)
-
         -- @todo worker进程内的缓存更新回调函数
     end
 
@@ -153,7 +151,7 @@ local function automatic_sync_router(premature)
         i = i + 1
 
         -- @todo 获取数据中心的数据然后推送到woker-events中通知worker更新本地缓存
-        events.post("source", "event", "data")
+        --events.post("source", "event", "data")
 
         ngx_sleep(1)
     end
@@ -167,10 +165,10 @@ function _M.init_worker()
     ngx_timer_at(0, automatic_sync_hash_id)
 
     -- 注册全局监听配置变化事件
-    --worker_sync_router_event_register()
+    worker_sync_router_event_register()
 
     -- 获取数据中心的配置数据并通知worker变更配置数据
-    --ngx_timer_at(0, automatic_sync_router)
+    ngx_timer_at(0, automatic_sync_router)
 end
 
 local checked_request_params = function(rule, params)
