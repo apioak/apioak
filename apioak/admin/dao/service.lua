@@ -232,24 +232,15 @@ function _M.service_list_by_plugin(detail)
 
             for j = 1, #service_plugins do
 
-                repeat
+                if service_plugins[j].id and (service_plugins[j].id == detail.id) then
+                    table.insert(service_list, service_info)
+                    break
+                end
 
-                    if not service_plugins[j].id and not service_plugins[j].name then
-                        break
-                    end
-
-                    if service_plugins[j].id and (service_plugins[j].id ~= detail.id) then
-                        break
-                    end
-
-                    if service_plugins[j].name and (service_plugins[j].name ~= detail.name) then
-                        break
-                    end
-
-                until true
-
-                table.insert(service_list, service_info)
-                break
+                if service_plugins[j].name and (service_plugins[j].name == detail.name) then
+                    table.insert(service_list, service_info)
+                    break
+                end
             end
 
         until true

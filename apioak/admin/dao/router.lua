@@ -294,24 +294,15 @@ function _M.router_list_by_plugin(detail)
 
             for j = 1, #router_plugins do
 
-                repeat
+                if router_plugins[j].id and (router_plugins[j].id == detail.id) then
+                    table.insert(router_list, router_info)
+                    break
+                end
 
-                    if not router_plugins[j].id and not router_plugins[j].name then
-                        break
-                    end
-
-                    if router_plugins[j].id and (router_plugins[j].id ~= detail.id) then
-                        break
-                    end
-
-                    if router_plugins[j].name and (router_plugins[j].name ~= detail.name) then
-                        break
-                    end
-
-                until true
-
-                table.insert(router_list, router_info)
-                break
+                if router_plugins[j].name and (router_plugins[j].name == detail.name) then
+                    table.insert(router_list, router_info)
+                    break
+                end
             end
 
         until true

@@ -128,7 +128,7 @@ function plugin_controller.deleted(params)
             table.insert(router_names, router_list[i]['name'])
         end
 
-        pdk.response.exit(400, { message = "plugin is in use by router [", table.concat(router_names, ","), "]" })
+        pdk.response.exit(400, { message = "plugin is in use by router [" .. table.concat(router_names, ",") .. "]" })
     end
 
     local service_list, service_list_err = dao.service.service_list_by_plugin(detail)
@@ -146,7 +146,7 @@ function plugin_controller.deleted(params)
             table.insert(service_names, service_list[i]['name'])
         end
 
-        pdk.response.exit(400, { message = "plugin is in use by service [", table.concat(service_names, ","), "]" })
+        pdk.response.exit(400, { message = "plugin is in use by service [" .. table.concat(service_names, ",") .. "]" })
     end
 
     local _, err = dao.plugin.deleted(detail)
