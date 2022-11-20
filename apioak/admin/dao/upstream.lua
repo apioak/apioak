@@ -48,7 +48,6 @@ function _M.created(params)
     return { id = id }, nil
 end
 
-
 function _M.lists()
 
     local res, err = common.list_keys(common.PREFIX_MAP.upstreams)
@@ -59,7 +58,6 @@ function _M.lists()
 
     return res, nil
 end
-
 
 function _M.updated(params, detail)
 
@@ -117,7 +115,6 @@ function _M.updated(params, detail)
     return { id = detail.id }, nil
 end
 
-
 function _M.detail(key)
     if uuid.is_valid(key) then
 
@@ -138,7 +135,6 @@ function _M.detail(key)
 
     return  pdk.json.decode(detail), nil
 end
-
 
 function _M.deleted(detail)
 
@@ -166,6 +162,51 @@ function _M.deleted(detail)
     end
 
     return {}, nil
+end
+
+function _M.upstream_list_by_node(detail)
+
+    if not detail.id and not detail.name then
+        return nil, nil
+    end
+
+    local list, err = common.list_keys(common.PREFIX_MAP.upstreams)
+
+    if err then
+        return nil, "get service list FAIL [".. err .."]"
+    end
+
+    local upstream_list = {}
+
+    for i = 1, #list['list'] do
+
+        local upstream_info = list['list'][i]
+
+        repeat
+
+            if not upstream_info['nodes'] then
+                break
+            end
+
+            local upstream_nodes = upstream_info['nodes']
+
+            for j = 1, #upstream_nodes do
+
+                if upstream_nodes[j].id and (upstream_nodes[j].id == detail.id) then
+                    table.insert(upstream_list, upstream_info)
+                    break
+                end
+
+                if upstream_nodes[j].name and (upstream_nodes[j].name == detail.name) then
+                    table.insert(upstream_list, upstream_info)
+                    break
+                end
+            end
+
+        until true
+    end
+
+    return upstream_list
 end
 
 

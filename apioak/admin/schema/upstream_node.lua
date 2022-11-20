@@ -1,27 +1,33 @@
+local common = require "apioak.admin.schema.common"
 local upstream_node = require "apioak.admin.dao.upstream_node"
 
 local _M = {}
 
+local address = {
+    type  = "string",
+    anyOf = {
+        {
+            format = "ipv4"
+        },
+        {
+            format = "ipv6"
+        }
+    }
+}
+
+local method_enum = {
+    "GET",
+    "POST",
+    "HEADER"
+}
+
+local http_pattern = "(http|https):\\/\\/[\\w\\-_]+(\\.[\\w\\-_]+)+([\\w\\-\\.,@?^=%&:/~\\+#]*[\\w\\-\\@?^=%&/~\\+#])?"
+
 _M.created = {
     type       = "object",
     properties = {
-        name    = {
-            type      = "string",
-            minLength = 3,
-            maxLength = 35,
-            pattern   = "^\\*?[0-9a-zA-Z-_.]+$",
-        },
-        address = {
-            type  = "string",
-            anyOf = {
-                {
-                    format = "ipv4"
-                },
-                {
-                    format = "ipv6"
-                }
-            }
-        },
+        name    = common.name,
+        address = address,
         port    = {
             type    = "number",
             minimum = 1,
@@ -53,14 +59,13 @@ _M.created = {
                 method   = {
                     type    = "string",
                     default = nil,
-                    enum    = { "GET", "POST", "HEADER" }
+                    enum    = method_enum
                 },
                 http     = {
                     type      = "string",
                     minLength = 3,
                     default   = nil,
-                    pattern   = "(http|https):\\/\\/[\\w\\-_]+(\\.[\\w\\-_]+)+" ..
-                            "([\\w\\-\\.,@?^=%&:/~\\+#]*[\\w\\-\\@?^=%&/~\\+#])?"
+                    pattern   = http_pattern
                 },
                 interval = {
                     type    = "number",
@@ -83,71 +88,41 @@ _M.created = {
 _M.updated = {
     type       = "object",
     properties = {
-        upstream_node_key    = {
-            type  = "string",
-            anyOf = {
-                {
-                    minLength = 3,
-                    maxLength = 35,
-                    pattern   = "^\\*?[0-9a-zA-Z-_.]+$",
-                },
-                {
-                    minLength = 36,
-                    maxLength = 36,
-                    pattern   = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
-                }
-            }
-        },
-        name    = {
-            type      = "string",
-            minLength = 3,
-            maxLength = 35,
-            pattern   = "^\\*?[0-9a-zA-Z-_.]+$",
-        },
-        address = {
-            type  = "string",
-            anyOf = {
-                {
-                    format = "ipv4"
-                },
-                {
-                    format = "ipv6"
-                }
-            }
-        },
-        port    = {
+        upstream_node_key = common.param_key,
+        name              = common.name,
+        address           = address,
+        port              = {
             type    = "number",
             minimum = 1,
             maximum = 65535,
         },
-        weight  = {
+        weight            = {
             type    = "number",
             minimum = 1,
             maximum = 100,
         },
-        health  = {
+        health            = {
             type = "string",
             enum = { upstream_node.DEFAULT_HEALTH, upstream_node.DEFAULT_UNHEALTH }
         },
-        check   = {
+        check             = {
             type       = "object",
             properties = {
                 enabled  = {
-                    type    = "boolean",
+                    type = "boolean",
                 },
                 tcp      = {
                     type      = "string",
                     minLength = 3,
                 },
                 method   = {
-                    type    = "string",
-                    enum    = { "GET", "POST", "HEADER" }
+                    type = "string",
+                    enum = method_enum
                 },
                 http     = {
                     type      = "string",
                     minLength = 3,
-                    pattern   = "(http|https):\\/\\/[\\w\\-_]+(\\.[\\w\\-_]+)+" ..
-                            "([\\w\\-\\.,@?^=%&:/~\\+#]*[\\w\\-\\@?^=%&/~\\+#])?"
+                    pattern   = http_pattern
                 },
                 interval = {
                     type    = "number",
