@@ -20,7 +20,7 @@ function certificate_controller.created()
     local exist_snis, exist_snis_err = dao.certificate.exist_sni(body.snis)
 
     if exist_snis_err ~= nil then
-        pdk.log.error("certificate-create exception when checking if sni exists: [" .. exist_hosts_err .. "]")
+        pdk.log.error("certificate-create exception when checking if sni exists: [" .. exist_snis_err .. "]")
         pdk.response.exit(500, { message = "exception when checking if sni exists" })
     end
 
