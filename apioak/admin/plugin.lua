@@ -11,10 +11,21 @@ function plugin_controller.created()
 
     plugin_controller.check_schema(schema.plugin.created, body)
 
+    local plugin_config = require("apioak.admin.schema.plugins." .. body.key)
+
+    plugin_controller.check_schema(plugin_config.config, body.config)
+
+    local check_name = dao.common.check_key_exists(body.name, pdk.const.CONSUL_PRFX_PLUGINS)
+
+    if check_name then
+        pdk.response.exit(400, { message = "the plugin name[" .. body.name .. "] already exists" })
+    end
+
     local res, err = dao.plugin.created(body)
 
     if err then
-        pdk.response.exit(500, { message = err })
+        pdk.log.error("plugin-create create plugin exception: [", err, "]")
+        pdk.response.exit(500, { message = "create plugin exception" })
     end
 
     pdk.response.exit(200, {id = res.id})
@@ -27,22 +38,49 @@ function plugin_controller.updated(params)
 
     plugin_controller.check_schema(schema.plugin.updated, body)
 
-    local  res, err = dao.plugin.updated(params.plugin_key, body)
+    local detail, err = dao.plugin.detail(body.plugin_key)
+
     if err then
-        pdk.response.exit(500, { message = err })
+        pdk.log.error("plugin-update get plugin detail exception: [", err, "]")
+        pdk.response.exit(500, { message = "get plugin detail exception" })
+    end
+
+    if body.name and (body.name ~= detail.name) then
+
+        local name_detail, _ = dao.plugin.detail(body.name)
+
+        if name_detail then
+            pdk.response.exit(400, { message = "the plugin name[" .. body.name .. "] already exists" })
+        end
+    end
+
+    if body.config then
+
+        local plugin_config = require("apioak.admin.schema.plugins." .. detail.key)
+
+        plugin_controller.check_schema(plugin_config.config, body.config)
+
+    end
+
+    local  res, err = dao.plugin.updated(body, detail)
+
+    if err then
+        pdk.log.error("plugin-update update plugin exception: [", err, "]")
+        pdk.response.exit(500, { message = "update plugin exception" })
     end
 
     pdk.response.exit(200, { id = res.id })
-
 end
 
 function plugin_controller.detail(params)
 
     plugin_controller.check_schema(schema.plugin.detail, params)
 
-    local  res, err = dao.plugin.detail(params)
+    local  res, err = dao.plugin.detail(params.plugin_key)
+
     if err then
-        pdk.response.exit(500, { message = err })
+        pdk.log.error("plugin-detail get plugin detail exception: [", err, "]")
+        pdk.response.exit(500, { message = "get plugin detail exception" })
     end
 
     pdk.response.exit(200, res)
@@ -53,7 +91,8 @@ function plugin_controller.lists()
     local  res, err = dao.plugin.lists()
 
     if err then
-        pdk.response.exit(500, { message = err })
+        pdk.log.error("plugin-list get plugin list exception: [", err, "]")
+        pdk.response.exit(500, { message = "get plugin list exception" })
     end
 
     pdk.response.exit(200, res)
@@ -63,10 +102,58 @@ function plugin_controller.deleted(params)
 
     plugin_controller.check_schema(schema.plugin.deleted, params)
 
-    local _, err = dao.plugin.deleted(params)
+    local detail, err = dao.plugin.detail(params.plugin_key)
 
     if err then
-        pdk.response.exit(500, { message = err })
+        pdk.log.error("plugin-delete get plugin detail exception: [", err, "]")
+        pdk.response.exit(500, { message = "get plugin detail exception" })
+    end
+
+    if not detail then
+        pdk.response.exit(400, { message = "the plugin not found" })
+    end
+
+    local router_list, router_list_err = dao.router.router_list_by_plugin(detail)
+
+    if router_list_err then
+        pdk.log.error("plugin-delete exception when detecting plugin route: [", router_list_err, "]")
+        pdk.response.exit(500, { message = "exception when detecting plugin route" })
+    end
+
+    if router_list and (#router_list > 0) then
+
+        local router_names = {}
+
+        for i = 1, #router_list do
+            table.insert(router_names, router_list[i]['name'])
+        end
+
+        pdk.response.exit(400, { message = "plugin is in use by router [", table.concat(router_names, ","), "]" })
+    end
+
+    local service_list, service_list_err = dao.service.service_list_by_plugin(detail)
+
+    if service_list_err then
+        pdk.log.error("plugin-delete exception when detecting plugin service: [", service_list_err, "]")
+        pdk.response.exit(500, { message = "exception when detecting plugin service" })
+    end
+
+    if service_list and (#service_list > 0) then
+
+        local service_names = {}
+
+        for i = 1, #service_list do
+            table.insert(service_names, service_list[i]['name'])
+        end
+
+        pdk.response.exit(400, { message = "plugin is in use by service [", table.concat(service_names, ","), "]" })
+    end
+
+    local _, err = dao.plugin.deleted(detail)
+
+    if err then
+        pdk.log.error("plugin-delete remove plugin exception: [", err, "]")
+        pdk.response.exit(500, { message = "remove plugin exception" })
     end
 
     pdk.response.exit(200, {})

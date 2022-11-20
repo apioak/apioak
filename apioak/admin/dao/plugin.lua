@@ -6,12 +6,6 @@ local _M = {}
 
 function _M.created(params)
 
-    local check_plugin_name = common.check_key_exists(params.name, "plugins")
-
-    if check_plugin_name then
-        return nil, "the plugin name[".. params.name .."] already exists"
-    end
-
     local plugin_id = uuid.generate_v4()
 
     local plugin_body = {
@@ -47,67 +41,39 @@ function _M.created(params)
     return { id = plugin_id }, nil
 end
 
-function _M.updated(plugin_key, params)
+function _M.updated(params, detail)
 
-    if uuid.is_valid(plugin_key) then
-        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.plugins .. plugin_key)
+    local old_name = detail.name
 
-        if err or not tmp then
-            return nil, "plugin:[".. plugin_key .. "] does not exists, err [".. tostring(err) .."]"
-        end
-        plugin_key = tmp
-
+    if params.name then
+        detail.name = params.name
     end
-
-    local prefix = common.PREFIX_MAP.plugins
-
-    local old, err = common.get_key(prefix .. plugin_key)
-
-    if err or not old then
-        return nil, "plugin[".. plugin_key .."] does not exist"
+    if params.config then
+        detail.config = params.config
     end
-
-    old = pdk.json.decode(old)
-
-    local v, err = common.get_key( prefix .. params.name)
-
-    if err then
-        return nil, "check plugin name error"
-    end
-
-    if v then
-        return nil, "the plugin name[".. params.name .."] already exists"
-    end
-
-    local plugin_body = {
-        id        = old.id,
-        name      = params.name,
-        key       = params.key,
-        config    = params.config or {},
-    }
 
     local payload = {
         {
             KV = {
                 Verb  = "delete",
-                Key   = common.PREFIX_MAP.plugins .. old.name,
+                Key   = common.PREFIX_MAP.plugins .. old_name,
                 Value = nil,
             }
         },
         {
             KV = {
                 Verb  = "set",
-                Key   = common.SYSTEM_PREFIX_MAP.plugins .. old.id,
-                Value = params.name,
+                Key   = common.SYSTEM_PREFIX_MAP.plugins .. detail.id,
+                Value = detail.name,
             }
         },
         {
             KV = {
                 Verb  = "set",
-                Key   = common.PREFIX_MAP.plugins .. params.name,
-                Value = pdk.json.encode(plugin_body),
+                Key   = common.PREFIX_MAP.plugins .. detail.name,
+                Value = pdk.json.encode(detail),
             }
-        },
+        }
     }
 
     local res, err = common.txn(payload)
@@ -116,7 +82,7 @@ function _M.updated(plugin_key, params)
         return nil, "update plugin FAIL, err[".. tostring(err) .."]"
     end
 
-    return { id = old.id }, nil
+    return { id = detail.id }, nil
 
 end
 
@@ -131,67 +97,41 @@ function _M.lists()
     return res, nil
 end
 
-function _M.detail(params)
+function _M.detail(key)
 
-    local name = params.plugin_key
-
-    if uuid.is_valid(params.plugin_key) then
-        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.plugins .. params.plugin_key)
+    if uuid.is_valid(key) then
+        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.plugins .. key)
 
         if err or not tmp then
-            return nil, "plugin:[".. params.plugin_key .. "] does not exists, err [".. tostring(err) .."]"
+            return nil, "plugin:[".. key .. "] does not exists, err [".. tostring(err) .."]"
         end
 
-        name = tmp
+        key = tmp
     end
 
-    local key = common.PREFIX_MAP.plugins .. name
-
-    local res, err = common.detail_key(key)
+    local res, err = common.detail_key(common.PREFIX_MAP.plugins .. key)
 
     if err or not res then
-        return nil, "plugin:[".. params.plugin_key .. "] does not exists, err [".. tostring(err) .."]"
+        return nil, "plugin:[".. key .. "] does not exists, err [".. tostring(err) .."]"
     end
 
     return pdk.json.decode(res), nil
 end
 
-function _M.deleted(params)
-
-    local name = params.plugin_key
-
-    if uuid.is_valid(params.plugin_key) then
-        local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.plugins .. params.plugin_key)
-
-        if err or not tmp then
-            return nil, "plugin:[".. params.plugin_key .. "] does not exists, err [".. tostring(err) .."]"
-        end
-
-        name = tmp
-    end
-
-    local key = common.PREFIX_MAP.plugins .. name
-
-    local g, err = common.get_key(key)
-
-    if err or not g then
-        return nil, "plugin:[" .. params.plugin_key .. "] does not exists], err:[".. tostring(err) .."]"
-    end
-
-    g = pdk.json.decode(g)
+function _M.deleted(detail)
 
     local payload = {
         {
             KV = {
                 Verb  = "delete",
-                Key   = common.SYSTEM_PREFIX_MAP.plugins .. g.id,
+                Key   = common.SYSTEM_PREFIX_MAP.plugins .. detail.id,
                 Value = nil,
             }
         },
         {
             KV = {
                 Verb  = "delete",
-                Key   = common.PREFIX_MAP.plugins .. name,
+                Key   = common.PREFIX_MAP.plugins .. detail.name,
                 Value = nil,
             }
         }

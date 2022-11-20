@@ -87,8 +87,8 @@ function router_controller.updated(params)
     local detail, err = dao.router.detail(params.router_key)
 
     if err then
-        pdk.log.error("router-update get route detail exception: [", err, "]")
-        pdk.response.exit(500, { message = "get route detail exception" })
+        pdk.log.error("router-update get router detail exception: [", err, "]")
+        pdk.response.exit(500, { message = "get router detail exception" })
     end
 
     if body.name and (body.name ~= detail.name) then

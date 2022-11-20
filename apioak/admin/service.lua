@@ -152,12 +152,12 @@ function service_controller.deleted(params)
     local router_list, router_list_err = dao.router.router_list_by_service(detail)
 
     if router_list_err then
-        pdk.log.error("service-delete exception when detecting service route: [", router_list_err, "]")
-        pdk.response.exit(500, { message = "exception when detecting service route" })
+        pdk.log.error("service-delete exception when detecting service router: [", router_list_err, "]")
+        pdk.response.exit(500, { message = "exception when detecting service router" })
     end
 
     if router_list and (#router_list > 0) then
-        pdk.response.exit(400, { message = "service is in use by routing" })
+        pdk.response.exit(400, { message = "service is in use by router" })
     end
 
     local _, err = dao.service.deleted(detail)

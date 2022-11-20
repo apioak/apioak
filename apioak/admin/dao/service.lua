@@ -204,4 +204,58 @@ function _M.exist_host(hosts, filter_id)
     return exist_hosts, nil
 end
 
+function _M.service_list_by_plugin(detail)
+
+    if not detail.id and not detail.name then
+        return nil, nil
+    end
+
+    local list, err = common.list_keys(common.PREFIX_MAP.services)
+
+    if err then
+        return nil, "get service list FAIL [".. err .."]"
+    end
+
+    local service_list = {}
+
+    for i = 1, #list['list'] do
+
+        local service_info = list['list'][i]
+
+        repeat
+
+            if not service_info['plugins'] then
+                break
+            end
+
+            local service_plugins = service_info['plugins']
+
+            for j = 1, #service_plugins do
+
+                repeat
+
+                    if not service_plugins[j].id and not service_plugins[j].name then
+                        break
+                    end
+
+                    if service_plugins[j].id and (service_plugins[j].id ~= detail.id) then
+                        break
+                    end
+
+                    if service_plugins[j].name and (service_plugins[j].name ~= detail.name) then
+                        break
+                    end
+
+                until true
+
+                table.insert(service_list, service_info)
+                break
+            end
+
+        until true
+    end
+
+    return service_list
+end
+
 return _M

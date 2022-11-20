@@ -1,29 +1,7 @@
 local service = require "apioak.admin.dao.service"
+local common  = require "apioak.admin.schema.common"
 
 local _M = {}
-
-local service_key = {
-    type  = "string",
-    anyOf = {
-        {
-            minLength = 3,
-            maxLength = 35,
-            pattern   = "^\\*?[0-9a-zA-Z-_.]+$",
-        },
-        {
-            minLength = 36,
-            maxLength = 36,
-            pattern   = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
-        }
-    }
-}
-
-local name = {
-    type = "string",
-    minLength = 3,
-    maxLength = 35,
-    pattern = "^\\*?[0-9a-zA-Z-_.]+$"
-}
 
 local hosts = {
     type = "array",
@@ -33,43 +11,13 @@ local hosts = {
         type = "string",
         minLength = 3,
         pattern = "^(?=^.{3,255}$)[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$"
-    },
-}
-
-local plugins = {
-    type = "array",
-    uniqueItems = true,
-    items       = {
-        type       = "object",
-        properties = {
-            id   = {
-                type      = "string",
-                minLength = 36,
-                maxLength = 36,
-                pattern   = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
-            },
-            name = {
-                type      = "string",
-                minLength = 3,
-                maxLength = 35,
-                pattern   = "^\\*?[0-9a-zA-Z-_.]+$",
-            }
-        },
-        anyOf      = {
-            {
-                required = { "id" }
-            },
-            {
-                required = { "name" }
-            }
-        }
     }
 }
 
 _M.created = {
     type = "object",
     properties = {
-        name = name,
+        name = common.name,
         protocols = {
             type = "array",
             minItems = 1,
@@ -81,7 +29,7 @@ _M.created = {
             default = { service.PROTOCOLS_HTTP }
         },
         hosts = hosts,
-        plugins = plugins,
+        plugins = common.items_array_id_or_name,
         enabled = {
             type = "boolean",
             default = true
@@ -93,8 +41,8 @@ _M.created = {
 _M.updated = {
     type = "object",
     properties = {
-        service_key = service_key,
-        name = name,
+        service_key = common.param_key,
+        name = common.name,
         protocols = {
             type = "array",
             minItems = 1,
@@ -105,7 +53,7 @@ _M.updated = {
             },
         },
         hosts = hosts,
-        plugins = plugins,
+        plugins = common.items_array_id_or_name,
         enabled = {
             type = "boolean"
         }
@@ -116,7 +64,7 @@ _M.updated = {
 _M.detail = {
     type = "object",
     properties = {
-        service_key = service_key
+        service_key = common.param_key
     },
     required = { "service_key"}
 }
@@ -124,7 +72,7 @@ _M.detail = {
 _M.deleted = {
     type = "object",
     properties = {
-        service_key = service_key
+        service_key = common.param_key
     },
     required = { "service_key"}
 }

@@ -1,76 +1,53 @@
+local common = require "apioak.admin.schema.common"
+
 local _M = {}
 
 _M.created = {
-    type = "object",
+    type       = "object",
     properties = {
-        name = {
-            type = "string",
-            minLength = 1,
-            maxLength = 50,
-            pattern = "^\\*?[0-9a-zA-Z-_.]+$"
-        },
-        key = {
-            type = "string",
-            minLength = 1,
-            maxLength = 50,
-            pattern = "^\\*?[0-9a-zA-Z-_.]+$"
+        name   = common.name,
+        key    = {
+            type      = "string",
+            minLength = 3,
+            maxLength = 35,
+            pattern   = "^\\*?[0-9a-zA-Z-_.]+$",
+            enum      = {
+                "waf"
+            }
         },
         config = {
             type = "object",
         },
     },
-    required = { "name", "key", "config" }
+    required   = { "name", "key", "config" }
 }
 
 _M.updated = {
-    type = "object",
+    type       = "object",
     properties = {
-        plugin_key = {
-            type = "string",
-            minLength = 1,
-            maxLength = 50
-        },
-        name = {
-            type = "string",
-            minLength = 1,
-            maxLength = 50,
-            pattern = "^\\*?[0-9a-zA-Z-_.]+$"
-        },
-        key = {
-            type = "string",
-            minLength = 1,
-            maxLength = 50,
-            pattern = "^\\*?[0-9a-zA-Z-_.]+$"
-        },
-        config = {
+        plugin_key = common.param_key,
+        name       = common.name,
+        config     = {
             type = "object",
         },
     },
-    required = { "plugin_key", "name", "key", "config" }
+    required   = { "plugin_key" }
 }
 
 _M.detail = {
-    type = "object",
+    type       = "object",
     properties = {
-        plugin_key = {
-            type = "string",
-            minLength = 1,
-            maxLength = 50
-        }
+        plugin_key = common.param_key
     },
-    required = { "plugin_key"}
+    required   = { "plugin_key" }
 }
 
 _M.deleted = {
-    type = "object",
+    type       = "object",
     properties = {
-        plugin_key = {
-            type = "string",
-            minLength = 1,
-            maxLength = 50
-        }
+        plugin_key = common.param_key
     },
-    required = { "plugin_key"}
+    required   = { "plugin_key" }
 }
 
 return _M

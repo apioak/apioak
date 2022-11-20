@@ -229,7 +229,7 @@ function _M.router_list_by_service(detail)
     local list, err = common.list_keys(common.PREFIX_MAP.routers)
 
     if err then
-        return nil, "get paths list FAIL [".. err .."]"
+        return nil, "get router list FAIL [".. err .."]"
     end
 
     local router_list = {}
@@ -259,6 +259,60 @@ function _M.router_list_by_service(detail)
             end
 
             table.insert(router_list, router_info)
+
+        until true
+    end
+
+    return router_list
+end
+
+function _M.router_list_by_plugin(detail)
+
+    if not detail.id and not detail.name then
+        return nil, nil
+    end
+
+    local list, err = common.list_keys(common.PREFIX_MAP.routers)
+
+    if err then
+        return nil, "get router list FAIL [".. err .."]"
+    end
+
+    local router_list = {}
+
+    for i = 1, #list['list'] do
+
+        local router_info = list['list'][i]
+
+        repeat
+
+            if not router_info['plugins'] then
+                break
+            end
+
+            local router_plugins = router_info['plugins']
+
+            for j = 1, #router_plugins do
+
+                repeat
+
+                    if not router_plugins[j].id and not router_plugins[j].name then
+                        break
+                    end
+
+                    if router_plugins[j].id and (router_plugins[j].id ~= detail.id) then
+                        break
+                    end
+
+                    if router_plugins[j].name and (router_plugins[j].name ~= detail.name) then
+                        break
+                    end
+
+                until true
+
+                table.insert(router_list, router_info)
+                break
+            end
 
         until true
     end

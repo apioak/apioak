@@ -86,7 +86,7 @@ _M.updated = {
 _M.detail = {
     type = "object",
     properties = {
-        router_key = common.items_object_id_or_name
+        router_key = common.param_key
     },
     required = { "router_key"}
 }
@@ -94,7 +94,7 @@ _M.detail = {
 _M.deleted = {
     type = "object",
     properties = {
-        router_key = common.items_object_id_or_name
+        router_key = common.param_key
     },
     required = { "router_key"}
 }
