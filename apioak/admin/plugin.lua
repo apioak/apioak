@@ -24,7 +24,7 @@ function plugin_controller.created()
     local res, err = dao.plugin.created(body)
 
     if err then
-        pdk.log.error("plugin-create create plugin exception: [", err, "]")
+        pdk.log.error("plugin-create create plugin exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "create plugin exception" })
     end
 
@@ -41,7 +41,7 @@ function plugin_controller.updated(params)
     local detail, err = dao.plugin.detail(body.plugin_key)
 
     if err then
-        pdk.log.error("plugin-update get plugin detail exception: [", err, "]")
+        pdk.log.error("plugin-update get plugin detail exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "get plugin detail exception" })
     end
 
@@ -65,7 +65,7 @@ function plugin_controller.updated(params)
     local  res, err = dao.plugin.updated(body, detail)
 
     if err then
-        pdk.log.error("plugin-update update plugin exception: [", err, "]")
+        pdk.log.error("plugin-update update plugin exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "update plugin exception" })
     end
 
@@ -79,7 +79,7 @@ function plugin_controller.detail(params)
     local  res, err = dao.plugin.detail(params.plugin_key)
 
     if err then
-        pdk.log.error("plugin-detail get plugin detail exception: [", err, "]")
+        pdk.log.error("plugin-detail get plugin detail exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "get plugin detail exception" })
     end
 
@@ -91,7 +91,7 @@ function plugin_controller.lists()
     local  res, err = dao.plugin.lists()
 
     if err then
-        pdk.log.error("plugin-list get plugin list exception: [", err, "]")
+        pdk.log.error("plugin-list get plugin list exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "get plugin list exception" })
     end
 
@@ -105,7 +105,7 @@ function plugin_controller.deleted(params)
     local detail, err = dao.plugin.detail(params.plugin_key)
 
     if err then
-        pdk.log.error("plugin-delete get plugin detail exception: [", err, "]")
+        pdk.log.error("plugin-delete get plugin detail exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "get plugin detail exception" })
     end
 
@@ -116,7 +116,7 @@ function plugin_controller.deleted(params)
     local router_list, router_list_err = dao.router.router_list_by_plugin(detail)
 
     if router_list_err then
-        pdk.log.error("plugin-delete exception when detecting plugin route: [", router_list_err, "]")
+        pdk.log.error("plugin-delete exception when detecting plugin route: [" .. router_list_err .. "]")
         pdk.response.exit(500, { message = "exception when detecting plugin route" })
     end
 
@@ -134,7 +134,7 @@ function plugin_controller.deleted(params)
     local service_list, service_list_err = dao.service.service_list_by_plugin(detail)
 
     if service_list_err then
-        pdk.log.error("plugin-delete exception when detecting plugin service: [", service_list_err, "]")
+        pdk.log.error("plugin-delete exception when detecting plugin service: [" .. service_list_err .. "]")
         pdk.response.exit(500, { message = "exception when detecting plugin service" })
     end
 
@@ -152,7 +152,7 @@ function plugin_controller.deleted(params)
     local _, err = dao.plugin.deleted(detail)
 
     if err then
-        pdk.log.error("plugin-delete remove plugin exception: [", err, "]")
+        pdk.log.error("plugin-delete remove plugin exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "remove plugin exception" })
     end
 

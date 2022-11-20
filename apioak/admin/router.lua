@@ -20,7 +20,7 @@ function router_controller.created()
     local check_service, err = dao.common.check_kv_exists(body.service, pdk.const.CONSUL_PRFX_SERVICES)
 
     if err then
-        pdk.log.error("router-create detect service exceptions: [", err, "]")
+        pdk.log.error("router-create detect service exceptions: [" .. err .. "]")
         pdk.response.exit(500, { message = "detect service exceptions" })
     end
 
@@ -33,7 +33,7 @@ function router_controller.created()
         local check_plugin, err = dao.common.batch_check_kv_exists(body.plugins, pdk.const.CONSUL_PRFX_PLUGINS)
 
         if err then
-            pdk.log.error("router-create detect plugin exceptions: [", err, "]")
+            pdk.log.error("router-create detect plugin exceptions: [" .. err .. "]")
             pdk.response.exit(500, { message = "detect plugin exceptions" })
         end
 
@@ -47,7 +47,7 @@ function router_controller.created()
         local check_upstream, err = dao.common.check_kv_exists(body.upstream, pdk.const.CONSUL_PRFX_UPSTREAMS)
 
         if err then
-            pdk.log.error("router-create detect upstream exceptions: [", err, "]")
+            pdk.log.error("router-create detect upstream exceptions: [" .. err .. "]")
             pdk.response.exit(500, { message = "detect upstream exceptions" })
         end
 
@@ -59,7 +59,7 @@ function router_controller.created()
     local exist_paths, exist_paths_err = dao.router.exist_path(body.paths)
 
     if exist_paths_err ~= nil then
-        pdk.log.error("router-create exception when checking if path exists: [", exist_paths_err, "]")
+        pdk.log.error("router-create exception when checking if path exists: [" .. exist_paths_err .. "]")
         pdk.response.exit(500, { message = "exception when checking if path exists" })
     end
 
@@ -70,7 +70,7 @@ function router_controller.created()
     local res, err = dao.router.created(body)
 
     if err then
-        pdk.log.error("router-create create router exception: [", err, "]")
+        pdk.log.error("router-create create router exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "create router exception" })
     end
 
@@ -87,7 +87,7 @@ function router_controller.updated(params)
     local detail, err = dao.router.detail(params.router_key)
 
     if err then
-        pdk.log.error("router-update get router detail exception: [", err, "]")
+        pdk.log.error("router-update get router detail exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "get router detail exception" })
     end
 
@@ -103,7 +103,7 @@ function router_controller.updated(params)
     local exist_paths, exist_paths_err = dao.router.exist_path(body.paths, detail.id)
 
     if exist_paths_err then
-        pdk.log.error("router-update exception when checking if path exists: [", exist_paths_err, "]")
+        pdk.log.error("router-update exception when checking if path exists: [" .. exist_paths_err .. "]")
         pdk.response.exit(500, { message = "exception when checking if path exists" })
     end
 
@@ -116,7 +116,7 @@ function router_controller.updated(params)
         local check_service, err = dao.common.check_kv_exists(body.service, pdk.const.CONSUL_PRFX_SERVICES)
 
         if err then
-            pdk.log.error("router-update detect service exceptions: [", err, "]")
+            pdk.log.error("router-update detect service exceptions: [" .. err .. "]")
             pdk.response.exit(500, { message = "detect service exceptions" })
         end
 
@@ -130,7 +130,7 @@ function router_controller.updated(params)
         local check_plugin, err = dao.common.batch_check_kv_exists(body.plugins, pdk.const.CONSUL_PRFX_PLUGINS)
 
         if err then
-            pdk.log.error("router-update detect plugin exceptions: [", err, "]")
+            pdk.log.error("router-update detect plugin exceptions: [" .. err .. "]")
             pdk.response.exit(500, { message = "detect plugin exceptions" })
         end
 
@@ -144,7 +144,7 @@ function router_controller.updated(params)
         local check_upstream, err = dao.common.check_kv_exists(body.upstream, pdk.const.CONSUL_PRFX_UPSTREAMS)
 
         if err then
-            pdk.log.error("router-update detect upstream exceptions: [", err, "]")
+            pdk.log.error("router-update detect upstream exceptions: [" .. err .. "]")
             pdk.response.exit(500, { message = "detect upstream exceptions" })
         end
 
@@ -156,7 +156,7 @@ function router_controller.updated(params)
     local res, err = dao.router.updated(body, detail)
 
     if err then
-        pdk.log.error("router-update update route exception: [", err, "]")
+        pdk.log.error("router-update update route exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "update route exception" })
     end
 
@@ -170,7 +170,7 @@ function router_controller.detail(params)
     local res, err = dao.router.detail(params.router_key)
 
     if err then
-        pdk.log.error("router-detail get route detail exception: [", err, "]")
+        pdk.log.error("router-detail get route detail exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "get route detail exception" })
     end
 
@@ -182,7 +182,7 @@ function router_controller.lists()
     local res, err = dao.router.lists()
 
     if err then
-        pdk.log.error("router-list get route list exception: [", err, "]")
+        pdk.log.error("router-list get route list exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "get route list exception" })
     end
 
@@ -196,7 +196,7 @@ function router_controller.deleted(params)
     local detail, err = dao.router.detail(params.router_key)
 
     if err then
-        pdk.log.error("router-delete get route detail exception: [", err, "]")
+        pdk.log.error("router-delete get route detail exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "get route detail exception" })
     end
 
@@ -207,7 +207,7 @@ function router_controller.deleted(params)
     local _, err = dao.router.deleted(detail)
 
     if err then
-        pdk.log.error("router-delete remove route exception: [", err, "]")
+        pdk.log.error("router-delete remove route exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "remove route exception" })
     end
 
