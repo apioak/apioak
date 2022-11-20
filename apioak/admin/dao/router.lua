@@ -244,21 +244,15 @@ function _M.router_list_by_service(detail)
                 break
             end
 
-            local router_service = router_info['service']
-
-            if not router_service.id and not router_service.name then
+            if router_info['service'].id and (router_info['service'].id == detail.id) then
+                table.insert(router_list, router_info)
                 break
             end
 
-            if router_service.id and (router_service.id ~= detail.id) then
+            if router_info['service'].name and (router_info['service'].name == detail.name) then
+                table.insert(router_list, router_info)
                 break
             end
-
-            if router_service.name and (router_service.name ~= detail.name) then
-                break
-            end
-
-            table.insert(router_list, router_info)
 
         until true
     end
@@ -303,6 +297,46 @@ function _M.router_list_by_plugin(detail)
                     table.insert(router_list, router_info)
                     break
                 end
+            end
+
+        until true
+    end
+
+    return router_list
+end
+
+function _M.router_list_by_upstream(detail)
+
+    if not detail.id and not detail.name then
+        return nil, nil
+    end
+
+    local list, err = common.list_keys(common.PREFIX_MAP.routers)
+
+    if err then
+        return nil, "get router list FAIL [".. err .."]"
+    end
+
+    local router_list = {}
+
+    for i = 1, #list['list'] do
+
+        local router_info = list['list'][i]
+
+        repeat
+
+            if not router_info['upstream'] then
+                break
+            end
+
+            if router_info['upstream'].id and (router_info['upstream'].id == detail.id) then
+                table.insert(router_list, router_info)
+                break
+            end
+
+            if router_info['upstream'].name and (router_info['upstream'].name == detail.name) then
+                table.insert(router_list, router_info)
+                break
             end
 
         until true
