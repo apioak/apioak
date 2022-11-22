@@ -9,7 +9,7 @@ __DATA__
 location /t {
     content_by_lua_block {
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/services', ngx.HTTP_GET)
+        local code, message, body = t('/apioak/admin/services', ngx.HTTP_GET)
         ngx.status = code
 
         local json = require("cjson.safe")
@@ -32,7 +32,7 @@ OK
 location /t {
     content_by_lua_block {
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/services', ngx.HTTP_POST, {
+        local code, message, body = t('/apioak/admin/services', ngx.HTTP_POST, {
             name = "foo-service-001",
             protocols = {"http", "https"},
             hosts = {"foo.com", "bar.com"},
@@ -44,7 +44,7 @@ location /t {
         ngx.say("OK")
 
         local t = require("tools.request").test
-        local code2, message2, body2 = t('/apioak/admin/bete/services', ngx.HTTP_POST, {
+        local code2, message2, body2 = t('/apioak/admin/services', ngx.HTTP_POST, {
             name = "foo-service-001-to-delete",
             protocols = {"http", "https"},
             hosts = {"foo.com", "bar.com"},
@@ -71,7 +71,7 @@ OK
 location /t {
     content_by_lua_block {
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/services', ngx.HTTP_POST, {
+        local code, message, body = t('/apioak/admin/services', ngx.HTTP_POST, {
             name = "foo-service-001",
             protocols = {"http", "https"},
             hosts = {"foo.com", "bar.com"},
@@ -98,7 +98,7 @@ GET /t
 location /t {
     content_by_lua_block {
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/services/foo-service-001', ngx.HTTP_GET)
+        local code, message, body = t('/apioak/admin/services/foo-service-001', ngx.HTTP_GET)
         ngx.status = code
         ngx.say(body.name)
     }
@@ -120,7 +120,7 @@ location /t {
         local id = consul.get_kv_id("apioak/services/", "foo-service-001")
 
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/services/' .. id, ngx.HTTP_GET)
+        local code, message, body = t('/apioak/admin/services/' .. id, ngx.HTTP_GET)
         ngx.status = code
         ngx.say(body.name)
     }
@@ -143,7 +143,7 @@ location /t {
         local id = consul.get_kv_id("apioak/services/", "foo-service-001")
 
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/services/' .. id, ngx.HTTP_PUT, {
+        local code, message, body = t('/apioak/admin/services/' .. id, ngx.HTTP_PUT, {
             name = "foo-service-001-update",
             protocols = {"http", "https"},
             hosts = {"foo.com", "bar.com"},
@@ -169,7 +169,7 @@ OK
 location /t {
     content_by_lua_block {
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/services/foo-service-001-update', ngx.HTTP_PUT, {
+        local code, message, body = t('/apioak/admin/services/foo-service-001-update', ngx.HTTP_PUT, {
             name = "foo-service-001-update-by-name",
             protocols = {"http", "https"},
             hosts = {"foo.com", "bar.com"},
@@ -198,7 +198,7 @@ location /t {
         local id = consul.get_kv_id("apioak/services/", "foo-service-001-update-by-name")
 
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/services/' .. id, ngx.HTTP_DELETE)
+        local code, message, body = t('/apioak/admin/services/' .. id, ngx.HTTP_DELETE)
         ngx.status = code
         ngx.say(message)
     }
@@ -217,7 +217,7 @@ OK
 location /t {
     content_by_lua_block {
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/services/foo-service-001-to-delete', ngx.HTTP_DELETE)
+        local code, message, body = t('/apioak/admin/services/foo-service-001-to-delete', ngx.HTTP_DELETE)
         ngx.status = code
         ngx.say(message)
     }

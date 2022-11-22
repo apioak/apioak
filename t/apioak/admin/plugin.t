@@ -9,7 +9,7 @@ __DATA__
 location /t {
     content_by_lua_block {
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/plugins', ngx.HTTP_GET)
+        local code, message, body = t('/apioak/admin/beta/plugins', ngx.HTTP_GET)
         ngx.status = code
 
         local json = require("cjson.safe")
@@ -30,7 +30,7 @@ OK
 location /t {
     content_by_lua_block {
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/plugins', ngx.HTTP_POST, {
+        local code, message, body = t('/apioak/admin/plugins', ngx.HTTP_POST, {
             name = "foo-plugin-001",
             key = "foo-plugin-001-1",
             config = { foo = "xxx", bar = "xxx"},
@@ -39,7 +39,7 @@ location /t {
         ngx.say("OK")
 
         local t = require("tools.request").test
-        local code2, message2, body2 = t('/apioak/admin/bete/plugins', ngx.HTTP_POST, {
+        local code2, message2, body2 = t('/apioak/admin/plugins', ngx.HTTP_POST, {
             name = "foo-plugin-001-to-delete",
             key = "foo-plugin-001-to-delete-1",
             config = { foo = "xxx", bar = "xxx"},
@@ -63,7 +63,7 @@ OK
 location /t {
     content_by_lua_block {
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/plugins', ngx.HTTP_POST, {
+        local code, message, body = t('/apioak/admin/plugins', ngx.HTTP_POST, {
             name = "foo-plugin-001",
             key = "foo-plugin-001-1",
             config = { foo = "xxx", bar = "xxx"},
@@ -87,7 +87,7 @@ GET /t
 location /t {
     content_by_lua_block {
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/plugins/foo-plugin-001', ngx.HTTP_GET)
+        local code, message, body = t('/apioak/admin/plugins/foo-plugin-001', ngx.HTTP_GET)
         ngx.status = code
         ngx.say(body.name)
     }
@@ -109,7 +109,7 @@ location /t {
         local id = consul.get_kv_id("apioak/plugins/", "foo-plugin-001")
 
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/plugins/' .. id, ngx.HTTP_GET)
+        local code, message, body = t('/apioak/admin/plugins/' .. id, ngx.HTTP_GET)
         ngx.status = code
         ngx.say(body.name)
     }
@@ -132,7 +132,7 @@ location /t {
         local id = consul.get_kv_id("apioak/plugins/", "foo-plugin-001")
 
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/plugins/' .. id, ngx.HTTP_PUT, {
+        local code, message, body = t('/apioak/admin/plugins/' .. id, ngx.HTTP_PUT, {
             name = "foo-plugin-001-update",
             key = "foo-plugin-001-2",
             config = { foo = "xxx", bar = "xxx"},
@@ -155,7 +155,7 @@ OK
 location /t {
     content_by_lua_block {
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/plugins/foo-plugin-001-update', ngx.HTTP_PUT, {
+        local code, message, body = t('/apioak/admin/plugins/foo-plugin-001-update', ngx.HTTP_PUT, {
             name = "foo-plugin-001-update-by-name",
             key = "foo-plugin-001-2",
             config = { foo = "xxx", bar = "xxx"},
@@ -181,7 +181,7 @@ location /t {
         local id = consul.get_kv_id("apioak/plugins/", "foo-plugin-001-update-by-name")
 
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/plugins/' .. id, ngx.HTTP_DELETE)
+        local code, message, body = t('/apioak/admin/plugins/' .. id, ngx.HTTP_DELETE)
         ngx.status = code
         ngx.say(message)
     }
@@ -200,7 +200,7 @@ OK
 location /t {
     content_by_lua_block {
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/plugins/foo-plugin-001-to-delete', ngx.HTTP_DELETE)
+        local code, message, body = t('/apioak/admin/plugins/foo-plugin-001-to-delete', ngx.HTTP_DELETE)
         ngx.status = code
         ngx.say(message)
     }

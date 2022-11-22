@@ -9,7 +9,7 @@ __DATA__
 location /t {
     content_by_lua_block {
         local t = require("tools.request").test
-        local code, message, body = t('/apioak/admin/bete/routers', ngx.HTTP_GET)
+        local code, message, body = t('/apioak/admin/beta/routers', ngx.HTTP_GET)
         ngx.status = code
 
         local json = require("cjson.safe")
@@ -36,7 +36,7 @@ location /t {
         local t = require("tools.request").test
 
         local service_name = "foo-router-service-" .. random_number
-        local code_s, message_s = t('/apioak/admin/bete/services', ngx.HTTP_POST, {
+        local code_s, message_s = t('/apioak/admin/services', ngx.HTTP_POST, {
             name = service_name,
             protocols = {"http", "https"},
             hosts = {"foo.com", "bar.com"},
@@ -48,7 +48,7 @@ location /t {
         ngx.say(message_s)
 
         local plugin_name = "foo-router-plugin-" .. random_number
-        local code_p, message_p = t('/apioak/admin/bete/plugins', ngx.HTTP_POST, {
+        local code_p, message_p = t('/apioak/admin/plugins', ngx.HTTP_POST, {
             name = plugin_name,
             key = "foo-plugin-001-1",
             config = { foo = "xxx", bar = "xxx"},
@@ -57,7 +57,7 @@ location /t {
         ngx.say(message_p)
 
         local router_name = "foo-router-" .. random_number
-        local code, message, body = t('/apioak/admin/bete/routers', ngx.HTTP_POST, {
+        local code, message, body = t('/apioak/admin/routers', ngx.HTTP_POST, {
             name = router_name,
             methods = {"GET", "POST"},
             paths = {"/foo", "/bar"},
@@ -87,7 +87,7 @@ location /t {
         local random_number = math.random(100000)
 
         local service_name = "foo-router-service-" .. random_number
-        local code_s, message_s = t('/apioak/admin/bete/services', ngx.HTTP_POST, {
+        local code_s, message_s = t('/apioak/admin/services', ngx.HTTP_POST, {
             name = service_name,
             protocols = {"http", "https"},
             hosts = {"foo.com", "bar.com"},
@@ -99,7 +99,7 @@ location /t {
         ngx.say(message_s)
 
         local router_name = "foo-router-" .. random_number
-        local code_r_1, message_r_1 = t('/apioak/admin/bete/routers', ngx.HTTP_POST, {
+        local code_r_1, message_r_1 = t('/apioak/admin/routers', ngx.HTTP_POST, {
             name     = router_name,
             methods  = {"GET", "POST"},
             paths    = {"/foo", "/bar"},
@@ -112,7 +112,7 @@ location /t {
 
         ngx.say(message_r_1)
 
-        local code_r_2, message_r_2, body = t('/apioak/admin/bete/routers', ngx.HTTP_POST, {
+        local code_r_2, message_r_2, body = t('/apioak/admin/routers', ngx.HTTP_POST, {
             name     = router_name,
             methods  = {"GET", "POST"},
             paths    = {"/foo", "/bar"},
@@ -149,7 +149,7 @@ location /t {
         local random_number = math.random(100000)
 
         local service_name = "foo-router-service-" .. random_number
-        local code_s, message_s = t('/apioak/admin/bete/services', ngx.HTTP_POST, {
+        local code_s, message_s = t('/apioak/admin/services', ngx.HTTP_POST, {
             name = service_name,
             protocols = {"http", "https"},
             hosts = {"foo.com", "bar.com"},
@@ -161,7 +161,7 @@ location /t {
         ngx.say(message_s)
 
         local router_name = "foo-router-" .. random_number
-        local code_r_1, message_r_1 = t('/apioak/admin/bete/routers', ngx.HTTP_POST, {
+        local code_r_1, message_r_1 = t('/apioak/admin/routers', ngx.HTTP_POST, {
             name     = router_name,
             methods  = {"GET", "POST"},
             paths    = {"/foo", "/bar"},
@@ -174,7 +174,7 @@ location /t {
 
         ngx.say(message_r_1)
 
-        local code, message, body = t('/apioak/admin/bete/routers/' .. router_name, ngx.HTTP_GET)
+        local code, message, body = t('/apioak/admin/routers/' .. router_name, ngx.HTTP_GET)
 
         if body.name == router_name then
             ngx.say(message)
@@ -203,7 +203,7 @@ location /t {
         local random_number = math.random(100000)
 
         local service_name = "foo-router-service-" .. random_number
-        local code_s, message_s = t('/apioak/admin/bete/services', ngx.HTTP_POST, {
+        local code_s, message_s = t('/apioak/admin/services', ngx.HTTP_POST, {
             name = service_name,
             protocols = {"http", "https"},
             hosts = {"foo.com", "bar.com"},
@@ -215,7 +215,7 @@ location /t {
         ngx.say(message_s)
 
         local router_name = "foo-router-" .. random_number
-        local code_r_1, message_r_1 = t('/apioak/admin/bete/routers', ngx.HTTP_POST, {
+        local code_r_1, message_r_1 = t('/apioak/admin/routers', ngx.HTTP_POST, {
             name     = router_name,
             methods  = {"GET", "POST"},
             paths    = {"/foo", "/bar"},
@@ -233,7 +233,7 @@ location /t {
 
         local random_number_2 = math.random(100000)
 
-        local code, message, body = t('/apioak/admin/bete/routers/' .. id, ngx.HTTP_PUT, {
+        local code, message, body = t('/apioak/admin/routers/' .. id, ngx.HTTP_PUT, {
             name     = "foo-router-" .. random_number_2,
             methods  = {"GET", "POST"},
             paths    = {"/foo", "/bar"},
@@ -267,7 +267,7 @@ location /t {
         local random_number = math.random(100000)
 
         local service_name = "foo-router-service-" .. random_number
-        local code_s, message_s = t('/apioak/admin/bete/services', ngx.HTTP_POST, {
+        local code_s, message_s = t('/apioak/admin/services', ngx.HTTP_POST, {
             name = service_name,
             protocols = {"http", "https"},
             hosts = {"foo.com", "bar.com"},
@@ -279,7 +279,7 @@ location /t {
         ngx.say(message_s)
 
         local router_name = "foo-router-" .. random_number
-        local code_r_1, message_r_1 = t('/apioak/admin/bete/routers', ngx.HTTP_POST, {
+        local code_r_1, message_r_1 = t('/apioak/admin/routers', ngx.HTTP_POST, {
             name     = router_name,
             methods  = {"GET", "POST"},
             paths    = {"/foo", "/bar"},
@@ -294,7 +294,7 @@ location /t {
 
         local random_number_2 = math.random(100000)
 
-        local code, message, body = t('/apioak/admin/bete/routers/' .. router_name, ngx.HTTP_PUT, {
+        local code, message, body = t('/apioak/admin/routers/' .. router_name, ngx.HTTP_PUT, {
             name     = "foo-router-" .. random_number_2,
             methods  = {"GET", "POST"},
             paths    = {"/foo", "/bar"},
@@ -327,7 +327,7 @@ location /t {
         local random_number = math.random(100000)
 
         local service_name = "foo-router-service-" .. random_number
-        local code_s, message_s = t('/apioak/admin/bete/services', ngx.HTTP_POST, {
+        local code_s, message_s = t('/apioak/admin/services', ngx.HTTP_POST, {
             name = service_name,
             protocols = {"http", "https"},
             hosts = {"foo.com", "bar.com"},
@@ -339,7 +339,7 @@ location /t {
         ngx.say(message_s)
 
         local router_name = "foo-router-" .. random_number
-        local code_r_1, message_r_1 = t('/apioak/admin/bete/routers', ngx.HTTP_POST, {
+        local code_r_1, message_r_1 = t('/apioak/admin/routers', ngx.HTTP_POST, {
             name     = router_name,
             methods  = {"GET", "POST"},
             paths    = {"/foo", "/bar"},
@@ -355,7 +355,7 @@ location /t {
         local consul = require("tools.consul")
         local id = consul.get_kv_id("apioak/routers/", router_name)
 
-        local code, message, body = t('/apioak/admin/bete/routers/' .. id, ngx.HTTP_DELETE)
+        local code, message, body = t('/apioak/admin/routers/' .. id, ngx.HTTP_DELETE)
 
         ngx.say(message)
     }
@@ -379,7 +379,7 @@ location /t {
         local random_number = math.random(100000)
 
         local service_name = "foo-router-service-" .. random_number
-        local code_s, message_s = t('/apioak/admin/bete/services', ngx.HTTP_POST, {
+        local code_s, message_s = t('/apioak/admin/services', ngx.HTTP_POST, {
             name = service_name,
             protocols = {"http", "https"},
             hosts = {"foo.com", "bar.com"},
@@ -391,7 +391,7 @@ location /t {
         ngx.say(message_s)
 
         local router_name = "foo-router-" .. random_number
-        local code_r_1, message_r_1 = t('/apioak/admin/bete/routers', ngx.HTTP_POST, {
+        local code_r_1, message_r_1 = t('/apioak/admin/routers', ngx.HTTP_POST, {
             name     = router_name,
             methods  = {"GET", "POST"},
             paths    = {"/foo", "/bar"},
@@ -404,7 +404,7 @@ location /t {
 
         ngx.say(message_r_1)
 
-        local code, message, body = t('/apioak/admin/bete/routers/' .. router_name, ngx.HTTP_DELETE)
+        local code, message, body = t('/apioak/admin/routers/' .. router_name, ngx.HTTP_DELETE)
 
         ngx.say(message)
     }

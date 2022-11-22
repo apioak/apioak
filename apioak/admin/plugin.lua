@@ -11,7 +11,7 @@ function plugin_controller.created()
 
     plugin_controller.check_schema(schema.plugin.created, body)
 
-    local plugin_config = require("apioak.admin.schema.plugins." .. body.key)
+    local plugin_config = require("apioak.plugin." .. body.key .. ".schema-" .. body.key)
 
     plugin_controller.check_schema(plugin_config.config, body.config)
 
@@ -56,7 +56,7 @@ function plugin_controller.updated(params)
 
     if body.config then
 
-        local plugin_config = require("apioak.admin.schema.plugins." .. detail.key)
+        local plugin_config = require("apioak.plugin." .. body.key .. ".schema-" .. body.key)
 
         plugin_controller.check_schema(plugin_config.config, body.config)
 
