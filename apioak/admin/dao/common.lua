@@ -1,4 +1,6 @@
-local pdk = require("apioak.pdk")
+local ngx    = ngx
+local rand   = math.random
+local pdk    = require("apioak.pdk")
 local config = require("apioak.sys.config")
 
 local _M = {}
@@ -15,6 +17,8 @@ _M.APIOAK_PREFIX = function()
 end
 
 _M.SYSTEM_PREFIX = _M.APIOAK_PREFIX() .. "system/mapping/"
+_M.DATA_PREFIX   = _M.APIOAK_PREFIX() .. "data/"
+_M.HASH_PREFIX   = _M.APIOAK_PREFIX() .. "system/hash/"
 
 _M.SYSTEM_PREFIX_MAP = {
     services       = _M.SYSTEM_PREFIX .. pdk.const.CONSUL_PRFX_SERVICES .. "/",
@@ -26,12 +30,16 @@ _M.SYSTEM_PREFIX_MAP = {
 }
 
 _M.PREFIX_MAP = {
-    services       = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_SERVICES .. "/",
-    routers        = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_ROUTERS .. "/",
-    plugins        = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_PLUGINS .. "/",
-    upstreams      = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_UPSTREAMS .. "/",
-    certificates   = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_CERTIFICATES .. "/",
-    upstream_nodes = _M.APIOAK_PREFIX() .. pdk.const.CONSUL_PRFX_UPSTREAM_NODES .. "/",
+    services       = _M.DATA_PREFIX .. pdk.const.CONSUL_PRFX_SERVICES .. "/",
+    routers        = _M.DATA_PREFIX .. pdk.const.CONSUL_PRFX_ROUTERS .. "/",
+    plugins        = _M.DATA_PREFIX .. pdk.const.CONSUL_PRFX_PLUGINS .. "/",
+    upstreams      = _M.DATA_PREFIX .. pdk.const.CONSUL_PRFX_UPSTREAMS .. "/",
+    certificates   = _M.DATA_PREFIX .. pdk.const.CONSUL_PRFX_CERTIFICATES .. "/",
+    upstream_nodes = _M.DATA_PREFIX .. pdk.const.CONSUL_PRFX_UPSTREAM_NODES .. "/",
+}
+
+_M.HASH_PREFIX_MAP = {
+    sync_update = _M.HASH_PREFIX .. "sync/update",
 }
 
 function _M.get_key(key)
@@ -51,6 +59,21 @@ function _M.get_key(key)
     end
 
     return d.body[1].Value, nil
+end
+
+function _M.put_key(key, value, args)
+
+    local d, err = pdk.consul.instance:put_key(key, value, args)
+
+    if err then
+        return false, err
+    end
+
+    if d and (d.status == 200) then
+        return d.body, nil
+    end
+
+    return false, ("[" .. d.status .. "]" .. d.reason)
 end
 
 function _M.list_keys(prefix)
@@ -279,5 +302,43 @@ function _M.check_mapping_exists(id, prefix)
 
     return true
 end
+
+function _M.update_sync_data_hash(init)
+
+    local key = _M.HASH_PREFIX_MAP[pdk.const.CONSUL_SYNC_UPDATE]
+
+    local hash_data, err = _M.get_key(key)
+
+    if err then
+        return false, err
+    end
+
+    if not hash_data then
+        hash_data = {}
+    end
+
+    if hash_data and (type(hash_data) == "string") then
+        hash_data = pdk.json.decode(hash_data)
+    end
+
+    local millisecond = ngx.now()
+    local hash_key = key .. ":" .. millisecond .. rand()
+    local hash = pdk.string.md5(hash_key)
+
+    hash_data.new = hash
+
+    if init == true then
+        hash_data.old = hash
+    end
+
+    local res, err = _M.put_key(key, hash_data)
+
+    if err then
+        return false, err
+    end
+
+    return res, nil
+end
+
 
 return _M

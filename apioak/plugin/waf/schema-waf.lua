@@ -3,11 +3,9 @@ local _M = {}
 _M.config = {
     type = "object",
     properties = {
-        waf_config = {
-            type = "string"
-        }
+
     },
-    required = { "waf_config" }
+    required = {  }
 }
 
 return _M

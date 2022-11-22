@@ -43,6 +43,12 @@ function _M.created(params)
         return nil, "create service FAIL [".. err .."]"
     end
 
+    local _, update_hash_err = common.update_sync_data_hash()
+
+    if update_hash_err then
+        pdk.log.error("dao-service-create update_sync_data_hash err: [" .. update_hash_err .. "]")
+    end
+
     return { id = service_id }, nil
 end
 
@@ -94,6 +100,12 @@ function _M.updated(params, detail)
 
     if err or not res then
         return nil, "update service FAIL, err[".. tostring(err) .."]"
+    end
+
+    local _, update_hash_err = common.update_sync_data_hash()
+
+    if update_hash_err then
+        pdk.log.error("dao-service-update update_sync_data_hash err: [" .. update_hash_err .. "]")
     end
 
     return { id = detail.id }, nil
@@ -154,6 +166,12 @@ function _M.deleted(detail)
 
     if err or not res then
         return nil, "delete service FAIL, err[".. tostring(err) .."]"
+    end
+
+    local _, update_hash_err = common.update_sync_data_hash()
+
+    if update_hash_err then
+        pdk.log.error("dao-service-delete update_sync_data_hash err: [" .. update_hash_err .. "]")
     end
 
     return {}, nil

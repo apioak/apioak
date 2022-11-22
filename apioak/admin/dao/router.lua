@@ -50,6 +50,12 @@ function _M.created(params)
         return nil, "create router FAIL [".. tostring(err) .."]"
     end
 
+    local _, update_hash_err = common.update_sync_data_hash()
+
+    if update_hash_err then
+        pdk.log.error("dao-router-create update_sync_data_hash err: [" .. update_hash_err .. "]")
+    end
+
     return { id = router_id }, nil
 end
 
@@ -112,6 +118,12 @@ function _M.updated(params, detail)
         return nil, "update router FAIL, err[".. tostring(err) .."]"
     end
 
+    local _, update_hash_err = common.update_sync_data_hash()
+
+    if update_hash_err then
+        pdk.log.error("dao-router-update update_sync_data_hash err: [" .. update_hash_err .. "]")
+    end
+
     return { id = detail.id }, nil
 end
 
@@ -170,6 +182,12 @@ function _M.deleted(detail)
 
     if err or not res then
         return nil, "delete router FAIL, err[".. tostring(err) .."]"
+    end
+
+    local _, update_hash_err = common.update_sync_data_hash()
+
+    if update_hash_err then
+        pdk.log.error("dao-router-delete update_sync_data_hash err: [" .. update_hash_err .. "]")
     end
 
     return {}, nil

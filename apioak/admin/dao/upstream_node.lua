@@ -55,6 +55,12 @@ function _M.created(params)
         return nil, "create upstream_node FAIL [".. err .."]"
     end
 
+    local _, update_hash_err = common.update_sync_data_hash()
+
+    if update_hash_err then
+        pdk.log.error("dao-upstream-node-create update_sync_data_hash err: [" .. update_hash_err .. "]")
+    end
+
     return { id = id }, nil
 end
 
@@ -134,6 +140,12 @@ function _M.updated(params, detail)
 
     if err or not res then
         return nil, "update upstream_node FAIL, err[".. tostring(err) .."]"
+    end
+
+    local _, update_hash_err = common.update_sync_data_hash()
+
+    if update_hash_err then
+        pdk.log.error("dao-upstream-node-update update_sync_data_hash err: [" .. update_hash_err .. "]")
     end
 
     return { id = detail.id }, nil
@@ -229,6 +241,12 @@ function _M.deleted(detail)
 
     if err or not res then
         return nil, "delete upstream_node FAIL, err[".. tostring(err) .."]"
+    end
+
+    local _, update_hash_err = common.update_sync_data_hash()
+
+    if update_hash_err then
+        pdk.log.error("dao-upstream-node-delete update_sync_data_hash err: [" .. update_hash_err .. "]")
     end
 
     return {}, nil

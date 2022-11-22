@@ -38,6 +38,12 @@ function _M.created(params)
         return nil, "create plugin FAIL, err:[".. tostring(err) .."]"
     end
 
+    local _, update_hash_err = common.update_sync_data_hash()
+
+    if update_hash_err then
+        pdk.log.error("dao-plugin-create update_sync_data_hash err: [" .. update_hash_err .. "]")
+    end
+
     return { id = plugin_id }, nil
 end
 
@@ -80,6 +86,12 @@ function _M.updated(params, detail)
 
     if err or not res then
         return nil, "update plugin FAIL, err[".. tostring(err) .."]"
+    end
+
+    local _, update_hash_err = common.update_sync_data_hash()
+
+    if update_hash_err then
+        pdk.log.error("dao-plugin-update update_sync_data_hash err: [" .. update_hash_err .. "]")
     end
 
     return { id = detail.id }, nil
@@ -141,6 +153,12 @@ function _M.deleted(detail)
 
     if err or not res then
         return nil, "delete plugin FAIL, err[".. tostring(err) .."]"
+    end
+
+    local _, update_hash_err = common.update_sync_data_hash()
+
+    if update_hash_err then
+        pdk.log.error("dao-plugin-delete update_sync_data_hash err: [" .. update_hash_err .. "]")
     end
 
     return {}, nil
