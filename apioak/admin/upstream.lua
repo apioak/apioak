@@ -29,6 +29,14 @@ function upstream_controller.created()
         pdk.response.exit(400, { message = "the upstream nodes not found" })
     end
 
+    local node_ids = {}
+
+    for i = 1, #check_nodes do
+        table.insert(node_ids, {id = check_nodes[i].id})
+    end
+
+    body.nodes = node_ids
+
     local res, err = dao.upstream.created(body)
 
     if err then
@@ -74,6 +82,14 @@ function upstream_controller.updated(params)
         if not check_nodes then
             pdk.response.exit(400, { message = "detect upstream-node not found" })
         end
+
+        local node_ids = {}
+
+        for i = 1, #check_nodes do
+            table.insert(node_ids, {id = check_nodes[i].id})
+        end
+
+        body.nodes = node_ids
     end
 
     local res, err = dao.upstream.updated(body, detail)

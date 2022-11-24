@@ -1,7 +1,8 @@
-local ngx    = ngx
-local rand   = math.random
-local pdk    = require("apioak.pdk")
-local config = require("apioak.sys.config")
+local ngx         = ngx
+local rand        = math.random
+local pdk         = require("apioak.pdk")
+local config      = require("apioak.sys.config")
+local empty_table = {}
 
 local _M = {}
 
@@ -176,97 +177,150 @@ end
 function _M.batch_check_kv_exists(params, prefix)
 
     if type(params) ~= "table" then
-        return false, "params format error, err:[table expected, got " .. type(params) .. "]"
+        return nil, "params format error, err:[table expected, got " .. type(params) .. "]"
     end
 
     if params.len == 0 then
-        return true, nil
+        return nil, "parameter cannot be empty:[" .. pdk.json.encode(params, true) .. "]"
     end
 
-    for _, value in ipairs(params) do
+    local exists_data, exists_id_map = {}, {}
 
-        local id = value.id or nil
-        local name = value.name or nil
+    for _, item in ipairs(params) do
 
         repeat
-            if not id and not name then
+            if not item.id and not item.name then
                 break
             end
 
-            local res, err = _M.check_kv_exists(value, prefix)
+            local res, err = _M.check_kv_exists(item, prefix)
 
             if err then
-                return false, err
+                return nil, err
             end
 
             if not res then
-                return false, nil
+                break
             end
+
+            if exists_id_map[res.id] then
+                break
+            end
+
+            table.insert(exists_data, res)
+            exists_id_map[res.id] = 0
 
         until true
     end
 
-    return true, nil
+    if exists_data ~= empty_table then
+        return exists_data, nil
+    end
+
+    return nil, nil
 end
 
 function _M.check_kv_exists(params, prefix)
 
     if type(params) ~= "table" then
-        return false, "params format error, err:[table expected, got " .. type(params) .. "]"
+        return nil, "the parameter must be a table:[" .. type(params) .. "][" .. pdk.json.encode(params) .. "]"
     end
 
-    local id = params.id or nil
-    local name = params.name or nil
-
-    if not id and not name then
-        return true, nil
+    if params == empty_table then
+        return nil, "parameter cannot be empty:[" .. pdk.json.encode(params, true) .. "]"
     end
 
-    local id_res, id_err = nil, nil
+    if not params.id and not params.name then
+        return nil, "the parameter must be one or both of the id and name passed:["
+                .. pdk.json.encode(params, true) .. "]"
+    end
 
-    local name_res, name_err = nil, nil
+    if params.id and not params.name then
 
-    if id then
+        local id_key = _M.SYSTEM_PREFIX_MAP[prefix] .. params.id
 
-        local id_key = _M.SYSTEM_PREFIX_MAP[prefix] .. id
-
-        id_res, id_err = _M.get_key(id_key)
+        local id_res, id_err = _M.get_key(id_key)
 
         if id_err then
-            return false, "failed to get " .. prefix ..
-                    " with id [" .. params.id .. "], err:[" .. tostring(id_err) .. "]"
+            return nil, "params-id failed to get with id [" .. id_key .. "], err:[" .. tostring(id_err) .. "]"
         end
 
         if not id_res then
-            return false, "failed to get " .. prefix .. " with id [" .. params.id .. "]"
+            return nil, "params-id no data found for parameter id [" .. id_key .. "]"
         end
-    end
 
-    if name then
+        local name_key = _M.PREFIX_MAP[prefix] .. id_res
 
-        local name_key = _M.PREFIX_MAP[prefix] .. name
-
-        name_res, name_err = _M.get_key(name_key)
+        local name_res, name_err = _M.get_key(name_key)
 
         if name_err then
-            return false, "failed to get " .. prefix ..
-                    " with name [" .. params.name .. "], err:[" .. tostring(name_err) .. "]"
+            return nil, " params-id failed to get with name [ "
+                    .. id_key .. "|" .. name_key .. "], err:[" .. tostring(name_err) .. "]"
         end
 
         if not name_res then
-            return false, "failed to get " .. prefix .. " with name [" .. params.name .. "]"
+            return nil, "params-id no data found for parameter name [" .. id_key .. "|" .. name_key .. "]"
         end
+
+        return pdk.json.decode(name_res), nil
     end
 
-    if id and name and not id_err and not name_err then
-        if id_res and name_res then
-            if id_res ~= name then
-                return false, "params.id:[" .. id .. "] and params.name:[" .. name .. "] resources do not match"
-            end
+    if not params.id and params.name then
+
+        local name_key = _M.PREFIX_MAP[prefix] .. params.name
+
+        local name_res, name_err = _M.get_key(name_key)
+
+        if name_err then
+            return nil, "params-name failed to get with name [" .. name_key .. "], err:[" .. tostring(name_err) .. "]"
         end
+
+        if not name_res then
+            return nil, "params-name no data found for parameter name [" .. name_key .. "]"
+        end
+
+        return pdk.json.decode(name_res), nil
     end
 
-    return true, nil
+    if params.id and params.name then
+
+        local id_key = _M.SYSTEM_PREFIX_MAP[prefix] .. params.id
+
+        local id_res, id_err = _M.get_key(id_key)
+
+        if id_err then
+            return nil, "params-id-name failed to get with id ["
+                    .. id_key .. "|" .. name_key .. "], err:[" .. tostring(id_err) .. "]"
+        end
+
+        local name_key = _M.PREFIX_MAP[prefix] .. params.name
+
+        local name_res, name_err = _M.get_key(name_key)
+
+        if name_err then
+            return nil, "params-id-name failed to get with name [ "
+                    .. id_key .. "|" .. name_key .. "], err:[" .. tostring(name_err) .. "]"
+        end
+
+        if id_res and not name_res then
+            return nil, "params-id-name id exists result, parameter name is wrong ["
+                    .. params.id .. "][" .. params.name .. "]"
+        end
+
+        if not id_res and name_res then
+            return nil, "params-id-name name exists result, parameter id is wrong ["
+                    .. params.id .. "][" .. params.name .. "]"
+        end
+
+        if id_res ~= params.name then
+            return nil, "params-id-name the parameter id and name are not the same result ["
+                    .. params.id .. "][" .. params.name .. "]"
+        end
+
+        return pdk.json.decode(name_res), nil
+    end
+
+    return nil, nil
 end
 
 function _M.check_key_exists(name, prefix)

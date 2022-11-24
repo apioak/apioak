@@ -28,6 +28,8 @@ function router_controller.created()
         pdk.response.exit(400, { message = "detect service not found" })
     end
 
+    body.service = {id = check_service.id}
+
     if body.plugins then
 
         local check_plugin, err = dao.common.batch_check_kv_exists(body.plugins, pdk.const.CONSUL_PRFX_PLUGINS)
@@ -40,6 +42,14 @@ function router_controller.created()
         if not check_plugin then
             pdk.response.exit(400, { message = "detect plugin not found" })
         end
+
+        local plugin_ids = {}
+
+        for i = 1, #check_plugin do
+            table.insert(plugin_ids, {id = check_plugin[i].id})
+        end
+
+        body.plugins = plugin_ids
     end
 
     if body.upstream then
@@ -54,6 +64,8 @@ function router_controller.created()
         if not check_upstream then
             pdk.response.exit(400, { message = "detect upstream not found" })
         end
+
+        body.upstream = {id = check_upstream.id}
     end
 
     local exist_paths, exist_paths_err = dao.router.exist_path(body.paths)
@@ -111,6 +123,22 @@ function router_controller.updated(params)
         pdk.response.exit(400, { message = "exists paths [" .. table.concat(exist_paths, ",") .. "]" })
     end
 
+    if body.upstream then
+
+        local check_upstream, err = dao.common.check_kv_exists(body.upstream, pdk.const.CONSUL_PRFX_UPSTREAMS)
+
+        if err then
+            pdk.log.error("router-update detect upstream exceptions: [" .. err .. "]")
+            pdk.response.exit(500, { message = "detect upstream exceptions" })
+        end
+
+        if not check_upstream then
+            pdk.response.exit(400, { message = "detect upstream not found" })
+        end
+
+        body.upstream = {id = check_upstream.id}
+    end
+
     if body.service then
 
         local check_service, err = dao.common.check_kv_exists(body.service, pdk.const.CONSUL_PRFX_SERVICES)
@@ -123,6 +151,8 @@ function router_controller.updated(params)
         if not check_service then
             pdk.response.exit(400, { message = "detect service not found" })
         end
+
+        body.service = {id = check_service.id}
     end
 
     if body.plugins then
@@ -137,20 +167,14 @@ function router_controller.updated(params)
         if not check_plugin then
             pdk.response.exit(400, { message = "detect plugin not found" })
         end
-    end
 
-    if body.upstream then
+        local plugin_ids = {}
 
-        local check_upstream, err = dao.common.check_kv_exists(body.upstream, pdk.const.CONSUL_PRFX_UPSTREAMS)
-
-        if err then
-            pdk.log.error("router-update detect upstream exceptions: [" .. err .. "]")
-            pdk.response.exit(500, { message = "detect upstream exceptions" })
+        for i = 1, #check_plugin do
+            table.insert(plugin_ids, {id = check_plugin[i].id})
         end
 
-        if not check_upstream then
-            pdk.response.exit(400, { message = "detect upstream not found" })
-        end
+        body.plugins = plugin_ids
     end
 
     local res, err = dao.router.updated(body, detail)
