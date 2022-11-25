@@ -286,14 +286,14 @@ function _M.check_kv_exists(params, prefix)
 
         local id_key = _M.SYSTEM_PREFIX_MAP[prefix] .. params.id
 
+        local name_key = _M.PREFIX_MAP[prefix] .. params.name
+
         local id_res, id_err = _M.get_key(id_key)
 
         if id_err then
             return nil, "params-id-name failed to get with id ["
                     .. id_key .. "|" .. name_key .. "], err:[" .. tostring(id_err) .. "]"
         end
-
-        local name_key = _M.PREFIX_MAP[prefix] .. params.name
 
         local name_res, name_err = _M.get_key(name_key)
 
