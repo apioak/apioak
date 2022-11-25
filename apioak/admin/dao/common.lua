@@ -359,22 +359,13 @@ end
 
 function _M.update_sync_data_hash(init)
 
-    local key = _M.HASH_PREFIX_MAP[pdk.const.CONSUL_SYNC_UPDATE]
-
-    local hash_data, err = _M.get_key(key)
+    local hash_data, err = _M.get_sync_data()
 
     if err then
         return false, err
     end
 
-    if not hash_data then
-        hash_data = {}
-    end
-
-    if hash_data and (type(hash_data) == "string") then
-        hash_data = pdk.json.decode(hash_data)
-    end
-
+    local key = _M.HASH_PREFIX_MAP[pdk.const.CONSUL_SYNC_UPDATE]
     local millisecond = ngx.now()
     local hash_key = key .. ":" .. millisecond .. rand()
     local hash = pdk.string.md5(hash_key)
@@ -392,6 +383,27 @@ function _M.update_sync_data_hash(init)
     end
 
     return res, nil
+end
+
+function _M.get_sync_data()
+
+    local key = _M.HASH_PREFIX_MAP[pdk.const.CONSUL_SYNC_UPDATE]
+
+    local hash_data, err = _M.get_key(key)
+
+    if err then
+        return nil, err
+    end
+
+    if not hash_data then
+        hash_data = {}
+    end
+
+    if hash_data and (type(hash_data) == "string") then
+        hash_data = pdk.json.decode(hash_data)
+    end
+
+    return hash_data, nil
 end
 
 

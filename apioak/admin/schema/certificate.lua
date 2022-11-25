@@ -44,4 +44,14 @@ _M.updated = {
     required   = { "certificate_key" }
 }
 
+_M.sync_data_certificate = {
+    type       = "object",
+    properties = {
+        snis = snis,
+        cert = cert_key,
+        key  = cert_key
+    },
+    required   = { "snis", "cert", "key" }
+}
+
 return _M

@@ -1,18 +1,26 @@
 local ngx     = ngx
 local pdk     = require("apioak.pdk")
 local db      = require("apioak.db")
+local dao     = require("apioak.dao")
 local process = require("ngx.process")
 local events  = require("resty.worker.events")
+local schema  = require("apioak.schema")
 local pairs               = pairs
 local oakrouting          = require("resty.oakrouting")
+local lru_cache           = require("apioak.sys.cache")
 local ngx_var             = ngx.var
 local ngx_sleep           = ngx.sleep
 local ngx_timer_at        = ngx.timer.at
 local ngx_worker_exiting  = ngx.worker.exiting
+local empty_table         = {}
 
 local router_objects
 local router_latest_hash_id
 local router_cached_hash_id
+
+local events_type_put      = "events_type_put"
+local events_source_ssl    = "events_source_ssl"
+local events_source_router = "events_source_router"
 
 local _M = {}
 
@@ -125,19 +133,92 @@ local function automatic_sync_hash_id(premature)
     end
 end
 
-local function worker_sync_router_event_register()
+local function worker_sync_event_register()
 
-    local handler = function(data, event, source, pid)
+    local ssl_handler = function(data, event, source)
+        if source ~= events_source_ssl then
+            return
+        end
+
+        if event ~= events_type_put then
+            return
+        end
+
+        if (type(data) ~= "table") or (data == empty_table) then
+            return
+        end
+
+        lru_cache.set(lru_cache.fixed_key_ssl_cache_key, data)
+    end
+
+    -- 处理router的回调函数
+    local router_handler = function(data, event, source)
         -- @todo worker进程内的缓存更新回调函数
     end
 
     if process.type() ~= "privileged agent" then
-        events.register(handler, "source", "event1", "event2")
+        events.register(ssl_handler, events_source_ssl, events_type_put)
+        events.register(router_handler, events_source_router, events_type_put)
     end
 
 end
 
-local function automatic_sync_router(premature)
+local function sync_update_ssl_data()
+
+    local ssl_list, ssl_list_err = dao.certificate.lists()
+
+    if ssl_list_err then
+        return ssl_list_err
+    end
+
+    if not ssl_list.list then
+        return nil
+    end
+
+    local ssl_data = {}
+    for i = 1, #ssl_list.list do
+
+        repeat
+
+            local _, err = pdk.schema.check(schema.certificate.sync_data_certificate, ssl_list.list[i])
+
+            if err then
+                pdk.log.error("generate_ssl_date_scheam_err:[" .. err .. "]["
+                                      .. pdk.json.encode(ssl_list.list[i], true) .. "]")
+                break
+            end
+
+            for j = 1, #ssl_list.list[i].snis do
+                ssl_data[ssl_list.list[i].snis[j]] = {
+                    key = ssl_list.list[i].key,
+                    cert = ssl_list.list[i].cert,
+                }
+            end
+
+        until true
+    end
+
+    if ssl_data == empty_table then
+        return nil
+    end
+
+    local _, post_err = events.post(events_source_ssl, events_type_put, ssl_data)
+
+    if post_err then
+        return post_err
+    end
+
+    return nil
+end
+
+local function sync_update_router_data()
+
+    -- @todo 同步更新
+
+    return nil
+end
+
+local function automatic_sync_ssl_router(premature)
     if premature then
         return
     end
@@ -146,29 +227,73 @@ local function automatic_sync_router(premature)
         return
     end
 
-    local i = 0
-    while not ngx_worker_exiting() and i <= 10 do
+    local i, limit, times, times_limit = 0, 10, 0, 5
+
+    while not ngx_worker_exiting() and i <= limit do
         i = i + 1
 
-        -- @todo 获取数据中心的数据然后推送到woker-events中通知worker更新本地缓存
-        --events.post("source", "event", "data")
+        repeat
+            local sync_data, err = dao.common.get_sync_data()
 
-        ngx_sleep(1)
+            if err then
+                times = times + 1
+
+                pdk.log.error("automatic_sync_ssl_router_get_sync_data_err: ["
+                                      .. times .. "] [" .. tostring(err) .. "]")
+
+                if times == times_limit then
+                    times = 0
+
+                    ngx_sleep(15)
+                    break
+                end
+
+                ngx_sleep(2)
+                break
+            end
+
+            if not sync_data.new or (sync_data.new ~= sync_data.old) then
+
+                local sync_ssl_err = sync_update_ssl_data()
+
+                if sync_ssl_err then
+                    pdk.log.error("automatic_sync_ssl_router_sync_update_ssl_err:["
+                                          .. i .."][" .. tostring(sync_ssl_err) .. "]")
+                end
+
+                local sync_router_err = sync_update_router_data()
+
+                if sync_router_err then
+                    pdk.log.error("automatic_sync_ssl_router_sync_update_router_err:["
+                                          .. i .."][" .. tostring(sync_router_err) .. "]")
+                end
+
+                if not sync_ssl_err and not sync_router_err then
+
+                    local _, init_sync_hash_err = dao.common.update_sync_data_hash(true)
+
+                    if init_sync_hash_err then
+                        pdk.log.error("automatic_sync_ssl_router_init_sync_hash_err:["
+                                              .. i .."][" .. tostring(init_sync_hash_err) .. "]")
+                    end
+                end
+            end
+
+            ngx_sleep(2)
+        until true
     end
 
     if not ngx_worker_exiting() then
-        ngx_timer_at(0, automatic_sync_router)
+        ngx_timer_at(0, automatic_sync_ssl_router)
     end
 end
 
 function _M.init_worker()
     ngx_timer_at(0, automatic_sync_hash_id)
 
-    -- 注册全局监听配置变化事件
-    worker_sync_router_event_register()
+    worker_sync_event_register()
 
-    -- 获取数据中心的配置数据并通知worker变更配置数据
-    ngx_timer_at(0, automatic_sync_router)
+    ngx_timer_at(0, automatic_sync_ssl_router)
 end
 
 local checked_request_params = function(rule, params)
