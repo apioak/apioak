@@ -163,6 +163,13 @@ local function generate_ssl_data(params_data)
     }, nil
 end
 
+local function generate_router_data(params_data)
+
+    -- @todo 这里需要生成流量请求匹配到该路由上的数据（用在流量请求接收上）
+
+    return nil, nil
+end
+
 local function worker_sync_event_register()
 
     local router_ssl_handler = function(data, event, source)
@@ -185,6 +192,7 @@ local function worker_sync_event_register()
             for i = 1, #data.data_ssl do
 
                 repeat
+
                     local ssl_data, ssl_data_err = generate_ssl_data(data.data_ssl[i])
 
                     if ssl_data_err then
@@ -201,8 +209,26 @@ local function worker_sync_event_register()
 
         if data.data_router then
 
-            -- todo 整理路由数据到oakrouting中
+            for i = 1, #data.data_router do
 
+                repeat
+
+                    local router_data, router_data_err = generate_router_data(data.data_router[i])
+
+                    if router_data_err then
+                        pdk.log.error("worker_sync_event_register: generate router data err: ["
+                                              .. tostring(router_data_err) .. "]")
+                        break
+                    end
+
+                    if not router_data then
+                        break
+                    end
+
+                    table.insert(oak_routing_data, router_data)
+
+                until true
+            end
         end
 
         router_objects = oakrouting.new(oak_routing_data)
@@ -329,7 +355,7 @@ local function automatic_sync_ssl_router(premature)
 
                 local _, post_err = events.post(events_source_router_ssl, events_type_put, sync_router_ssl_data)
 
-                if init_sync_hash_err then
+                if post_err then
                     pdk.log.error("automatic_sync_ssl_router: sync data post err:["
                                           .. i .."][" .. tostring(post_err) .. "]")
                 end

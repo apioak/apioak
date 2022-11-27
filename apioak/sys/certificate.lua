@@ -1,4 +1,3 @@
-local ngx = ngx
 local pdk = require("apioak.pdk")
 
 local _M = {}
