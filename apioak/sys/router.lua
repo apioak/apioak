@@ -7,7 +7,7 @@ local events  = require("resty.worker.events")
 local schema  = require("apioak.schema")
 local pairs               = pairs
 local oakrouting          = require("resty.oakrouting")
-local lru_cache           = require("apioak.sys.cache")
+local sys_certificate     = require("apioak.sys.certificate")
 local ngx_var             = ngx.var
 local ngx_sleep           = ngx.sleep
 local ngx_timer_at        = ngx.timer.at
@@ -18,9 +18,9 @@ local router_objects
 local router_latest_hash_id
 local router_cached_hash_id
 
-local events_type_put      = "events_type_put"
-local events_source_ssl    = "events_source_ssl"
-local events_source_router = "events_source_router"
+local events_type_put          = "events_type_put"
+local events_source_router_ssl = "events_source_router_ssl"
+local oakrouting_ssl_method    = "oakrouting_ssl_method"
 
 local _M = {}
 
@@ -133,10 +133,40 @@ local function automatic_sync_hash_id(premature)
     end
 end
 
+local function generate_ssl_data(params_data)
+
+    if not params_data or type(params_data) ~= "table" then
+        return nil, "generate_ssl_data: the data is empty or the data format is wrong["
+                .. pdk.json.encode(params_data, true) .. "]"
+    end
+
+    if not params_data.sni or not params_data.cert or not params_data.key then
+        return nil, "generate_ssl_data: Missing data required fields["
+                .. pdk.json.encode(params_data, true) .. "]"
+    end
+
+    return {
+        path    = oakrouting_ssl_method .. ":" .. params_data.sni,
+        method  = "OPTIONS",
+        handler = function(params, oak_ctx)
+
+            local ssl_table = {}
+            ssl_table.params = params
+            ssl_table.cert_key = {
+                cert = params_data.cert,
+                key  = params_data.key,
+            }
+            ssl_table.oak_ctx = oak_ctx
+
+            sys_certificate.peel_certificate(ssl_table)
+        end
+    }, nil
+end
+
 local function worker_sync_event_register()
 
-    local ssl_handler = function(data, event, source)
-        if source ~= events_source_ssl then
+    local router_ssl_handler = function(data, event, source)
+        if source ~= events_source_router_ssl then
             return
         end
 
@@ -148,19 +178,46 @@ local function worker_sync_event_register()
             return
         end
 
-        lru_cache.set(lru_cache.fixed_key_ssl_cache_key, data)
-    end
+        local oak_routing_data = {}
 
-    -- 处理router的回调函数
-    local router_handler = function(data, event, source)
-        -- @todo worker进程内的缓存更新回调函数
+        if data.data_ssl then
+
+            for i = 1, #data.data_ssl do
+
+                repeat
+                    local ssl_data, ssl_data_err = generate_ssl_data(data.data_ssl[i])
+
+                    if ssl_data_err then
+                        pdk.log.error("worker_sync_event_register: generate ssl data err: ["
+                                              .. tostring(ssl_data_err) .. "]")
+                        break
+                    end
+
+                    table.insert(oak_routing_data, ssl_data)
+
+                until true
+            end
+        end
+
+        if data.data_router then
+
+            -- todo 整理路由数据到oakrouting中
+
+        end
+
+        router_objects = oakrouting.new(oak_routing_data)
     end
 
     if process.type() ~= "privileged agent" then
-        events.register(ssl_handler, events_source_ssl, events_type_put)
-        events.register(router_handler, events_source_router, events_type_put)
+        events.register(router_ssl_handler, events_source_router_ssl, events_type_put)
     end
+end
 
+local function sync_update_router_data()
+
+    -- @todo 整理与路由相关联的数据进行推送到各个worker进程中（相关数据： router、service、plugin、upstream、upstream_node）
+
+    return nil, nil
 end
 
 local function sync_update_ssl_data()
@@ -168,11 +225,11 @@ local function sync_update_ssl_data()
     local ssl_list, ssl_list_err = dao.certificate.lists()
 
     if ssl_list_err then
-        return ssl_list_err
+        return nil, ssl_list_err
     end
 
     if not ssl_list.list then
-        return nil
+        return nil, nil
     end
 
     local ssl_data = {}
@@ -189,33 +246,21 @@ local function sync_update_ssl_data()
             end
 
             for j = 1, #ssl_list.list[i].snis do
-                ssl_data[ssl_list.list[i].snis[j]] = {
+                table.insert(ssl_data, {
+                    sni = ssl_list.list[i].snis[j],
                     key = ssl_list.list[i].key,
                     cert = ssl_list.list[i].cert,
-                }
+                })
             end
 
         until true
     end
 
     if ssl_data == empty_table then
-        return nil
+        return nil, nil
     end
 
-    local _, post_err = events.post(events_source_ssl, events_type_put, ssl_data)
-
-    if post_err then
-        return post_err
-    end
-
-    return nil
-end
-
-local function sync_update_router_data()
-
-    -- @todo 同步更新
-
-    return nil
+    return ssl_data, nil
 end
 
 local function automatic_sync_ssl_router(premature)
@@ -252,30 +297,41 @@ local function automatic_sync_ssl_router(premature)
                 break
             end
 
+            if not sync_data then
+                sync_data = {}
+            end
+
             if not sync_data.new or (sync_data.new ~= sync_data.old) then
 
-                local sync_ssl_err = sync_update_ssl_data()
+                local sync_router_ssl_data = {}
+
+                local sync_ssl_data, sync_ssl_err = sync_update_ssl_data()
 
                 if sync_ssl_err then
-                    pdk.log.error("automatic_sync_ssl_router_sync_update_ssl_err:["
+                    pdk.log.error("automatic_sync_ssl_router: get sync ssl data err:["
                                           .. i .."][" .. tostring(sync_ssl_err) .. "]")
                 end
 
-                local sync_router_err = sync_update_router_data()
+                if not sync_ssl_err and sync_ssl_data then
+                    sync_router_ssl_data.data_ssl = sync_ssl_data
+                end
+
+                local sync_router_data, sync_router_err = sync_update_router_data()
 
                 if sync_router_err then
-                    pdk.log.error("automatic_sync_ssl_router_sync_update_router_err:["
+                    pdk.log.error("automatic_sync_ssl_router: get sync router data err:["
                                           .. i .."][" .. tostring(sync_router_err) .. "]")
                 end
 
-                if not sync_ssl_err and not sync_router_err then
+                if not sync_router_err and sync_router_data then
+                    sync_router_ssl_data.data_router = sync_ssl_data
+                end
 
-                    local _, init_sync_hash_err = dao.common.update_sync_data_hash(true)
+                local _, post_err = events.post(events_source_router_ssl, events_type_put, sync_router_ssl_data)
 
-                    if init_sync_hash_err then
-                        pdk.log.error("automatic_sync_ssl_router_init_sync_hash_err:["
-                                              .. i .."][" .. tostring(init_sync_hash_err) .. "]")
-                    end
+                if init_sync_hash_err then
+                    pdk.log.error("automatic_sync_ssl_router: sync data post err:["
+                                          .. i .."][" .. tostring(post_err) .. "]")
                 end
             end
 
@@ -288,8 +344,34 @@ local function automatic_sync_ssl_router(premature)
     end
 end
 
+local function clear_sync_update_data()
+
+    if process.type() ~= "privileged agent" then
+        return
+    end
+
+    local sync_data, err = dao.common.get_sync_data()
+
+    if err then
+        pdk.log.error("[sys.dao] get sync data err: ", err)
+    end
+
+    if not sync_data or sync_data == empty_table then
+        return
+    end
+
+    local _, err = dao.common.clear_sync_data()
+
+    if err then
+        pdk.log.error("[sys.dao] clear sync data err: ", err)
+        return
+    end
+end
+
 function _M.init_worker()
     ngx_timer_at(0, automatic_sync_hash_id)
+
+    ngx_timer_at(0, clear_sync_update_data)
 
     worker_sync_event_register()
 
