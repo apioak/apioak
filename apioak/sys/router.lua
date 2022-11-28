@@ -18,9 +18,8 @@ local router_objects
 local router_latest_hash_id
 local router_cached_hash_id
 
-local events_type_put          = "events_type_put"
-local events_source_router_ssl = "events_source_router_ssl"
-local oakrouting_ssl_method    = "oakrouting_ssl_method"
+local events_source_router   = "events_source_router"
+local events_type_put_router = "events_type_put_router"
 
 local _M = {}
 
@@ -133,34 +132,9 @@ local function automatic_sync_hash_id(premature)
     end
 end
 
-local function generate_ssl_data(params_data)
+local function authenticate_request(router_table)
 
-    if not params_data or type(params_data) ~= "table" then
-        return nil, "generate_ssl_data: the data is empty or the data format is wrong["
-                .. pdk.json.encode(params_data, true) .. "]"
-    end
 
-    if not params_data.sni or not params_data.cert or not params_data.key then
-        return nil, "generate_ssl_data: Missing data required fields["
-                .. pdk.json.encode(params_data, true) .. "]"
-    end
-
-    return {
-        path    = oakrouting_ssl_method .. ":" .. params_data.sni,
-        method  = "OPTIONS",
-        handler = function(params, oak_ctx)
-
-            local ssl_table = {}
-            ssl_table.params = params
-            ssl_table.cert_key = {
-                cert = params_data.cert,
-                key  = params_data.key,
-            }
-            ssl_table.oak_ctx = oak_ctx
-
-            sys_certificate.peel_certificate(ssl_table)
-        end
-    }, nil
 end
 
 local function generate_router_data(params_data)
@@ -172,70 +146,22 @@ end
 
 local function worker_sync_event_register()
 
-    local router_ssl_handler = function(data, event, source)
-        if source ~= events_source_router_ssl then
-            return
-        end
+    local ssl_handler = sys_certificate.ssl_handler
 
-        if event ~= events_type_put then
-            return
-        end
+    local router_handler = function(data, event, source)
 
-        if (type(data) ~= "table") or (data == empty_table) then
-            return
-        end
+        local res = {}
 
-        local oak_routing_data = {}
+        local data, _ = generate_router_data(data)
 
-        if data.data_ssl then
+        table.insert(res, data)
 
-            for i = 1, #data.data_ssl do
-
-                repeat
-
-                    local ssl_data, ssl_data_err = generate_ssl_data(data.data_ssl[i])
-
-                    if ssl_data_err then
-                        pdk.log.error("worker_sync_event_register: generate ssl data err: ["
-                                              .. tostring(ssl_data_err) .. "]")
-                        break
-                    end
-
-                    table.insert(oak_routing_data, ssl_data)
-
-                until true
-            end
-        end
-
-        if data.data_router then
-
-            for i = 1, #data.data_router do
-
-                repeat
-
-                    local router_data, router_data_err = generate_router_data(data.data_router[i])
-
-                    if router_data_err then
-                        pdk.log.error("worker_sync_event_register: generate router data err: ["
-                                              .. tostring(router_data_err) .. "]")
-                        break
-                    end
-
-                    if not router_data then
-                        break
-                    end
-
-                    table.insert(oak_routing_data, router_data)
-
-                until true
-            end
-        end
-
-        router_objects = oakrouting.new(oak_routing_data)
+        router_objects = oakrouting.new(res)
     end
 
     if process.type() ~= "privileged agent" then
-        events.register(router_ssl_handler, events_source_router_ssl, events_type_put)
+        events.register(ssl_handler, sys_certificate.events_source_ssl, sys_certificate.events_type_put_ssl)
+        events.register(router_handler, events_source_router, events_type_put_router)
     end
 end
 
@@ -244,49 +170,6 @@ local function sync_update_router_data()
     -- @todo 整理与路由相关联的数据进行推送到各个worker进程中（相关数据： router、service、plugin、upstream、upstream_node）
 
     return nil, nil
-end
-
-local function sync_update_ssl_data()
-
-    local ssl_list, ssl_list_err = dao.certificate.lists()
-
-    if ssl_list_err then
-        return nil, ssl_list_err
-    end
-
-    if not ssl_list.list then
-        return nil, nil
-    end
-
-    local ssl_data = {}
-    for i = 1, #ssl_list.list do
-
-        repeat
-
-            local _, err = pdk.schema.check(schema.certificate.sync_data_certificate, ssl_list.list[i])
-
-            if err then
-                pdk.log.error("generate_ssl_date_scheam_err:[" .. err .. "]["
-                                      .. pdk.json.encode(ssl_list.list[i], true) .. "]")
-                break
-            end
-
-            for j = 1, #ssl_list.list[i].snis do
-                table.insert(ssl_data, {
-                    sni = ssl_list.list[i].snis[j],
-                    key = ssl_list.list[i].key,
-                    cert = ssl_list.list[i].cert,
-                })
-            end
-
-        until true
-    end
-
-    if ssl_data == empty_table then
-        return nil, nil
-    end
-
-    return ssl_data, nil
 end
 
 local function automatic_sync_ssl_router(premature)
@@ -329,17 +212,22 @@ local function automatic_sync_ssl_router(premature)
 
             if not sync_data.new or (sync_data.new ~= sync_data.old) then
 
-                local sync_router_ssl_data = {}
-
-                local sync_ssl_data, sync_ssl_err = sync_update_ssl_data()
+                local sync_ssl_data, sync_ssl_err = sys_certificate.sync_update_ssl_data()
 
                 if sync_ssl_err then
                     pdk.log.error("automatic_sync_ssl_router: get sync ssl data err:["
                                           .. i .."][" .. tostring(sync_ssl_err) .. "]")
                 end
 
-                if not sync_ssl_err and sync_ssl_data then
-                    sync_router_ssl_data.data_ssl = sync_ssl_data
+                if sync_ssl_data and (sync_ssl_data ~= empty_table) then
+
+                    local _, post_ssl_err = events.post(
+                            sys_certificate.events_source_ssl, sys_certificate.events_type_put_ssl, sync_ssl_data)
+
+                    if post_ssl_err then
+                        pdk.log.error("automatic_sync_ssl_router: sync ssl data post err:["
+                                              .. i .."][" .. tostring(post_ssl_err) .. "]")
+                    end
                 end
 
                 local sync_router_data, sync_router_err = sync_update_router_data()
@@ -349,16 +237,16 @@ local function automatic_sync_ssl_router(premature)
                                           .. i .."][" .. tostring(sync_router_err) .. "]")
                 end
 
-                if not sync_router_err and sync_router_data then
-                    sync_router_ssl_data.data_router = sync_ssl_data
+                if sync_router_data and (sync_router_data ~= empty_table) then
+
+                    local _, post_router_err = events.post(events_source_router, events_type_put_router, sync_router_data)
+
+                    if post_router_err then
+                        pdk.log.error("automatic_sync_ssl_router: sync router data post err:["
+                                              .. i .."][" .. tostring(post_router_err) .. "]")
+                    end
                 end
 
-                local _, post_err = events.post(events_source_router_ssl, events_type_put, sync_router_ssl_data)
-
-                if post_err then
-                    pdk.log.error("automatic_sync_ssl_router: sync data post err:["
-                                          .. i .."][" .. tostring(post_err) .. "]")
-                end
             end
 
             ngx_sleep(2)
