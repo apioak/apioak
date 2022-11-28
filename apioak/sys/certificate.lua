@@ -149,5 +149,16 @@ function _M.sync_update_ssl_data()
     return ssl_data, nil
 end
 
+function _M.ssl_match(params)
+
+    local match, err = ssl_objects:dispatch(oakrouting_ssl_prefix .. ":" .. params.host, oakrouting_ssl_method, params)
+
+    if err or not match then
+        return false
+    end
+
+    return true
+end
+
 
 return _M

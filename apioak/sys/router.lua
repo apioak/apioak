@@ -4,7 +4,6 @@ local db      = require("apioak.db")
 local dao     = require("apioak.dao")
 local process = require("ngx.process")
 local events  = require("resty.worker.events")
-local schema  = require("apioak.schema")
 local pairs               = pairs
 local oakrouting          = require("resty.oakrouting")
 local sys_certificate     = require("apioak.sys.certificate")
@@ -132,10 +131,11 @@ local function automatic_sync_hash_id(premature)
     end
 end
 
-local function authenticate_request(router_table)
-
-
-end
+--local function authenticate_request(router_table)
+--
+--    -- @todo 处理当前请求是否符合配置要求，同时设置全局变量为进行后续的阶段操作提供配置数据
+--
+--end
 
 local function generate_router_data(params_data)
 
@@ -166,6 +166,10 @@ local function worker_sync_event_register()
 end
 
 local function sync_update_router_data()
+
+    -- 当前获取数据以服务为单位获取
+
+
 
     -- @todo 整理与路由相关联的数据进行推送到各个worker进程中（相关数据： router、service、plugin、upstream、upstream_node）
 
@@ -239,7 +243,8 @@ local function automatic_sync_ssl_router(premature)
 
                 if sync_router_data and (sync_router_data ~= empty_table) then
 
-                    local _, post_router_err = events.post(events_source_router, events_type_put_router, sync_router_data)
+                    local _, post_router_err = events.post(
+                            events_source_router, events_type_put_router, sync_router_data)
 
                     if post_router_err then
                         pdk.log.error("automatic_sync_ssl_router: sync router data post err:["
