@@ -191,7 +191,7 @@ function _M.upstream_list_by_node(detail)
     local list, err = common.list_keys(common.PREFIX_MAP.upstreams)
 
     if err then
-        return nil, "get service list FAIL [".. err .."]"
+        return nil, "get upstream list FAIL [".. err .."]"
     end
 
     local upstream_list = {}

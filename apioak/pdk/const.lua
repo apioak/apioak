@@ -48,4 +48,8 @@ _M.CONSUL_PRFX_UPSTREAM_NODES = "upstream_nodes"
 
 _M.CONSUL_SYNC_UPDATE = "sync_update"
 
+_M.PLUGIN_WAF = "waf"
+
+_M.PLUGIN_CORS = "cors"
+
 return _M

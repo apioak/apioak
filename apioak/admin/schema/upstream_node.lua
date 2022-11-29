@@ -16,12 +16,69 @@ local address = {
 }
 
 local method_enum = {
+    "",
     "GET",
     "POST",
     "HEADER"
 }
 
 local http_pattern = "(http|https):\\/\\/[\\w\\-_]+(\\.[\\w\\-_]+)+([\\w\\-\\.,@?^=%&:/~\\+#]*[\\w\\-\\@?^=%&/~\\+#])?"
+
+local port = {
+    type    = "number",
+    minimum = 1,
+    maximum = 65535,
+}
+
+local weight = {
+    type    = "number",
+    minimum = 1,
+    maximum = 100,
+}
+
+local health = {
+    type = "string",
+    enum = { upstream_node.DEFAULT_HEALTH, upstream_node.DEFAULT_UNHEALTH }
+}
+
+local enabled = {
+    type = "boolean",
+}
+
+local tcp = {
+    type      = "string",
+    maxLength = 150,
+}
+
+local method = {
+    type = "string",
+    enum = method_enum
+}
+
+local http = {
+    type      = "string",
+    maxLength = 150,
+    anyOf = {
+        {
+            pattern   = http_pattern
+        },
+        {
+            pattern   = ""
+        }
+    }
+}
+
+local interval = {
+    type    = "number",
+    minimum = 0,
+    maximum = 86400,
+}
+
+local timeout = {
+    type    = "number",
+    minimum = 0,
+    maximum = 86400,
+}
 
 _M.created = {
     type       = "object",
@@ -91,53 +148,47 @@ _M.updated = {
         upstream_node_key = common.param_key,
         name              = common.name,
         address           = address,
-        port              = {
-            type    = "number",
-            minimum = 1,
-            maximum = 65535,
-        },
-        weight            = {
-            type    = "number",
-            minimum = 1,
-            maximum = 100,
-        },
-        health            = {
-            type = "string",
-            enum = { upstream_node.DEFAULT_HEALTH, upstream_node.DEFAULT_UNHEALTH }
-        },
+        port              = port,
+        weight            = weight,
+        health            = health,
         check             = {
             type       = "object",
             properties = {
-                enabled  = {
-                    type = "boolean",
-                },
-                tcp      = {
-                    type      = "string",
-                    minLength = 3,
-                },
-                method   = {
-                    type = "string",
-                    enum = method_enum
-                },
-                http     = {
-                    type      = "string",
-                    minLength = 3,
-                    pattern   = http_pattern
-                },
-                interval = {
-                    type    = "number",
-                    minimum = 0,
-                    maximum = 86400,
-                },
-                timeout  = {
-                    type    = "number",
-                    minimum = 0,
-                    maximum = 86400,
-                }
+                enabled  = enabled,
+                tcp      = tcp,
+                method   = method,
+                http     = http,
+                interval = interval,
+                timeout  = timeout
             }
         }
     },
     required   = { "upstream_node_key" }
+}
+
+_M.upstream_node_data = {
+    type       = "object",
+    properties = {
+        id      = common.id,
+        name    = common.name,
+        address = address,
+        port    = port,
+        weight  = weight,
+        health  = health,
+        check   = {
+            type       = "object",
+            properties = {
+                enabled  = enabled,
+                tcp      = tcp,
+                method   = method,
+                http     = http,
+                interval = interval,
+                timeout  = timeout
+            },
+            required   = { "enabled", "interval", "timeout" }
+        }
+    },
+    required   = { "id", "name", "address", "port", "weight", "health", "check" }
 }
 
 return _M

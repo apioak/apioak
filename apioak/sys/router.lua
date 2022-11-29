@@ -4,6 +4,7 @@ local db      = require("apioak.db")
 local dao     = require("apioak.dao")
 local process = require("ngx.process")
 local events  = require("resty.worker.events")
+local schema  = require("apioak.schema")
 local pairs               = pairs
 local oakrouting          = require("resty.oakrouting")
 local sys_certificate     = require("apioak.sys.certificate")
@@ -11,7 +12,6 @@ local ngx_var             = ngx.var
 local ngx_sleep           = ngx.sleep
 local ngx_timer_at        = ngx.timer.at
 local ngx_worker_exiting  = ngx.worker.exiting
-local empty_table         = {}
 
 local router_objects
 local router_latest_hash_id
@@ -137,41 +137,202 @@ end
 --
 --end
 
-local function generate_router_data(params_data)
+local function upstream_nodes_map_id()
 
-    -- @todo 这里需要生成流量请求匹配到该路由上的数据（用在流量请求接收上）
+    local upstream_list, err = dao.common.list_keys(dao.common.PREFIX_MAP.upstreams)
 
-    return nil, nil
+    if err then
+        pdk.log.error("upstream_nodes_map_id: get upstream list FAIL [".. err .."]")
+        return nil
+    end
+
+    if not upstream_list or not upstream_list.list or (#upstream_list.list == 0) then
+        pdk.log.error("upstream_nodes_map_id: upstream list null ["
+                              .. pdk.json.encode(upstream_list, true) .. "]")
+        return nil
+    end
+
+    local node_list, err = dao.common.list_keys(dao.common.PREFIX_MAP.upstream_nodes)
+
+    if err then
+        pdk.log.error("upstream_nodes_map_id: get upstream node list FAIL [".. err .."]")
+        return nil
+    end
+
+    local node_map_by_id = {}
+
+    if node_list and node_list.list and (#node_list.list > 0) then
+
+        local health = dao.upstream_node.DEFAULT_HEALTH
+
+        for i = 1, #node_list.list do
+
+            repeat
+                local _, err = pdk.schema.check(schema.upstream_node.upstream_node_data, node_list.list[i])
+
+                if err then
+                    pdk.log.error("upstream_nodes_map_id: upstream node schema check err:[" .. err .. "]["
+                                          .. pdk.json.encode(node_list.list[i], true) .. "]")
+                    break
+                end
+
+                if node_list.list[i].health ~= health then
+                    break
+                end
+
+                node_map_by_id[node_list.list[i].id] = {
+                    address = node_list.list[i].address,
+                    port    = node_list.list[i].port,
+                    weight  = node_list.list[i].weight,
+                }
+            until true
+
+        end
+
+    end
+
+    local upstreams_nodes_map = {}
+
+    for j = 1, #upstream_list.list do
+
+        repeat
+            local _, err = pdk.schema.check(schema.upstream.upstream_data, upstream_list.list[j])
+
+            if err then
+                pdk.log.error("upstream_nodes_map_id: upstream schema check err:[" .. err .. "]["
+                                      .. pdk.json.encode(upstream_list.list[j], true) .. "]")
+                break
+            end
+
+            local upstream_nodes = {}
+
+            for k = 1, #upstream_list.list[j].nodes do
+
+                repeat
+                    local node = node_map_by_id[upstream_list.list[j].nodes[k].id]
+
+                    if not node then
+                        break
+                    end
+
+                    table.insert(upstream_nodes, node)
+                until true
+
+            end
+
+            if #upstream_nodes == 0 then
+                pdk.log.error("upstream_nodes_map_id: the upstream node does not match the data: ["
+                                      .. pdk.json.encode(upstream_list.list[j], true) .. "]")
+                break
+            end
+
+            upstreams_nodes_map[upstream_list.list[j].id] = {
+                nodes           = upstream_nodes,
+                algorithm       = upstream_list.list[j].algorithm,
+                read_timeout    = upstream_list.list[j].read_timeout,
+                write_timeout   = upstream_list.list[j].write_timeout,
+                connect_timeout = upstream_list.list[j].connect_timeout,
+            }
+        until true
+
+    end
+
+    if next(upstreams_nodes_map) then
+        return upstreams_nodes_map
+    end
+
+    return nil
 end
 
-local function worker_sync_event_register()
+local function plugins_map_id()
 
-    local ssl_handler = sys_certificate.ssl_handler
+    local list, err = dao.common.list_keys(dao.common.PREFIX_MAP.plugins)
 
-    local router_handler = function(data, event, source)
-
-        local res = {}
-
-        local data, _ = generate_router_data(data)
-
-        table.insert(res, data)
-
-        router_objects = oakrouting.new(res)
+    if err then
+        pdk.log.error("plugins_map_id: get upstream list FAIL [".. err .."]")
+        return nil
     end
 
-    if process.type() ~= "privileged agent" then
-        events.register(ssl_handler, sys_certificate.events_source_ssl, sys_certificate.events_type_put_ssl)
-        events.register(router_handler, events_source_router, events_type_put_router)
+    if not list or not list.list or (#list.list == 0) then
+        pdk.log.error("plugins_map_id: plugin list null [" .. pdk.json.encode(list, true) .. "]")
+        return nil
     end
+
+    local plugins_map = {}
+
+    for i = 1, #list.list do
+
+        repeat
+            local _, err = pdk.schema.check(schema.plugin.plugin_data, list.list[i])
+
+            if err then
+                pdk.log.error("upstream_nodes_map_id: plugin schema check err:[" .. err .. "]["
+                                      .. pdk.json.encode(list.list[i], true) .. "]")
+                break
+            end
+
+            local schema_key = list.list[i].key
+
+            local plugin_schema = require("apioak.plugin." .. schema_key .. ".schema-" .. schema_key)
+
+            local _, err = pdk.schema.check(plugin_schema, list.list[i].config)
+
+            if err then
+                pdk.log.error("upstream_nodes_map_id: plugin config schema check err:[" .. err .. "]["
+                                      .. pdk.json.encode(list.list[i], true) .. "]")
+                break
+            end
+
+            plugins_map[list.list[i].id] = {
+                key    = list.list[i].key,
+                config = list.list[i].config,
+            }
+        until true
+
+    end
+
+    if next(plugins_map) then
+        return plugins_map
+    end
+
+   return nil
+end
+
+local function service_map_id()
+
+
+
+    return nil
 end
 
 local function sync_update_router_data()
 
-    -- 当前获取数据以服务为单位获取
-
-
-
     -- @todo 整理与路由相关联的数据进行推送到各个worker进程中（相关数据： router、service、plugin、upstream、upstream_node）
+
+    -- 获取upstream和node的信息，以upstream的map数据获取
+    local upstream_nodes_map = upstream_nodes_map_id()
+
+    -- 获取插件数据，以map的形式获取
+    local plugin_map = plugins_map_id()
+
+    -- 获取 service 数据，以map的形式获取
+    local service_map = service_map_id()
+
+    -- 获取路由列表数据，以service的id作为key，值为路由列表的大数组数据
+    -- 这里需要把 plugin-map 和 upstream-map 传递进去，需要将upstream和plugin绑定到路由数据上
+
+    -- 获取service数据，列表接口
+
+    -- 将路由的数据绑定到service上，然后返回该数据
+
+    pdk.log.error("-------------",
+                  pdk.json.encode(upstream_nodes_map, true), "---",
+                  pdk.json.encode(plugin_map, true), "---",
+                  pdk.json.encode(service_map, true), "-----------")
+
+    -- 当前获取数据以服务为单位获取，服务下的 路由 和 插件
+    -- 路由下的 upstream（包括 upstream node）、plugin
+
 
     return nil, nil
 end
@@ -223,7 +384,7 @@ local function automatic_sync_ssl_router(premature)
                                           .. i .."][" .. tostring(sync_ssl_err) .. "]")
                 end
 
-                if sync_ssl_data and (sync_ssl_data ~= empty_table) then
+                if sync_ssl_data then
 
                     local _, post_ssl_err = events.post(
                             sys_certificate.events_source_ssl, sys_certificate.events_type_put_ssl, sync_ssl_data)
@@ -241,7 +402,7 @@ local function automatic_sync_ssl_router(premature)
                                           .. i .."][" .. tostring(sync_router_err) .. "]")
                 end
 
-                if sync_router_data and (sync_router_data ~= empty_table) then
+                if sync_router_data then
 
                     local _, post_router_err = events.post(
                             events_source_router, events_type_put_router, sync_router_data)
@@ -263,6 +424,34 @@ local function automatic_sync_ssl_router(premature)
     end
 end
 
+local function generate_router_data(params_data)
+
+    -- @todo 这里需要生成流量请求匹配到该路由上的数据（用在流量请求接收上）
+
+    return nil, nil
+end
+
+local function worker_sync_event_register()
+
+    local ssl_handler = sys_certificate.ssl_handler
+
+    local router_handler = function(data, event, source)
+
+        local res = {}
+
+        local data, _ = generate_router_data(data)
+
+        table.insert(res, data)
+
+        router_objects = oakrouting.new(res)
+    end
+
+    if process.type() ~= "privileged agent" then
+        events.register(ssl_handler, sys_certificate.events_source_ssl, sys_certificate.events_type_put_ssl)
+        events.register(router_handler, events_source_router, events_type_put_router)
+    end
+end
+
 local function clear_sync_update_data()
 
     if process.type() ~= "privileged agent" then
@@ -275,7 +464,7 @@ local function clear_sync_update_data()
         pdk.log.error("[sys.dao] get sync data err: ", err)
     end
 
-    if not sync_data or sync_data == empty_table then
+    if not sync_data then
         return
     end
 

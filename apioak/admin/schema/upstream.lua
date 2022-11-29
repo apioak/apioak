@@ -1,7 +1,30 @@
 local upstream = require "apioak.admin.dao.upstream"
-local common   = require "apioak.admin.schema.common"
+local common = require "apioak.admin.schema.common"
 
 local _M = {}
+
+local algorithm = {
+    type = "string",
+    enum = { upstream.DEFAULT_ALGORITHM }
+}
+
+local connect_timeout = {
+    type    = "number",
+    minimum = 0,
+    maximum = 3600000,
+}
+
+local write_timeout = {
+    type    = "number",
+    minimum = 0,
+    maximum = 3600000,
+}
+
+local read_timeout = {
+    type    = "number",
+    minimum = 0,
+    maximum = 3600000,
+}
 
 _M.created = {
     type       = "object",
@@ -40,28 +63,27 @@ _M.updated = {
     properties = {
         upstream_key    = common.param_key,
         name            = common.name,
-        algorithm       = {
-            type = "string",
-            enum = { upstream.DEFAULT_ALGORITHM }
-        },
+        algorithm       = algorithm,
         nodes           = common.items_array_id_or_name,
-        connect_timeout = {
-            type    = "number",
-            minimum = 0,
-            maximum = 3600000,
-        },
-        write_timeout   = {
-            type    = "number",
-            minimum = 0,
-            maximum = 3600000,
-        },
-        read_timeout    = {
-            type    = "number",
-            minimum = 0,
-            maximum = 3600000,
-        }
+        connect_timeout = connect_timeout,
+        write_timeout   = write_timeout,
+        read_timeout    = read_timeout
     },
     required   = { "upstream_key" }
+}
+
+_M.upstream_data = {
+    type       = "object",
+    properties = {
+        id              = common.id,
+        name            = common.name,
+        algorithm       = algorithm,
+        nodes           = common.items_array_id_or_name,
+        connect_timeout = connect_timeout,
+        write_timeout   = write_timeout,
+        read_timeout    = read_timeout
+    },
+    required   = { "id", "name", "algorithm", "nodes", "connect_timeout", "write_timeout", "read_timeout" }
 }
 
 return _M

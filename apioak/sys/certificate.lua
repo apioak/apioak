@@ -11,8 +11,8 @@ local oakrouting_ssl_method = "OPTIONS"
 
 local _M = {}
 
-_M.events_source_ssl     = "events_source_ssl"
-_M.events_type_put_ssl   = "events_type_put_ssl"
+_M.events_source_ssl   = "events_source_ssl"
+_M.events_type_put_ssl = "events_type_put_ssl"
 
 
 function _M.peel_certificate(oak_ctx)
