@@ -15,58 +15,54 @@ _M.events_source_ssl     = "events_source_ssl"
 _M.events_type_put_ssl   = "events_type_put_ssl"
 
 
-function _M.peel_certificate(ssl_table)
+function _M.peel_certificate(oak_ctx)
 
-    if not ssl_table or type(ssl_table) ~= "table" then
+    if not oak_ctx.config or type(oak_ctx.config) ~= "table" then
         pdk.log.error("peel_certificate: ssl_table is empty or malformed: ["
-                              .. pdk.json.encode(ssl_table, true) .. "]")
+                              .. pdk.json.encode(oak_ctx, true) .. "]")
         return
     end
 
-    if not ssl_table.cert_key then
+    if not oak_ctx.config.cert_key then
         pdk.log.error("peel_certificate: The cert and key data of ssl_table are missing: ["
-                              .. pdk.json.encode(ssl_table, true) .. "]")
+                              .. pdk.json.encode(oak_ctx, true) .. "]")
         return
     end
 
-    if not ssl_table.oak_ctx then
-        pdk.log.error("peel_certificate: The oak_ctx data of ssl_table are missing: ["
-                              .. pdk.json.encode(ssl_table, true) .. "]")
-        return
-    end
-
-    -- @todo 这里需要补充验证剥离证书的逻辑 params.cert_key 为本地证书信息表（table），字段为 cert 和 key。
-    -- @todo oak_ctx 为流量请求时调用 dispatch 在 method 参数后面传入的第一个参数数据（table类型即可）
+    -- @todo 这里需要补充验证剥离证书的逻辑 oak_ctx.config.cert_key 为本地证书信息表（table），字段为 cert 和 key。
+    -- @todo oak_ctx 为流量请求时调用 dispatch 在 method 参数后面传入的第一个参数数据（table类型即可）。
+    -- @todo 一般请求流量的具体数据在 oak_ctx.matched 的lua table 表中
 
     return
 end
 
-local function generate_ssl_data(params_data)
+local function generate_ssl_data(ssl_data)
 
-    if not params_data or type(params_data) ~= "table" then
+    if not ssl_data or type(ssl_data) ~= "table" then
         return nil, "generate_ssl_data: the data is empty or the data format is wrong["
-                .. pdk.json.encode(params_data, true) .. "]"
+                .. pdk.json.encode(ssl_data, true) .. "]"
     end
 
-    if not params_data.sni or not params_data.cert or not params_data.key then
+    if not ssl_data.sni or not ssl_data.cert or not ssl_data.key then
         return nil, "generate_ssl_data: Missing data required fields["
-                .. pdk.json.encode(params_data, true) .. "]"
+                .. pdk.json.encode(ssl_data, true) .. "]"
     end
 
     return {
-        path    = oakrouting_ssl_prefix .. ":" .. params_data.sni,
+        path    = oakrouting_ssl_prefix .. ":" .. ssl_data.sni,
         method  = oakrouting_ssl_method,
         handler = function(params, oak_ctx)
 
-            local ssl_table = {}
-            ssl_table.params = params
-            ssl_table.cert_key = {
-                cert = params_data.cert,
-                key  = params_data.key,
-            }
-            ssl_table.oak_ctx = oak_ctx
+            oak_ctx.params = params
 
-            _M.peel_certificate(ssl_table)
+            oak_ctx.config = {}
+            oak_ctx.config.cert_key = {
+                sni  = ssl_data.sni,
+                cert = ssl_data.cert,
+                key  = ssl_data.key,
+            }
+
+            _M.peel_certificate(oak_ctx)
         end
     }, nil
 end
@@ -149,11 +145,23 @@ function _M.sync_update_ssl_data()
     return ssl_data, nil
 end
 
-function _M.ssl_match(params)
+function _M.ssl_match(oak_ctx)
 
-    local match, err = ssl_objects:dispatch(oakrouting_ssl_prefix .. ":" .. params.host, oakrouting_ssl_method, params)
+    if not oak_ctx.matched or not oak_ctx.matched.host then
+        pdk.log.error("ssl_match: oak_ctx data format err: [" .. pdk.json.encode(oak_ctx, true) .. "]")
+        return false
+    end
 
-    if err or not match then
+    local match_sni = oakrouting_ssl_prefix .. ":" .. oak_ctx.matched.host
+
+    local match, err = ssl_objects:dispatch(match_sni, oakrouting_ssl_method, oak_ctx)
+
+    if err then
+        pdk.log.error("ssl_match: ssl_objects dispatch err: [" .. tostring(err) .. "]")
+        return false
+    end
+
+    if not match then
         return false
     end
 
