@@ -4,7 +4,6 @@ local schema     = require("apioak.schema")
 local oakrouting = require("resty.oakrouting")
 
 local ssl_objects
-local empty_table = {}
 
 local oakrouting_ssl_prefix = "oakrouting_ssl_prefix"
 local oakrouting_ssl_method = "OPTIONS"
@@ -18,13 +17,13 @@ _M.events_type_put_ssl = "events_type_put_ssl"
 function _M.peel_certificate(oak_ctx)
 
     if not oak_ctx.config or type(oak_ctx.config) ~= "table" then
-        pdk.log.error("peel_certificate: ssl_table is empty or malformed: ["
+        pdk.log.error("peel_certificate: oak_ctx.config is empty or malformed: ["
                               .. pdk.json.encode(oak_ctx, true) .. "]")
         return
     end
 
-    if not oak_ctx.config.cert_key then
-        pdk.log.error("peel_certificate: The cert and key data of ssl_table are missing: ["
+    if not oak_ctx.config.cert_key or not next(oak_ctx.config.cert_key) then
+        pdk.log.error("peel_certificate: the cert and key data of oak_ctx.config.cert_key are missing: ["
                               .. pdk.json.encode(oak_ctx, true) .. "]")
         return
     end
@@ -77,7 +76,7 @@ _M.ssl_handler = function (data, event, source)
         return
     end
 
-    if (type(data) ~= "table") or (data == empty_table) then
+    if (type(data) ~= "table") or not next(data) then
         return
     end
 
@@ -138,7 +137,7 @@ function _M.sync_update_ssl_data()
         until true
     end
 
-    if ssl_data == empty_table then
+    if not next(ssl_data) then
         return nil, nil
     end
 

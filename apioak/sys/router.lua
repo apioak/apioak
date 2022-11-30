@@ -17,8 +17,9 @@ local router_objects
 local router_latest_hash_id
 local router_cached_hash_id
 
-local events_source_router   = "events_source_router"
-local events_type_put_router = "events_type_put_router"
+local events_source_router     = "events_source_router"
+local events_type_put_router   = "events_type_put_router"
+local oakrouting_router_method = "OPTIONS"
 
 local _M = {}
 
@@ -130,12 +131,6 @@ local function automatic_sync_hash_id(premature)
         ngx_timer_at(0, automatic_sync_hash_id)
     end
 end
-
---local function authenticate_request(router_table)
---
---    -- @todo 处理当前请求是否符合配置要求，同时设置全局变量为进行后续的阶段操作提供配置数据
---
---end
 
 local function upstream_nodes_map_id()
 
@@ -424,41 +419,49 @@ local function sync_update_router_data()
 
     local router_map = router_map_service_id(upstream_nodes_map, plugin_map)
 
+    local service_router_list = {}
+
     for j = 1, #service_list do
 
-        if #service_list[j].plugins > 0 then
+        repeat
+            local routers = {}
 
-            local plugin_data = {}
-
-            for k = 1, #service_list[j].plugins do
-
-                repeat
-
-                    if not service_list[j].plugins[k].id or not plugin_map[service_list[j].plugins[k].id] then
-                        break
-                    end
-
-                    table.insert(plugin_data, plugin_map[service_list[j].plugins[k].id])
-
-                until true
+            if router_map[service_list[j].id] then
+                routers = router_map[service_list[j].id]
             end
 
-            service_list[j].plugins = plugin_data
-        end
+            if not next(routers) then
+                break
+            end
 
-        local routers = {}
+            service_list[j].routers = routers
 
-        if router_map[service_list[j].id] then
-            routers = router_map[service_list[j].id]
-        end
+            if #service_list[j].plugins > 0 then
 
-        service_list[j].routers = routers
+                local plugin_data = {}
 
-        service_list[j].id = nil
+                for k = 1, #service_list[j].plugins do
 
+                    repeat
+
+                        if not service_list[j].plugins[k].id or not plugin_map[service_list[j].plugins[k].id] then
+                            break
+                        end
+
+                        table.insert(plugin_data, plugin_map[service_list[j].plugins[k].id])
+
+                    until true
+                end
+
+                service_list[j].plugins = plugin_data
+            end
+
+            table.insert(service_router_list, service_list[j])
+
+        until true
     end
 
-    return service_list
+    return service_router_list
 end
 
 local function automatic_sync_ssl_router(premature)
@@ -548,9 +551,92 @@ local function automatic_sync_ssl_router(premature)
     end
 end
 
-local function generate_router_data(params_data)
+local function authenticate_request(oak_ctx)
 
-    -- @todo 这里需要生成流量请求匹配到该路由上的数据（用在流量请求接收上）
+    if not oak_ctx.config or type(oak_ctx.config) ~= "table" then
+        pdk.log.error("authenticate_request: oak_ctx.config is empty or malformed: ["
+                              .. pdk.json.encode(oak_ctx, true) .. "]")
+        return
+    end
+
+    if not oak_ctx.config.service_router or not next(oak_ctx.config.service_router) then
+        pdk.log.error("authenticate_request: the service_router data of oak_ctx.config.service_router are missing: ["
+                              .. pdk.json.encode(oak_ctx, true) .. "]")
+        return
+    end
+
+    -- @todo 处理当前请求是否符合配置要求，同时设置全局变量为进行后续的阶段操作提供配置数据
+
+end
+
+local function generate_router_data(router_data)
+
+    if not router_data or type(router_data) ~= "table" then
+        return nil, "generate_router_data: the data is empty or the data format is wrong["
+                .. pdk.json.encode(router_data, true) .. "]"
+    end
+
+    if not router_data.hosts or not router_data.routers or (#router_data.hosts == 0) or (#router_data.routers == 0) then
+        return nil, "generate_router_data: Missing data required fields["
+                .. pdk.json.encode(router_data, true) .. "]"
+    end
+
+    local router_data_list = {}
+
+    for i = 1, #router_data.hosts do
+
+        for j = 1, #router_data.routers do
+
+            repeat
+                if (type(router_data.routers[j].paths) ~= "table") or (#router_data.routers[j].paths == 0) then
+                    break
+                end
+
+                for k = 1, #router_data.routers[j].paths do
+                    repeat
+
+                        if #router_data.routers[j].paths[k] == 0 then
+                            break
+                        end
+
+                        local host_router_data = {
+                            plugins   = router_data.plugins,
+                            protocols = router_data.protocols,
+                            enabled   = router_data.enabled,
+                            host      = router_data.hosts[i],
+                            router    = {
+                                path     = router_data.routers[j].paths[k],
+                                plugins  = router_data.routers[j].plugins,
+                                upstream = router_data.routers[j].upstream,
+                                headers  = router_data.routers[j].headers,
+                                methods  = router_data.routers[j].methods,
+                                enabled  = router_data.routers[j].enabled,
+                            }
+                        }
+
+                        table.insert(router_data_list, {
+                            path    = host_router_data.host .. ":" .. host_router_data.router.path,
+                            method  = oakrouting_router_method,
+                            handler = function(params, oak_ctx)
+
+                                oak_ctx.params = params
+
+                                oak_ctx.config = {}
+                                oak_ctx.config.service_router = host_router_data
+
+                                authenticate_request(oak_ctx)
+                            end
+                        })
+                    until true
+                end
+
+            until true
+        end
+    end
+
+    if #router_data_list > 0 then
+        return router_data_list, nil
+    end
 
     return nil, nil
 end
@@ -561,13 +647,43 @@ local function worker_sync_event_register()
 
     local router_handler = function(data, event, source)
 
-        local res = {}
+        if source ~= events_source_router then
+            return
+        end
 
-        local data, _ = generate_router_data(data)
+        if event ~= events_type_put_router then
+            return
+        end
 
-        table.insert(res, data)
+        if (type(data) ~= "table") or (#data == 0) then
+            return
+        end
 
-        router_objects = oakrouting.new(res)
+        local oak_router_data = {}
+
+        for i = 1, #data do
+
+            repeat
+                local router_data, router_data_err = generate_router_data(data[i])
+
+                if router_data_err then
+                    pdk.log.error("worker_sync_event_register: generate router data err: ["
+                                          .. tostring(router_data_err) .. "]")
+                    break
+                end
+
+                if not router_data then
+                    break
+                end
+
+                for j = 1, #router_data do
+                    table.insert(oak_router_data, router_data[j])
+                end
+
+            until true
+        end
+
+        router_objects = oakrouting.new(oak_router_data)
     end
 
     if process.type() ~= "privileged agent" then
