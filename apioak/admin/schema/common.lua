@@ -30,11 +30,24 @@ _M.items_object_id_or_name = {
     }
 }
 
+_M.items_object_id_name = {
+    type       = "object",
+    properties = {
+        id   = _M.id
+    }
+}
+
 _M.items_array_id_or_name = {
     type        = "array",
     uniqueItems = true,
     minItems    = 1,
     items       = _M.items_object_id_or_name
+}
+
+_M.items_array_id = {
+    type        = "array",
+    uniqueItems = true,
+    items       = _M.items_object_id
 }
 
 _M.param_key = {

@@ -298,43 +298,167 @@ local function plugins_map_id()
    return nil
 end
 
-local function service_map_id()
+local function router_map_service_id(upstream_nodes_map, plugin_map)
 
+    local list, err = dao.common.list_keys(dao.common.PREFIX_MAP.routers)
 
+    if err then
+        pdk.log.error("router_map_service_id: get router list FAIL [".. err .."]")
+        return nil
+    end
+
+    if not list or not list.list or (#list.list == 0) then
+        pdk.log.error("router_map_service_id: router list null [" .. pdk.json.encode(list, true) .. "]")
+        return nil
+    end
+
+    local router_map_service = {}
+
+    for i = 1, #list.list do
+
+        repeat
+            local _, err = pdk.schema.check(schema.router.router_data, list.list[i])
+
+            if err then
+                pdk.log.error("router_map_service_id: router schema check err:["
+                                      .. err .. "][" .. list.list[i].name .. "]")
+                break
+            end
+
+            local upstream = upstream_nodes_map[list.list[i].upstream.id]
+
+            if list.list[i].upstream.id and upstream then
+                list.list[i].upstream = upstream
+            else
+                list.list[i].upstream = {}
+            end
+
+            if #list.list[i].plugins > 0 then
+
+                local plugin_data = {}
+
+                for j = 1, #list.list[i].plugins do
+
+                    repeat
+                        if not list.list[i].plugins[j].id or not plugin_map[list.list[i].plugins[j].id] then
+                            break
+                        end
+
+                        table.insert(plugin_data, plugin_map[list.list[i].plugins[j].id])
+
+                    until true
+                end
+
+                list.list[i].plugins = plugin_data
+
+            end
+
+            if not router_map_service[list.list[i].service.id] then
+                router_map_service[list.list[i].service.id] = {}
+            end
+
+            table.insert(router_map_service[list.list[i].service.id], {
+                paths    = list.list[i].paths,
+                methods  = list.list[i].methods,
+                headers  = list.list[i].headers,
+                upstream = list.list[i].upstream,
+                plugins  = list.list[i].plugins,
+                enabled  = list.list[i].enabled,
+            })
+        until true
+
+    end
+
+    if next(router_map_service) then
+        return router_map_service
+    end
 
     return nil
 end
 
 local function sync_update_router_data()
 
-    -- @todo 整理与路由相关联的数据进行推送到各个worker进程中（相关数据： router、service、plugin、upstream、upstream_node）
+    local list, err = dao.common.list_keys(dao.common.PREFIX_MAP.services)
 
-    -- 获取upstream和node的信息，以upstream的map数据获取
+    if err then
+        pdk.log.error("sync_update_router_data: get service list FAIL [".. err .."]")
+        return nil
+    end
+
+    if not list or not list.list or (#list.list == 0) then
+        pdk.log.error("sync_update_router_data: service list null [" .. pdk.json.encode(list, true) .. "]")
+        return nil
+    end
+
+    local service_list = {}
+
+    for i = 1, #list.list do
+
+        repeat
+            local _, err = pdk.schema.check(schema.service.service_data, list.list[i])
+
+            if err then
+                pdk.log.error("sync_update_router_data: service schema check err:["
+                                      .. err .. "][" .. list.list[i].name .. "]")
+                break
+            end
+
+            table.insert(service_list, {
+                id        = list.list[i].id,
+                hosts     = list.list[i].hosts,
+                protocols = list.list[i].protocols,
+                plugins   = list.list[i].plugins,
+                enabled   = list.list[i].enabled,
+            })
+        until true
+
+    end
+
+    if #service_list == 0 then
+        return nil
+    end
+
     local upstream_nodes_map = upstream_nodes_map_id()
 
-    -- 获取插件数据，以map的形式获取
     local plugin_map = plugins_map_id()
 
-    -- 获取 service 数据，以map的形式获取
-    local service_map = service_map_id()
+    local router_map = router_map_service_id(upstream_nodes_map, plugin_map)
 
-    -- 获取路由列表数据，以service的id作为key，值为路由列表的大数组数据
-    -- 这里需要把 plugin-map 和 upstream-map 传递进去，需要将upstream和plugin绑定到路由数据上
+    for j = 1, #service_list do
 
-    -- 获取service数据，列表接口
+        if #service_list[j].plugins > 0 then
 
-    -- 将路由的数据绑定到service上，然后返回该数据
+            local plugin_data = {}
 
-    pdk.log.error("-------------",
-                  pdk.json.encode(upstream_nodes_map, true), "---",
-                  pdk.json.encode(plugin_map, true), "---",
-                  pdk.json.encode(service_map, true), "-----------")
+            for k = 1, #service_list[j].plugins do
 
-    -- 当前获取数据以服务为单位获取，服务下的 路由 和 插件
-    -- 路由下的 upstream（包括 upstream node）、plugin
+                repeat
 
+                    if not service_list[j].plugins[k].id or not plugin_map[service_list[j].plugins[k].id] then
+                        break
+                    end
 
-    return nil, nil
+                    table.insert(plugin_data, plugin_map[service_list[j].plugins[k].id])
+
+                until true
+            end
+
+            service_list[j].plugins = plugin_data
+        end
+
+        local routers = {}
+
+        if router_map[service_list[j].id] then
+            routers = router_map[service_list[j].id]
+        end
+
+        service_list[j].routers = routers
+
+        service_list[j].id = nil
+
+    end
+
+    return service_list
 end
 
 local function automatic_sync_ssl_router(premature)
