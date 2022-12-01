@@ -320,6 +320,10 @@ local function router_map_service_id(upstream_nodes_map, plugin_map)
                 break
             end
 
+            if list.list[i].enabled == false then
+                break
+            end
+
             local upstream = upstream_nodes_map[list.list[i].upstream.id]
 
             if list.list[i].upstream.id and upstream then
@@ -358,7 +362,6 @@ local function router_map_service_id(upstream_nodes_map, plugin_map)
                 headers  = list.list[i].headers,
                 upstream = list.list[i].upstream,
                 plugins  = list.list[i].plugins,
-                enabled  = list.list[i].enabled,
             })
         until true
 
@@ -398,12 +401,15 @@ local function sync_update_router_data()
                 break
             end
 
+            if list.list[i].enabled == false then
+                break
+            end
+
             table.insert(service_list, {
                 id        = list.list[i].id,
                 hosts     = list.list[i].hosts,
                 protocols = list.list[i].protocols,
                 plugins   = list.list[i].plugins,
-                enabled   = list.list[i].enabled,
             })
         until true
 
@@ -511,17 +517,6 @@ local function automatic_sync_ssl_router(premature)
                                           .. i .."][" .. tostring(sync_ssl_err) .. "]")
                 end
 
-                if sync_ssl_data then
-
-                    local _, post_ssl_err = events.post(
-                            sys_certificate.events_source_ssl, sys_certificate.events_type_put_ssl, sync_ssl_data)
-
-                    if post_ssl_err then
-                        pdk.log.error("automatic_sync_ssl_router: sync ssl data post err:["
-                                              .. i .."][" .. tostring(post_ssl_err) .. "]")
-                    end
-                end
-
                 local sync_router_data, sync_router_err = sync_update_router_data()
 
                 if sync_router_err then
@@ -529,15 +524,24 @@ local function automatic_sync_ssl_router(premature)
                                           .. i .."][" .. tostring(sync_router_err) .. "]")
                 end
 
-                if sync_router_data then
+                local post_ssl, post_ssl_err = events.post(
+                        sys_certificate.events_source_ssl, sys_certificate.events_type_put_ssl, sync_ssl_data)
 
-                    local _, post_router_err = events.post(
-                            events_source_router, events_type_put_router, sync_router_data)
+                if post_ssl_err then
+                    pdk.log.error("automatic_sync_ssl_router: sync ssl data post err:["
+                                          .. i .."][" .. tostring(post_ssl_err) .. "]")
+                end
 
-                    if post_router_err then
-                        pdk.log.error("automatic_sync_ssl_router: sync router data post err:["
-                                              .. i .."][" .. tostring(post_router_err) .. "]")
-                    end
+                local post_router, post_router_err = events.post(
+                        events_source_router, events_type_put_router, sync_router_data)
+
+                if post_router_err then
+                    pdk.log.error("automatic_sync_ssl_router: sync router data post err:["
+                                          .. i .."][" .. tostring(post_router_err) .. "]")
+                end
+
+                if post_ssl and post_router then
+                    dao.common.update_sync_data_hash(true)
                 end
 
             end
@@ -549,24 +553,6 @@ local function automatic_sync_ssl_router(premature)
     if not ngx_worker_exiting() then
         ngx_timer_at(0, automatic_sync_ssl_router)
     end
-end
-
-local function authenticate_request(oak_ctx)
-
-    if not oak_ctx.config or type(oak_ctx.config) ~= "table" then
-        pdk.log.error("authenticate_request: oak_ctx.config is empty or malformed: ["
-                              .. pdk.json.encode(oak_ctx, true) .. "]")
-        return
-    end
-
-    if not oak_ctx.config.service_router or not next(oak_ctx.config.service_router) then
-        pdk.log.error("authenticate_request: the service_router data of oak_ctx.config.service_router are missing: ["
-                              .. pdk.json.encode(oak_ctx, true) .. "]")
-        return
-    end
-
-    -- @todo 处理当前请求是否符合配置要求，同时设置全局变量为进行后续的阶段操作提供配置数据
-
 end
 
 local function generate_router_data(router_data)
@@ -602,7 +588,6 @@ local function generate_router_data(router_data)
                         local host_router_data = {
                             plugins   = router_data.plugins,
                             protocols = router_data.protocols,
-                            enabled   = router_data.enabled,
                             host      = router_data.hosts[i],
                             router    = {
                                 path     = router_data.routers[j].paths[k],
@@ -610,7 +595,6 @@ local function generate_router_data(router_data)
                                 upstream = router_data.routers[j].upstream,
                                 headers  = router_data.routers[j].headers,
                                 methods  = router_data.routers[j].methods,
-                                enabled  = router_data.routers[j].enabled,
                             }
                         }
 
@@ -623,8 +607,6 @@ local function generate_router_data(router_data)
 
                                 oak_ctx.config = {}
                                 oak_ctx.config.service_router = host_router_data
-
-                                authenticate_request(oak_ctx)
                             end
                         })
                     until true
@@ -752,8 +734,12 @@ function _M.parameter(oak_ctx)
     end
 
     oak_ctx.matched = {}
-    oak_ctx.matched.query    = pdk.request.query()
-    oak_ctx.matched.header   = pdk.request.header()
+    oak_ctx.matched.host   = ngx.var.host
+    oak_ctx.matched.uri    = ngx.var.uri
+    oak_ctx.matched.scheme = ngx.var.scheme
+    oak_ctx.matched.query  = pdk.request.query()
+    oak_ctx.matched.method = pdk.request.get_method()
+    oak_ctx.matched.header = pdk.request.header()
 
     oak_ctx.matched.header[pdk.const.REQUEST_API_ENV_KEY] = env
 end
@@ -824,5 +810,87 @@ function _M.mapping(oak_ctx)
         oak_ctx.matched[constant_param_position][constant_param_name] = constant_param_value
     end
 end
+
+function _M.router_match(oak_ctx)
+
+    if not oak_ctx.matched or not oak_ctx.matched.host or not oak_ctx.matched.uri then
+        pdk.log.error("router_match: oak_ctx data format err: [" .. pdk.json.encode(oak_ctx, true) .. "]")
+        return false
+    end
+
+    local match_path = oak_ctx.matched.host .. ":" .. oak_ctx.matched.uri
+
+    local match, err = router_objects:dispatch(match_path, oakrouting_router_method, oak_ctx)
+
+    if err then
+        pdk.log.error("router_match: router_objects dispatch err: [" .. tostring(err) .. "]")
+        return false
+    end
+
+    if not match then
+        return false
+    end
+
+    local service_router = oak_ctx.config.service_router
+    local matched = oak_ctx.matched
+
+    local match_protocols = false
+
+    if service_router.protocols and matched.scheme then
+        for i = 1, #service_router.protocols do
+            if pdk.string.lower(service_router.protocols[i]) == pdk.string.lower(matched.scheme) then
+                match_protocols = true
+            end
+        end
+    end
+
+    if not match_protocols then
+        return false
+    end
+
+    if service_router.router.headers and next(service_router.router.headers) then
+        local match_header = true
+
+        for h_key, h_value in pairs(service_router.router.headers) do
+            local matched_header_value = matched.header[h_key]
+
+            if matched_header_value ~= h_value then
+                match_header = false
+            end
+        end
+
+        if not match_header then
+            return false
+        end
+
+    end
+
+    local config_methods = {}
+
+    if service_router.router.methods and (#service_router.router.methods > 0) then
+
+        for i = 1, #service_router.router.methods do
+            if service_router.router.methods[i] == pdk.const.METHODS_ALL then
+                config_methods = {}
+
+                for j = 1, #pdk.const.ALL_METHODS do
+                    config_methods[pdk.string.upper(pdk.const.ALL_METHODS[j])] = 0
+                end
+
+                break
+            else
+                config_methods[pdk.string.upper(service_router.router.methods[i])] = 0
+            end
+        end
+
+    end
+
+    if not config_methods[pdk.string.upper(matched.method)] then
+        return false
+    end
+
+    return true
+end
+
 
 return _M

@@ -13,28 +13,6 @@ local _M = {}
 _M.events_source_ssl   = "events_source_ssl"
 _M.events_type_put_ssl = "events_type_put_ssl"
 
-
-function _M.peel_certificate(oak_ctx)
-
-    if not oak_ctx.config or type(oak_ctx.config) ~= "table" then
-        pdk.log.error("peel_certificate: oak_ctx.config is empty or malformed: ["
-                              .. pdk.json.encode(oak_ctx, true) .. "]")
-        return
-    end
-
-    if not oak_ctx.config.cert_key or not next(oak_ctx.config.cert_key) then
-        pdk.log.error("peel_certificate: the cert and key data of oak_ctx.config.cert_key are missing: ["
-                              .. pdk.json.encode(oak_ctx, true) .. "]")
-        return
-    end
-
-    -- @todo 这里需要补充验证剥离证书的逻辑 oak_ctx.config.cert_key 为本地证书信息表（table），字段为 cert 和 key。
-    -- @todo oak_ctx 为流量请求时调用 dispatch 在 method 参数后面传入的第一个参数数据（table类型即可）。
-    -- @todo 一般请求流量的具体数据在 oak_ctx.matched 的lua table 表中
-
-    return
-end
-
 local function generate_ssl_data(ssl_data)
 
     if not ssl_data or type(ssl_data) ~= "table" then
@@ -60,8 +38,6 @@ local function generate_ssl_data(ssl_data)
                 cert = ssl_data.cert,
                 key  = ssl_data.key,
             }
-
-            _M.peel_certificate(oak_ctx)
         end
     }, nil
 end
@@ -163,6 +139,10 @@ function _M.ssl_match(oak_ctx)
     if not match then
         return false
     end
+
+    -- @todo 这里需要补充验证剥离证书的逻辑 oak_ctx.config.cert_key 为本地证书信息表（table），字段为 cert 和 key。
+    -- @todo oak_ctx 为流量请求时调用 dispatch 在 method 参数后面传入的第一个参数数据（table类型即可）。
+    -- @todo 一般请求流量的具体数据在 oak_ctx.matched 的lua table 表中
 
     return true
 end

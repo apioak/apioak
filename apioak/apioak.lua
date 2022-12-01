@@ -86,16 +86,19 @@ function APIOAK.http_access()
 
     local match_succeed = sys.router.matched(oak_ctx)
 
-
+    -- @todo 新版路由匹配
+    --local match_succeed = sys.router.router_match(oak_ctx)
 
     if not match_succeed then
         pdk.response.exit(404, { err_message = "\"URI\" Undefined" })
     end
 
+    -- @todo 跨域配置（该功能会放在插件中单独的作为一个插件来实现）
     if oak_ctx.router.enable_cors == 1 then
         enable_cors_handle()
     end
 
+    -- @todo mock数据（该功能后期也会放在插件中作为一个单独的插件来实现该功能）
     if oak_ctx.router.is_mock_request then
         pdk.response.set_header(pdk.const.RESPONSE_MOCK_REQUEST_KEY, true)
         pdk.response.exit(200, oak_ctx.router.response_success, oak_ctx.router.response_type)
@@ -108,6 +111,7 @@ function APIOAK.http_access()
     local upstream = router.upstream
 
     local upstream_uri = router.backend_path
+
     for path_key, path_val in pairs(matched.path) do
         upstream_uri = pdk.string.replace(upstream_uri, "{" .. path_key .. "}", path_val)
     end

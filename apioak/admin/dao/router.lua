@@ -4,13 +4,6 @@ local uuid   = require("resty.jit-uuid")
 
 local _M = {}
 
-_M.METHODS_ALL    = "ALL"
-_M.METHODS_GET    = "GET"
-_M.METHODS_PUT    = "PUT"
-_M.METHODS_POST   = "POST"
-_M.METHODS_PATH   = "PATH"
-_M.METHODS_DELETE = "DELETE"
-
 function _M.created(params)
 
     local router_id = uuid.generate_v4()
@@ -18,7 +11,7 @@ function _M.created(params)
     local router_body = {
         id        = router_id,
         name      = params.name,
-        methods   = params.methods or { _M.METHODS_ALL },
+        methods   = params.methods or { pdk.const.METHODS_ALL },
         paths     = params.paths,
         headers   = params.headers or {},
         service   = params.service,

@@ -1,4 +1,4 @@
-local router = require "apioak.admin.dao.router"
+local pdk    = require("apioak.pdk")
 local common = require "apioak.admin.schema.common"
 
 local _M = {}
@@ -24,12 +24,12 @@ local methods = {
     items       = {
         type = "string",
         enum = {
-            router.METHODS_ALL,
-            router.METHODS_GET,
-            router.METHODS_POST,
-            router.METHODS_PUT,
-            router.METHODS_DELETE,
-            router.PATH
+            pdk.const.METHODS_ALL,
+            pdk.const.METHODS_GET,
+            pdk.const.METHODS_POST,
+            pdk.const.METHODS_PUT,
+            pdk.const.METHODS_PATH,
+            pdk.const.METHODS_DELETE
         }
     }
 }
@@ -49,15 +49,15 @@ _M.created = {
             items       = {
                 type = "string",
                 enum = {
-                    router.METHODS_ALL,
-                    router.METHODS_GET,
-                    router.METHODS_POST,
-                    router.METHODS_PUT,
-                    router.METHODS_DELETE,
-                    router.PATH
+                    pdk.const.METHODS_ALL,
+                    pdk.const.METHODS_GET,
+                    pdk.const.METHODS_POST,
+                    pdk.const.METHODS_PUT,
+                    pdk.const.METHODS_PATH,
+                    pdk.const.METHODS_DELETE,
                 }
             },
-            default     = { router.METHODS_ALL }
+            default     = { pdk.const.METHODS_ALL }
         },
         paths    = paths,
         headers  = headers,
