@@ -132,113 +132,6 @@ local function automatic_sync_hash_id(premature)
     end
 end
 
-local function upstream_nodes_map_id()
-
-    local upstream_list, err = dao.common.list_keys(dao.common.PREFIX_MAP.upstreams)
-
-    if err then
-        pdk.log.error("upstream_nodes_map_id: get upstream list FAIL [".. err .."]")
-        return nil
-    end
-
-    if not upstream_list or not upstream_list.list or (#upstream_list.list == 0) then
-        pdk.log.error("upstream_nodes_map_id: upstream list null ["
-                              .. pdk.json.encode(upstream_list, true) .. "]")
-        return nil
-    end
-
-    local node_list, err = dao.common.list_keys(dao.common.PREFIX_MAP.upstream_nodes)
-
-    if err then
-        pdk.log.error("upstream_nodes_map_id: get upstream node list FAIL [".. err .."]")
-        return nil
-    end
-
-    local node_map_by_id = {}
-
-    if node_list and node_list.list and (#node_list.list > 0) then
-
-        local health = dao.upstream_node.DEFAULT_HEALTH
-
-        for i = 1, #node_list.list do
-
-            repeat
-                local _, err = pdk.schema.check(schema.upstream_node.upstream_node_data, node_list.list[i])
-
-                if err then
-                    pdk.log.error("upstream_nodes_map_id: upstream node schema check err:[" .. err .. "]["
-                                          .. pdk.json.encode(node_list.list[i], true) .. "]")
-                    break
-                end
-
-                if node_list.list[i].health ~= health then
-                    break
-                end
-
-                node_map_by_id[node_list.list[i].id] = {
-                    address = node_list.list[i].address,
-                    port    = node_list.list[i].port,
-                    weight  = node_list.list[i].weight,
-                }
-            until true
-
-        end
-
-    end
-
-    local upstreams_nodes_map = {}
-
-    for j = 1, #upstream_list.list do
-
-        repeat
-            local _, err = pdk.schema.check(schema.upstream.upstream_data, upstream_list.list[j])
-
-            if err then
-                pdk.log.error("upstream_nodes_map_id: upstream schema check err:[" .. err .. "]["
-                                      .. pdk.json.encode(upstream_list.list[j], true) .. "]")
-                break
-            end
-
-            local upstream_nodes = {}
-
-            for k = 1, #upstream_list.list[j].nodes do
-
-                repeat
-                    local node = node_map_by_id[upstream_list.list[j].nodes[k].id]
-
-                    if not node then
-                        break
-                    end
-
-                    table.insert(upstream_nodes, node)
-                until true
-
-            end
-
-            if #upstream_nodes == 0 then
-                pdk.log.error("upstream_nodes_map_id: the upstream node does not match the data: ["
-                                      .. pdk.json.encode(upstream_list.list[j], true) .. "]")
-                break
-            end
-
-            upstreams_nodes_map[upstream_list.list[j].id] = {
-                nodes           = upstream_nodes,
-                algorithm       = upstream_list.list[j].algorithm,
-                read_timeout    = upstream_list.list[j].read_timeout,
-                write_timeout   = upstream_list.list[j].write_timeout,
-                connect_timeout = upstream_list.list[j].connect_timeout,
-            }
-        until true
-
-    end
-
-    if next(upstreams_nodes_map) then
-        return upstreams_nodes_map
-    end
-
-    return nil
-end
-
 local function plugins_map_id()
 
     local list, err = dao.common.list_keys(dao.common.PREFIX_MAP.plugins)
@@ -293,7 +186,7 @@ local function plugins_map_id()
    return nil
 end
 
-local function router_map_service_id(upstream_nodes_map, plugin_map)
+local function router_map_service_id(plugin_map)
 
     local list, err = dao.common.list_keys(dao.common.PREFIX_MAP.routers)
 
@@ -322,14 +215,6 @@ local function router_map_service_id(upstream_nodes_map, plugin_map)
 
             if list.list[i].enabled == false then
                 break
-            end
-
-            local upstream = upstream_nodes_map[list.list[i].upstream.id]
-
-            if list.list[i].upstream.id and upstream then
-                list.list[i].upstream = upstream
-            else
-                list.list[i].upstream = {}
             end
 
             if #list.list[i].plugins > 0 then
@@ -419,11 +304,9 @@ local function sync_update_router_data()
         return nil
     end
 
-    local upstream_nodes_map = upstream_nodes_map_id()
-
     local plugin_map = plugins_map_id()
 
-    local router_map = router_map_service_id(upstream_nodes_map, plugin_map)
+    local router_map = router_map_service_id(plugin_map)
 
     local service_router_list = {}
 
