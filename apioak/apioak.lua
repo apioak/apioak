@@ -62,11 +62,13 @@ function APIOAK.init_worker()
 
     sys.cache.init_worker()
 
-    sys.router.init_worker()
+    sys.balancer.init_worker()
+
+    --sys.o_balancer.init_worker()
 
     --sys.balancer.init_worker_event()
 
-    sys.balancer.init_worker()
+    sys.router.init_worker()
 
     sys.plugin.init_worker()
 end
@@ -127,6 +129,7 @@ function APIOAK.http_access()
         end
         pdk.table.insert(query_args, query_key .. "=" .. query_val)
     end
+
     if #query_args > 0 then
         upstream_uri = upstream_uri .. "?" .. pdk.table.concat(query_args, "&")
     end

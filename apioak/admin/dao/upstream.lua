@@ -4,9 +4,7 @@ local common = require("apioak.admin.dao.common")
 
 local _M = {}
 
-_M.DEFAULT_ALGORITHM = "round-robin"
 _M.DEFAULT_TIMEOUT   = 6000
-
 
 function _M.created(params)
 
@@ -15,7 +13,7 @@ function _M.created(params)
     local data = {
         id              = id,
         name            = params.name,
-        algorithm       = params.algorithm or _M.DEFAULT_ALGORITHM,
+        algorithm       = params.algorithm or pdk.const.BALANCER_ROUNDROBIN,
         nodes           = params.nodes or {},
         connect_timeout = params.connect_timeout or _M.DEFAULT_TIMEOUT,
         write_timeout   = params.write_timeout or _M.DEFAULT_TIMEOUT,

@@ -479,7 +479,7 @@ local function automatic_sync_ssl_router(premature)
         return
     end
 
-    local i, limit, times, times_limit = 0, 10, 0, 5
+    local i, limit, err_times, err_times_limit = 0, 10, 0, 5
 
     while not ngx_worker_exiting() and i <= limit do
         i = i + 1
@@ -488,13 +488,13 @@ local function automatic_sync_ssl_router(premature)
             local sync_data, err = dao.common.get_sync_data()
 
             if err then
-                times = times + 1
+                err_times = err_times + 1
 
                 pdk.log.error("automatic_sync_ssl_router_get_sync_data_err: ["
-                                      .. times .. "] [" .. tostring(err) .. "]")
+                                      .. err_times .. "] [" .. tostring(err) .. "]")
 
-                if times == times_limit then
-                    times = 0
+                if err_times == err_times_limit then
+                    err_times = 0
 
                     ngx_sleep(15)
                     break
@@ -674,34 +674,8 @@ local function worker_sync_event_register()
     end
 end
 
-local function clear_sync_update_data()
-
-    if process.type() ~= "privileged agent" then
-        return
-    end
-
-    local sync_data, err = dao.common.get_sync_data()
-
-    if err then
-        pdk.log.error("[sys.dao] get sync data err: ", err)
-    end
-
-    if not sync_data then
-        return
-    end
-
-    local _, err = dao.common.clear_sync_data()
-
-    if err then
-        pdk.log.error("[sys.dao] clear sync data err: ", err)
-        return
-    end
-end
-
 function _M.init_worker()
     ngx_timer_at(0, automatic_sync_hash_id)
-
-    ngx_timer_at(0, clear_sync_update_data)
 
     worker_sync_event_register()
 

@@ -1,11 +1,12 @@
 local upstream = require "apioak.admin.dao.upstream"
 local common = require "apioak.admin.schema.common"
+local pdk = require("apioak.pdk")
 
 local _M = {}
 
 local algorithm = {
     type = "string",
-    enum = { upstream.DEFAULT_ALGORITHM }
+    enum = { pdk.const.BALANCER_ROUNDROBIN, pdk.const.BALANCER_CHASH }
 }
 
 local connect_timeout = {
@@ -32,8 +33,8 @@ _M.created = {
         name            = common.name,
         algorithm       = {
             type    = "string",
-            default = upstream.DEFAULT_ALGORITHM,
-            enum    = { upstream.DEFAULT_ALGORITHM }
+            default = pdk.const.BALANCER_ROUNDROBIN,
+            enum    = { pdk.const.BALANCER_ROUNDROBIN, pdk.const.BALANCER_CHASH }
         },
         nodes           = common.items_array_id_or_name,
         connect_timeout = {
