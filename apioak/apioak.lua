@@ -121,6 +121,8 @@ function APIOAK.http_access()
 
     --sys.router.mapping(oak_ctx)
 
+    sys.balancer.init_resolver()
+
     sys.balancer.check_replenish_upstream(oak_ctx)
 
     local matched  = oak_ctx.matched

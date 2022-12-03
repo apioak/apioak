@@ -31,7 +31,8 @@ dependencies = {
     "lua-resty-healthcheck = 1.2.0-1",
     "lua-resty-prometheus = 1.1",
     "lua-resty-consul = 0.3-2",
-    "lua-resty-jit-uuid = 0.0.7-2"
+    "lua-resty-jit-uuid = 0.0.7-2",
+    "lua-resty-dns = 0.21-1"
 }
 
 build = {

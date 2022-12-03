@@ -130,6 +130,10 @@ function _M.ssl_match(oak_ctx)
 
     local match_sni = oakrouting_ssl_prefix .. ":" .. oak_ctx.matched.host
 
+    if not ssl_objects then
+        return false
+    end
+
     local match, err = ssl_objects:dispatch(match_sni, oakrouting_ssl_method, oak_ctx)
 
     if err then

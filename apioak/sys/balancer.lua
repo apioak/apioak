@@ -1,11 +1,14 @@
-local ngx     = ngx
-local pdk     = require("apioak.pdk")
-local dao     = require("apioak.dao")
-local schema  = require("apioak.schema")
-local process = require("ngx.process")
-local events  = require("resty.worker.events")
+local ngx      = ngx
+local pdk      = require("apioak.pdk")
+local dao      = require("apioak.dao")
+local schema   = require("apioak.schema")
+local process  = require("ngx.process")
+local events   = require("resty.worker.events")
+local resolver = require("resty.dns.resolver")
+local cache    = require("apioak.sys.cache")
 local ngx_sleep          = ngx.sleep
 local ngx_timer_at       = ngx.timer.at
+local math_random        = math.random
 local ngx_worker_exiting = ngx.worker.exiting
 local balancer           = require("ngx.balancer")
 local balancer_round     = require('resty.roundrobin')
@@ -14,7 +17,10 @@ local balancer_chash     = require('resty.chash')
 local events_source_upstream   = "events_source_upstream"
 local events_type_put_upstream = "events_type_put_upstream"
 
+local resolver_address_cache_prefix = "resolver_address_cache_prefix"
+
 local upstream_objects = {}
+local resolver_client
 
 local _M = {}
 
@@ -323,6 +329,23 @@ function _M.init_worker()
 
 end
 
+function _M.init_resolver()
+
+    local client, err = resolver:new{
+        nameservers = { {"114.114.114.114", 53}, "8.8.8.8" },
+        retrans = 3,  -- 3 retransmissions on receive timeout
+        timeout = 500,  -- 500 ms
+        no_random = false, -- always start with first nameserver
+    }
+
+    if err then
+        pdk.log.error("init resolver error: [" .. tostring(err) .. "]")
+        return
+    end
+
+    resolver_client = client
+end
+
 function _M.check_replenish_upstream(oak_ctx)
 
     if not oak_ctx.config or not oak_ctx.config.service_router or not oak_ctx.config.service_router.router then
@@ -338,9 +361,46 @@ function _M.check_replenish_upstream(oak_ctx)
         return
     end
 
-    -- @todo 这里需要引入 lua-resty-dns 进行解析 service_router.host 域名获取IP地址，然后补录到 upstream 字段table中
+    if not resolver_client or not oak_ctx.matched or not oak_ctx.matched.host or (#oak_ctx.matched.host == 0) then
+        return
+    end
 
-    service_router.router.upstream.address = "127.0.0.1"
+    local address_cache_key = resolver_address_cache_prefix .. ":" .. oak_ctx.matched.host
+
+    local address_cache = cache.get(address_cache_key)
+
+    if address_cache then
+        service_router.router.upstream.address = address_cache
+        service_router.router.upstream.port    = 80
+        return
+    end
+
+    local answers, err = resolver_client:query(oak_ctx.matched.host, nil, {})
+
+    if err then
+        pdk.log.error("failed to query the DNS server: [" .. pdk.json.encode(err, true) .. "]")
+        return
+    end
+
+    local answers_list = {}
+
+    for i = 1, #answers do
+
+        if (answers[i].type == resolver_client.TYPE_A) or (answers[i].type == resolver_client.TYPE_AAAA) then
+            pdk.table.insert(answers_list, answers[i])
+        end
+
+    end
+
+    local resolver_result = answers[math_random(1, #answers)]
+
+    if not resolver_result or not next(resolver_result) then
+        return
+    end
+
+    cache.set(address_cache_key, resolver_result.address, 60)
+
+    service_router.router.upstream.address = resolver_result.address
     service_router.router.upstream.port    = 80
 
 end
@@ -350,8 +410,9 @@ function _M.gogogo(oak_ctx)
     if not oak_ctx.config or not oak_ctx.config.service_router or not oak_ctx.config.service_router.router or
             not oak_ctx.config.service_router.router.upstream or
             not next(oak_ctx.config.service_router.router.upstream) then
-        pdk.log.error("[sys.balancer.gogogo] oak_ctx format error: [" .. pdk.json.encode(oak_ctx, true) .. "]")
+        pdk.log.error("[sys.balancer.gogogo] oak_ctx.config.service_router.router.upstream is null!")
         pdk.response.exit(500)
+        return
     end
 
     local upstream = oak_ctx.config.service_router.router.upstream
@@ -371,6 +432,7 @@ function _M.gogogo(oak_ctx)
         if not upstream_object then
             pdk.log.error("[sys.balancer.gogogo] upstream undefined, upstream_object is null!")
             pdk.response.exit(500)
+            return
         end
 
         if not upstream_object.read_timeout then
@@ -394,6 +456,7 @@ function _M.gogogo(oak_ctx)
         if not address_port then
             pdk.log.error("[sys.balancer.gogogo] upstream undefined, upstream_object find null!")
             pdk.response.exit(500)
+            return
         end
 
         local address_port_table = pdk.string.split(address_port, "|")
@@ -402,6 +465,7 @@ function _M.gogogo(oak_ctx)
             pdk.log.error("[sys.balancer.gogogo] address port format error: ["
                                   .. pdk.json.encode(address_port_table, true) .. "]")
             pdk.response.exit(500)
+            return
         end
 
         address = address_port_table[1]
@@ -412,6 +476,7 @@ function _M.gogogo(oak_ctx)
         if not upstream.address or not upstream.port then
             pdk.log.error("[sys.balancer.gogogo] upstream address and port undefined")
             pdk.response.exit(500)
+            return
         end
 
         address = upstream.address
@@ -419,25 +484,36 @@ function _M.gogogo(oak_ctx)
 
     end
 
+    if not address or not port or (address == ngx.null) or (port == ngx.null) then
+        pdk.log.error("[sys.balancer.gogogo] address or port is null ["
+                              .. pdk.json.encode(address, true) .. "]["
+                              ..  pdk.json.encode(port, true) .. "]")
+        pdk.response.exit(500)
+        return
+    end
+
     local _, err = pdk.schema.check(schema.upstream_node.schema_ip, address)
 
     if err then
         pdk.log.error("[sys.balancer.gogogo] address schema check err:[" .. address .. "][" .. err .. "]")
         pdk.response.exit(500)
+        return
     end
 
     local _, err = pdk.schema.check(schema.upstream_node.schema_port, port)
 
     if err then
-        pdk.log.error("[sys.balancer.gogogo] port schema check err:[" .. address .. "][" .. err .. "]")
+        pdk.log.error("[sys.balancer.gogogo] port schema check err:[" .. port .. "][" .. err .. "]")
         pdk.response.exit(500)
+        return
     end
 
     local ok, err = balancer.set_timeouts(
             timeout.connect_timeout / 1000, timeout.write_timeout / 1000, timeout.read_timeout / 1000)
 
     if not ok then
-        pdk.log.error("[sys.balancer] could not set upstream timeouts: ", err)
+        pdk.log.error("[sys.balancer] could not set upstream timeouts: [" .. pdk.json.encode(err, true) .. "]")
+        return
     end
 
     local ok, err = balancer.set_current_peer(address, port)
@@ -445,6 +521,7 @@ function _M.gogogo(oak_ctx)
     if not ok then
         pdk.log.error("[sys.balancer] failed to set the current peer: ", err)
         pdk.response.exit(500)
+        return
     end
 end
 
