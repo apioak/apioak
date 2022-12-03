@@ -1,3 +1,5 @@
+local config = require("apioak.sys.config")
+
 local _M = {}
 
 _M.LOCAL_IP            = "127.0.0.1"
@@ -75,8 +77,8 @@ _M.ALL_METHODS    = {
     _M.METHODS_DELETE,
 }
 
-_M.PLUGIN_WAF  = "waf"
-
-_M.PLUGIN_CORS = "cors"
+_M.PLUGINS = function ()
+    return config.query("plugins")
+end
 
 return _M

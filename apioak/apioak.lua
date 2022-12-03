@@ -70,7 +70,7 @@ function APIOAK.init_worker()
 
     sys.router.init_worker()
 
-    sys.plugin.init_worker()
+    --sys.plugin.init_worker()
 end
 
 function APIOAK.ssl_certificate()

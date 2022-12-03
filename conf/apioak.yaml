@@ -17,11 +17,8 @@ database:
     - oak_users
 
 plugins:
-  - limit-req
-  - limit-count
-  - limit-conn
-  - key-auth
-  - jwt-auth
+  - cors
+  - waf
 
 consul:
   host: 192.168.10.21

@@ -56,7 +56,7 @@ function plugin_controller.updated(params)
 
     if body.config then
 
-        local plugin_config = require("apioak.plugin." .. body.key .. ".schema-" .. body.key)
+        local plugin_config = require("apioak.plugin." .. detail.key .. ".schema-" .. detail.key)
 
         plugin_controller.check_schema(plugin_config.config, body.config)
 

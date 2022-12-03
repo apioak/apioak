@@ -4,11 +4,8 @@ local common = require "apioak.admin.schema.common"
 local _M = {}
 
 local key = {
-    type      = "string",
-    enum      = {
-        pdk.const.PLUGIN_WAF,
-        pdk.const.PLUGIN_CORS
-    }
+    type = "string",
+    enum = pdk.const.PLUGINS()
 }
 
 local config = {
