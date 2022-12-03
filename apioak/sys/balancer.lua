@@ -7,6 +7,7 @@ local events  = require("resty.worker.events")
 local ngx_sleep          = ngx.sleep
 local ngx_timer_at       = ngx.timer.at
 local ngx_worker_exiting = ngx.worker.exiting
+local balancer           = require("ngx.balancer")
 local balancer_round     = require('resty.roundrobin')
 local balancer_chash     = require('resty.chash')
 
@@ -165,7 +166,7 @@ local function automatic_sync_upstream()
 
         until true
 
-        ngx_sleep(5)
+        ngx_sleep(3)
     end
 
     if not ngx_worker_exiting() then
@@ -199,15 +200,13 @@ local function generate_upstream_balancer(upstream_data)
     }
 
     if next(node_list) then
+
         if  upstream_balancer.algorithm == pdk.const.BALANCER_ROUNDROBIN then
-            upstream_balancer.round_handler = balancer_round:new(node_list)
-            upstream_balancer.chash_handler = ngx.null
+            upstream_balancer.handler = balancer_round:new(node_list)
+        elseif upstream_balancer.algorithm == pdk.const.BALANCER_CHASH then
+            upstream_balancer.handler = balancer_chash:new(node_list)
         end
 
-        if  upstream_balancer.algorithm == pdk.const.BALANCER_CHASH then
-            upstream_balancer.round_handler = ngx.null
-            upstream_balancer.chash_handler = balancer_chash:new(node_list)
-        end
     end
 
     return upstream_balancer
@@ -240,22 +239,12 @@ local function renew_upstream_balancer_object(new_upstream_objects)
             end
 
             if new_upstream_objects[upstream_id].algorithm ~= upstream_objects[upstream_id].algorithm then
-
-                upstream_objects[upstream_id].algorithm     = new_upstream_objects[upstream_id].algorithm
-                upstream_objects[upstream_id].round_handler = new_upstream_objects[upstream_id].round_handler
-                upstream_objects[upstream_id].chash_handler = new_upstream_objects[upstream_id].chash_handler
-
+                upstream_objects[upstream_id].algorithm = new_upstream_objects[upstream_id].algorithm
+                upstream_objects[upstream_id].handler   = new_upstream_objects[upstream_id].handler
             else
 
-                local handler, new_handler
-
-                if upstream_objects[upstream_id].algorithm == pdk.const.BALANCER_ROUNDROBIN then
-                    handler = upstream_objects[upstream_id].round_handler
-                    new_handler = new_upstream_objects[upstream_id].round_handler
-                else
-                    handler = upstream_objects[upstream_id].chash_handler
-                    new_handler = new_upstream_objects[upstream_id].chash_handler
-                end
+                local handler = upstream_objects[upstream_id].handler
+                local new_handler = new_upstream_objects[upstream_id].handler
 
                 local nodes, new_nodes = handler.nodes, new_handler.nodes
 
@@ -332,6 +321,131 @@ function _M.init_worker()
 
     ngx_timer_at(0, automatic_sync_upstream)
 
+end
+
+function _M.check_replenish_upstream(oak_ctx)
+
+    if not oak_ctx.config or not oak_ctx.config.service_router or not oak_ctx.config.service_router.router then
+        pdk.log.error("check_replenish_upstream: oak_ctx data format error: ["
+                              .. pdk.json.encode(oak_ctx, true) .. "]")
+        return
+    end
+
+    local service_router = oak_ctx.config.service_router
+
+    if service_router.router.upstream and service_router.router.upstream.id and
+            upstream_objects[service_router.router.upstream.id] then
+        return
+    end
+
+    -- @todo 这里需要引入 lua-resty-dns 进行解析 service_router.host 域名获取IP地址，然后补录到 upstream 字段table中
+
+    service_router.router.upstream.address = "127.0.0.1"
+    service_router.router.upstream.port    = 80
+
+end
+
+function _M.gogogo(oak_ctx)
+
+    if not oak_ctx.config or not oak_ctx.config.service_router or not oak_ctx.config.service_router.router or
+            not oak_ctx.config.service_router.router.upstream or
+            not next(oak_ctx.config.service_router.router.upstream) then
+        pdk.log.error("[sys.balancer.gogogo] oak_ctx format error: [" .. pdk.json.encode(oak_ctx, true) .. "]")
+        pdk.response.exit(500)
+    end
+
+    local upstream = oak_ctx.config.service_router.router.upstream
+
+    local address, port
+
+    local timeout = {
+        read_timeout    = pdk.const.UPSTREAM_DEFAULT_TIMEOUT,
+        write_timeout   = pdk.const.UPSTREAM_DEFAULT_TIMEOUT,
+        connect_timeout = pdk.const.UPSTREAM_DEFAULT_TIMEOUT,
+    }
+
+    if upstream.id then
+
+        local upstream_object = upstream_objects[upstream.id]
+
+        if not upstream_object then
+            pdk.log.error("[sys.balancer.gogogo] upstream undefined, upstream_object is null!")
+            pdk.response.exit(500)
+        end
+
+        if not upstream_object.read_timeout then
+            timeout.read_timeout = upstream_object.read_timeout
+        end
+        if not upstream_object.write_timeout then
+            timeout.write_timeout = upstream_object.write_timeout
+        end
+        if not upstream_object.connect_timeout then
+            timeout.connect_timeout = upstream_object.connect_timeout
+        end
+
+        local address_port
+
+        if upstream_object.algorithm == pdk.const.BALANCER_ROUNDROBIN then
+            address_port = upstream_object.handler:find()
+        elseif upstream_object.algorithm == pdk.const.BALANCER_CHASH then
+            address_port = upstream_object.handler:find(oak_ctx.config.service_router.host)
+        end
+
+        if not address_port then
+            pdk.log.error("[sys.balancer.gogogo] upstream undefined, upstream_object find null!")
+            pdk.response.exit(500)
+        end
+
+        local address_port_table = pdk.string.split(address_port, "|")
+
+        if #address_port_table ~= 2 then
+            pdk.log.error("[sys.balancer.gogogo] address port format error: ["
+                                  .. pdk.json.encode(address_port_table, true) .. "]")
+            pdk.response.exit(500)
+        end
+
+        address = address_port_table[1]
+        port    = tonumber(address_port_table[2])
+
+    else
+
+        if not upstream.address or not upstream.port then
+            pdk.log.error("[sys.balancer.gogogo] upstream address and port undefined")
+            pdk.response.exit(500)
+        end
+
+        address = upstream.address
+        port    = upstream.port
+
+    end
+
+    local _, err = pdk.schema.check(schema.upstream_node.schema_ip, address)
+
+    if err then
+        pdk.log.error("[sys.balancer.gogogo] address schema check err:[" .. address .. "][" .. err .. "]")
+        pdk.response.exit(500)
+    end
+
+    local _, err = pdk.schema.check(schema.upstream_node.schema_port, port)
+
+    if err then
+        pdk.log.error("[sys.balancer.gogogo] port schema check err:[" .. address .. "][" .. err .. "]")
+        pdk.response.exit(500)
+    end
+
+    local ok, err = balancer.set_timeouts(
+            timeout.connect_timeout / 1000, timeout.write_timeout / 1000, timeout.read_timeout / 1000)
+
+    if not ok then
+        pdk.log.error("[sys.balancer] could not set upstream timeouts: ", err)
+    end
+
+    local ok, err = balancer.set_current_peer(address, port)
+
+    if not ok then
+        pdk.log.error("[sys.balancer] failed to set the current peer: ", err)
+        pdk.response.exit(500)
+    end
 end
 
 return _M

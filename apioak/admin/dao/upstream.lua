@@ -4,8 +4,6 @@ local common = require("apioak.admin.dao.common")
 
 local _M = {}
 
-_M.DEFAULT_TIMEOUT   = 6000
-
 function _M.created(params)
 
     local id = uuid.generate_v4()
@@ -14,10 +12,10 @@ function _M.created(params)
         id              = id,
         name            = params.name,
         algorithm       = params.algorithm or pdk.const.BALANCER_ROUNDROBIN,
-        nodes           = params.nodes or {},
-        connect_timeout = params.connect_timeout or _M.DEFAULT_TIMEOUT,
-        write_timeout   = params.write_timeout or _M.DEFAULT_TIMEOUT,
-        read_timeout    = params.read_timeout or _M.DEFAULT_TIMEOUT
+        nodes           = params.nodes     or {},
+        connect_timeout = params.connect_timeout or pdk.const.UPSTREAM_DEFAULT_TIMEOUT,
+        write_timeout   = params.write_timeout   or pdk.const.UPSTREAM_DEFAULT_TIMEOUT,
+        read_timeout    = params.read_timeout    or pdk.const.UPSTREAM_DEFAULT_TIMEOUT
     }
 
     local payload = {

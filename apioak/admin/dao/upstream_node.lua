@@ -23,11 +23,11 @@ function _M.created(params)
         health  = params.health or _M.DEFAULT_HEALTH,
         weight  = params.weight or _M.DEFAULT_WEIGHT,
         check   = {
-            enabled  = params.check.enabled or _M.DEFAULT_ENABLED_FALSE,
-            tcp      = params.check.tcp or "",
-            method   = params.check.method or "",
-            http     = params.check.http or "",
-            timeout  = params.check.timeout or _M.DEFAULT_TIMEOUT,
+            enabled  = params.check.enabled  or _M.DEFAULT_ENABLED_FALSE,
+            tcp      = params.check.tcp      or "",
+            method   = params.check.method   or "",
+            http     = params.check.http     or "",
+            timeout  = params.check.timeout  or _M.DEFAULT_TIMEOUT,
             interval = params.check.interval or _M.DEFAULT_INTERVAL,
         }
     }

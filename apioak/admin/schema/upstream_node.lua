@@ -191,4 +191,8 @@ _M.upstream_node_data = {
     required   = { "id", "name", "address", "port", "weight", "health", "check" }
 }
 
+_M.schema_ip = address
+
+_M.schema_port = port
+
 return _M
