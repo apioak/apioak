@@ -8,6 +8,7 @@ _M.DEFAULT_PORT = 80
 _M.DEFAULT_WEIGHT = 1
 _M.DEFAULT_TIMEOUT = 1
 _M.DEFAULT_INTERVAL = 5
+_M.DEFAULT_ENABLED_TRUE = true
 _M.DEFAULT_ENABLED_FALSE = false
 _M.DEFAULT_HEALTH = "HEALTH"
 _M.DEFAULT_UNHEALTH = "UNHEALTH"
@@ -24,9 +25,10 @@ function _M.created(params)
         weight  = params.weight or _M.DEFAULT_WEIGHT,
         check   = {
             enabled  = params.check.enabled  or _M.DEFAULT_ENABLED_FALSE,
-            tcp      = params.check.tcp      or "",
+            tcp      = params.check.tcp      or _M.DEFAULT_ENABLED_TRUE,
             method   = params.check.method   or "",
-            http     = params.check.http     or "",
+            host     = params.check.host     or "",
+            uri      = params.check.uri      or "",
             timeout  = params.check.timeout  or _M.DEFAULT_TIMEOUT,
             interval = params.check.interval or _M.DEFAULT_INTERVAL,
         }
@@ -102,8 +104,11 @@ function _M.updated(params, detail)
     if params.check.method then
         detail.check.method = params.check.method
     end
-    if params.check.http then
-        detail.check.http = params.check.http
+    if params.check.host then
+        detail.check.host = params.check.host
+    end
+    if params.check.uri then
+        detail.check.uri = params.check.uri
     end
     if params.check.interval then
         detail.check.interval = params.check.interval

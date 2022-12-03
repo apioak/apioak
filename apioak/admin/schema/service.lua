@@ -43,7 +43,7 @@ _M.created = {
             default     = { service.PROTOCOLS_HTTP }
         },
         hosts     = hosts,
-        plugins   = common.items_array_id_or_name,
+        plugins   = common.items_array_id_or_name_or_null,
         enabled   = {
             type    = "boolean",
             default = true
@@ -59,7 +59,7 @@ _M.updated = {
         name        = common.name,
         protocols   = protocols,
         hosts       = hosts,
-        plugins     = common.items_array_id_or_name,
+        plugins     = common.items_array_id_or_name_or_null,
         enabled     = enabled
     },
     required   = { "service_key" }

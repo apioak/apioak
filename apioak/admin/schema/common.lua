@@ -30,7 +30,24 @@ _M.items_object_id_or_name = {
     }
 }
 
-_M.items_object_id_name = {
+_M.items_object_id_or_name_or_null = {
+    type       = "object",
+    properties = {
+        id   = _M.id,
+        name = _M.name,
+    },
+    anyOf      = {
+        {
+            required = { "id" }
+        },
+        {
+            required = { "name" }
+        },
+        {}
+    }
+}
+
+_M.items_object_id = {
     type       = "object",
     properties = {
         id   = _M.id
@@ -41,6 +58,12 @@ _M.items_array_id_or_name = {
     type        = "array",
     uniqueItems = true,
     minItems    = 1,
+    items       = _M.items_object_id_or_name
+}
+
+_M.items_array_id_or_name_or_null = {
+    type        = "array",
+    uniqueItems = true,
     items       = _M.items_object_id_or_name
 }
 

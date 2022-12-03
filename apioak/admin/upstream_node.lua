@@ -11,9 +11,11 @@ function upstream_node_controller.created()
 
     upstream_node_controller.check_schema(schema.upstream_node.created, body)
 
-    if body.check.enabled == true then
-        if (body.check.tcp == nil) and ((body.check.http == nil) or (body.check.method == nil)) then
-            pdk.response.exit(400, { message = "one of tcp or http and method is required" })
+    if body.check.enabled == true and body.check.tcp == false then
+        if not body.check.method or not body.check.host or not body.check.uri or
+                (#body.check.method == 0) or (#body.check.host == 0) or (#body.check.uri == 0) then
+            pdk.response.exit(400,
+                              { message = "the health check http parameters method, host and uri are required" })
         end
     end
 
@@ -50,11 +52,13 @@ function upstream_node_controller.updated(params)
     local body = upstream_node_controller.get_body()
     body.upstream_node_key = params.upstream_node_key
 
-    upstream_node_controller.check_schema(schema.upstream_node.created, body)
+    upstream_node_controller.check_schema(schema.upstream_node.updated, body)
 
-    if body.check.enabled == true then
-        if (body.check.tcp == nil) and ((body.check.http == nil) or (body.check.method == nil)) then
-            pdk.response.exit(400, { message = "health check parameter error" })
+    if body.check.enabled == true and body.check.tcp == false then
+        if not body.check.method or not body.check.host or not body.check.uri or
+                (#body.check.method == 0) or (#body.check.host == 0) or (#body.check.uri == 0) then
+            pdk.response.exit(400,
+                              { message = "the health check http parameters method, host and uri are required" })
         end
     end
 

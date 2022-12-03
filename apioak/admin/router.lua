@@ -123,7 +123,7 @@ function router_controller.updated(params)
         pdk.response.exit(400, { message = "exists paths [" .. table.concat(exist_paths, ",") .. "]" })
     end
 
-    if body.upstream then
+    if body.upstream and next(body.upstream) then
 
         local check_upstream, err = dao.common.check_kv_exists(body.upstream, pdk.const.CONSUL_PRFX_UPSTREAMS)
 
@@ -155,7 +155,7 @@ function router_controller.updated(params)
         body.service = {id = check_service.id}
     end
 
-    if body.plugins then
+    if body.plugins and (#body.plugins > 0) then
 
         local check_plugin, err = dao.common.batch_check_kv_exists(body.plugins, pdk.const.CONSUL_PRFX_PLUGINS)
 

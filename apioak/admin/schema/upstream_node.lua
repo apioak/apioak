@@ -19,10 +19,11 @@ local method_enum = {
     "",
     "GET",
     "POST",
-    "HEADER"
+    "HEADER",
+    "OPTIONS"
 }
 
-local http_pattern = "(http|https):\\/\\/[\\w\\-_]+(\\.[\\w\\-_]+)+([\\w\\-\\.,@?^=%&:/~\\+#]*[\\w\\-\\@?^=%&/~\\+#])?"
+local uri_pattern = "^\\/\\*?[0-9a-zA-Z-.=?_*/{}]+$"
 
 local port = {
     type    = "number",
@@ -45,7 +46,7 @@ local enabled = {
     type = "boolean",
 }
 
-local tcp = {
+local host = {
     type      = "string",
     maxLength = 150,
 }
@@ -55,16 +56,14 @@ local method = {
     enum = method_enum
 }
 
-local http = {
+local uri = {
     type      = "string",
     maxLength = 150,
-    anyOf = {
+    anyOf     = {
         {
-            pattern   = http_pattern
+            pattern = uri_pattern
         },
-        {
-            pattern   = ""
-        }
+        {}
     }
 }
 
@@ -109,21 +108,12 @@ _M.created = {
                     default = upstream_node.DEFAULT_ENABLED_FALSE,
                 },
                 tcp      = {
-                    type      = "string",
-                    default   = nil,
-                    minLength = 3,
+                    type    = "boolean",
+                    default = upstream_node.DEFAULT_ENABLED_TRUE,
                 },
-                method   = {
-                    type    = "string",
-                    default = nil,
-                    enum    = method_enum
-                },
-                http     = {
-                    type      = "string",
-                    minLength = 3,
-                    default   = nil,
-                    pattern   = http_pattern
-                },
+                method   = method,
+                host     = host,
+                uri      = uri,
                 interval = {
                     type    = "number",
                     minimum = 0,
@@ -155,9 +145,10 @@ _M.updated = {
             type       = "object",
             properties = {
                 enabled  = enabled,
-                tcp      = tcp,
+                tcp      = enabled,
                 method   = method,
-                http     = http,
+                host     = host,
+                uri      = uri,
                 interval = interval,
                 timeout  = timeout
             }
@@ -179,9 +170,10 @@ _M.upstream_node_data = {
             type       = "object",
             properties = {
                 enabled  = enabled,
-                tcp      = tcp,
+                tcp      = enabled,
                 method   = method,
-                http     = http,
+                host     = host,
+                uri      = uri,
                 interval = interval,
                 timeout  = timeout
             },
