@@ -1,8 +1,10 @@
-local upstream = require "apioak.admin.dao.upstream"
+local pdk    = require("apioak.pdk")
 local common = require "apioak.admin.schema.common"
-local pdk = require("apioak.pdk")
 
 local _M = {}
+
+local timeout_minimum = 1
+local timeout_maximum = 600000
 
 local algorithm = {
     type = "string",
@@ -11,20 +13,20 @@ local algorithm = {
 
 local connect_timeout = {
     type    = "number",
-    minimum = 0,
-    maximum = 3600000,
+    minimum = timeout_minimum,
+    maximum = timeout_maximum,
 }
 
 local write_timeout = {
     type    = "number",
-    minimum = 0,
-    maximum = 3600000,
+    minimum = timeout_minimum,
+    maximum = timeout_maximum,
 }
 
 local read_timeout = {
     type    = "number",
-    minimum = 0,
-    maximum = 3600000,
+    minimum = timeout_minimum,
+    maximum = timeout_maximum,
 }
 
 _M.created = {
@@ -39,21 +41,21 @@ _M.created = {
         nodes           = common.items_array_id_or_name,
         connect_timeout = {
             type    = "number",
-            minimum = 0,
-            maximum = 3600000,
-            default = upstream.DEFAULT_TIMEOUT
+            minimum = timeout_minimum,
+            maximum = timeout_maximum,
+            default = pdk.const.UPSTREAM_DEFAULT_TIMEOUT
         },
         write_timeout   = {
             type    = "number",
-            minimum = 0,
-            maximum = 3600000,
-            default = upstream.DEFAULT_TIMEOUT
+            minimum = timeout_minimum,
+            maximum = timeout_maximum,
+            default = pdk.const.UPSTREAM_DEFAULT_TIMEOUT
         },
         read_timeout    = {
             type    = "number",
-            minimum = 0,
-            maximum = 3600000,
-            default = upstream.DEFAULT_TIMEOUT
+            minimum = timeout_minimum,
+            maximum = timeout_maximum,
+            default = pdk.const.UPSTREAM_DEFAULT_TIMEOUT
         }
     },
     required   = { "name", "nodes" }

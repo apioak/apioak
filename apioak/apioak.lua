@@ -86,33 +86,33 @@ function APIOAK.http_access()
 
     sys.router.parameter(oak_ctx)
 
-    local match_succeed = sys.router.matched(oak_ctx)
+    --local match_succeed = sys.router.matched(oak_ctx)
 
     -- @todo 新版路由匹配
-    --local match_succeed = sys.router.router_match(oak_ctx)
+    local match_succeed = sys.router.router_match(oak_ctx)
 
     if not match_succeed then
         pdk.response.exit(404, { err_message = "\"URI\" Undefined" })
     end
 
     -- @todo 跨域配置（该功能会放在插件中单独的作为一个插件来实现）
-    if oak_ctx.router.enable_cors == 1 then
-        enable_cors_handle()
-    end
+    --if oak_ctx.router.enable_cors == 1 then
+    --    enable_cors_handle()
+    --end
 
     -- @todo mock数据（该功能后期也会放在插件中作为一个单独的插件来实现该功能）
-    if oak_ctx.router.is_mock_request then
-        pdk.response.set_header(pdk.const.RESPONSE_MOCK_REQUEST_KEY, true)
-        pdk.response.exit(200, oak_ctx.router.response_success, oak_ctx.router.response_type)
-    end
+    --if oak_ctx.router.is_mock_request then
+    --    pdk.response.set_header(pdk.const.RESPONSE_MOCK_REQUEST_KEY, true)
+    --    pdk.response.exit(200, oak_ctx.router.response_success, oak_ctx.router.response_type)
+    --end
 
-    sys.router.mapping(oak_ctx)
+    --sys.router.mapping(oak_ctx)
 
-    local router   = oak_ctx.router
+    sys.balancer.check_replenish_upstream(oak_ctx)
+
     local matched  = oak_ctx.matched
-    local upstream = router.upstream
 
-    local upstream_uri = router.backend_path
+    local upstream_uri = matched.uri
 
     for path_key, path_val in pairs(matched.path) do
         upstream_uri = pdk.string.replace(upstream_uri, "{" .. path_key .. "}", path_val)
@@ -123,6 +123,7 @@ function APIOAK.http_access()
     end
 
     local query_args = {}
+
     for query_key, query_val in pairs(matched.query) do
         if query_val == true then
             query_val = ""
@@ -134,13 +135,11 @@ function APIOAK.http_access()
         upstream_uri = upstream_uri .. "?" .. pdk.table.concat(query_args, "&")
     end
 
-    pdk.request.set_method(router.backend_method)
+    pdk.request.set_method(matched.method)
 
     ngx.var.upstream_uri = upstream_uri
 
-    ngx.var.upstream_host = upstream.host
-
-    sys.balancer.loading()
+    ngx.var.upstream_host = matched.host
 
     run_plugin("http_access", oak_ctx)
 end

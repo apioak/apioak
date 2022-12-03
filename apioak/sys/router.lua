@@ -486,7 +486,7 @@ local function generate_router_data(router_data)
                             method  = oakrouting_router_method,
                             handler = function(params, oak_ctx)
 
-                                oak_ctx.params = params
+                                oak_ctx.matched.path = params
 
                                 oak_ctx.config = {}
                                 oak_ctx.config.service_router = host_router_data
@@ -673,6 +673,11 @@ function _M.router_match(oak_ctx)
     if not oak_ctx.matched or not oak_ctx.matched.host or not oak_ctx.matched.uri then
         pdk.log.error("router_match: oak_ctx data format err: [" .. pdk.json.encode(oak_ctx, true) .. "]")
         return false
+    end
+
+    if not router_objects then
+        pdk.log.error("router_match: router_objects is null")
+        return
     end
 
     local match_path = oak_ctx.matched.host .. ":" .. oak_ctx.matched.uri
