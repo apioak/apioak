@@ -7,5 +7,6 @@ return {
     config   = require("apioak.sys.config"),
     balancer = require("apioak.sys.balancer"),
     o_balancer = require("apioak.sys.o_balancer"),
-    dao      = require("apioak.sys.dao")
+    dao      = require("apioak.sys.dao"),
+    certificate = require("apioak.sys.certificate")
 }

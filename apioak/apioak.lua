@@ -73,6 +73,19 @@ function APIOAK.init_worker()
     sys.plugin.init_worker()
 end
 
+function APIOAK.ssl_certificate()
+
+    local ngx_ssl = require("ngx.ssl")
+    local server_name = ngx_ssl.server_name()
+
+    local oak_ctx = {
+        matched = {
+            host = server_name
+        }
+    }
+    sys.certificate.ssl_match(oak_ctx)
+end
+
 function APIOAK.http_access()
 
     options_request_handle()

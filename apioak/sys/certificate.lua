@@ -2,6 +2,7 @@ local pdk        = require("apioak.pdk")
 local dao        = require("apioak.dao")
 local schema     = require("apioak.schema")
 local oakrouting = require("resty.oakrouting")
+local ngx_ssl    = require("ngx.ssl")
 
 local ssl_objects
 
@@ -140,12 +141,39 @@ function _M.ssl_match(oak_ctx)
         return false
     end
 
-    -- @todo 这里需要补充验证剥离证书的逻辑 oak_ctx.config.cert_key 为本地证书信息表（table），字段为 cert 和 key。
-    -- @todo oak_ctx 为流量请求时调用 dispatch 在 method 参数后面传入的第一个参数数据（table类型即可）。
-    -- @todo 一般请求流量的具体数据在 oak_ctx.matched 的lua table 表中
+    ngx_ssl.clear_certs()
+
+    -- TODO Store cdata to lrucache
+    local parsed_cert, err = ngx_ssl.parse_pem_cert(oak_ctx.config.cert_key.cert)
+
+    if err ~= nil then
+        pdk.log.error("failed to parse pem cert" ,err)
+        return false
+    end
+
+    local ok, err = ngx_ssl.set_cert(parsed_cert)
+
+    if err ~= nil or not ok then
+        pdk.log.error("failed to set pem cert" ,err)
+        return false
+    end
+
+    -- TODO Store cdata to lrucache
+    local parsed_priv_key, err = ngx_ssl.parse_pem_priv_key(oak_ctx.config.cert_key.key)
+
+    if err ~= nil then
+        pdk.log.error("failed to parse pem priv key" ,err)
+        return false
+    end
+
+    local ok, err = ngx_ssl.set_priv_key(parsed_priv_key)
+
+    if err ~= nil or not ok then
+        pdk.log.error("failed to set pem priv key" ,err)
+        return false
+    end
 
     return true
 end
-
 
 return _M
