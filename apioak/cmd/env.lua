@@ -1,9 +1,11 @@
-local common = require "apioak/cmd/utils/common"
+local common  = require "apioak/cmd/utils/common"
+local io_open = io.open
 
 local lapp = [[
 Usage: apioak env
 ]]
 
+local config
 
 local function get_config()
     local res, err = io.open(common.apioak_home .. "/conf/apioak.yaml", "r")
@@ -33,7 +35,7 @@ end
 local function validate_database()
     local res, err = get_config()
     if not res.database then
-        print("Config Database        ...FAIL(".. err ..")")
+        print("Config Database        ...FAIL (".. err ..")")
         os.exit(1)
     else
         print("Config Database        ...OK")
@@ -44,7 +46,7 @@ local function validate_database()
     local mysql  = require("resty.mysql")
     res, err = mysql:new()
     if not res then
-        print("Database Init          ...FAIL(".. err ..")")
+        print("Database Init          ...FAIL (".. err ..")")
         os.exit(1)
     else
         print("Database Init          ...OK")
@@ -60,7 +62,7 @@ local function validate_database()
     })
 
     if not res then
-        print("Database Connect       ...FAIL(".. err ..")")
+        print("Database Connect       ...FAIL (".. err ..")")
         os.exit(1)
     else
         print("Database Connect       ...OK")
@@ -68,7 +70,7 @@ local function validate_database()
 
     res, err = db:query("SELECT version() AS version")
     if not res then
-        print("Database Query Version ...FAIL(".. err ..")")
+        print("Database Query Version ...FAIL (".. err ..")")
         os.exit(1)
     else
         print("Database Query Version ...OK")
@@ -78,14 +80,14 @@ local function validate_database()
     local db_version_num = tonumber(string.match(db_version, "^%d+%.%d+"))
     if string.find(db_version, "MariaDB") then
         if db_version_num < 10.2 then
-            print("Database Version       ...FAIL(MariaDB version be greater than 10.2)")
+            print("Database Version       ...FAIL (MariaDB version be greater than 10.2)")
             os.exit(1)
         else
             print("Database Version       ...OK")
         end
     else
         if db_version_num < 5.7 then
-            print("Database Version       ...FAIL(MySQL version be greater than 5.7)")
+            print("Database Version       ...FAIL (MySQL version be greater than 5.7)")
             os.exit(1)
         else
             print("Database Version       ...OK")
@@ -94,7 +96,7 @@ local function validate_database()
 
     res, err = db:query("SHOW tables")
     if not res then
-        print("Database Query Tables  ...FAIL(".. err ..")")
+        print("Database Query Tables  ...FAIL (".. err ..")")
         os.exit(1)
     else
         print("Database Query Tables  ...OK")
@@ -116,7 +118,7 @@ end
 local function validate_consul()
     local res, err = get_config()
     if not res.database then
-        print("Config Consul          ...FAIL(".. err ..")")
+        print("Config Consul          ...FAIL (".. err ..")")
         os.exit(1)
     else
         print("Config Consul          ...OK")
@@ -139,7 +141,7 @@ local function validate_consul()
     local agent_config, err = consul:get('/agent/self')
 
     if not agent_config then
-        print("Consul Connect         ...FAIL(".. err ..")")
+        print("Consul Connect         ...FAIL (".. err ..")")
         os.exit(1)
     else
         print("Consul Connect         ...OK")
@@ -153,10 +155,38 @@ local function validate_consul()
 
     local consul_version_num = tonumber(string.match(agent_config.body.Config.Version, "^%d+%.%d+"))
     if consul_version_num < 1.13 then
-        print("Consul Version         ...FAIL(consul version be greater than 1.13)")
+        print("Consul Version         ...FAIL (consul version be greater than 1.13)")
         os.exit(1)
     else
         print("Consul Version         ...OK")
+    end
+
+    config = res
+end
+
+local function validate_plugin()
+
+    local plugins = config.plugins
+
+    local err_plugins = {}
+
+    for i = 1, #plugins do
+
+        local file_path = common.apioak_home .. "/apioak/plugin/" .. plugins[i] .. "/" .. plugins[i] .. ".lua"
+
+        local _, err = io_open(file_path, "r")
+
+        if err then
+            table.insert(err_plugins, plugins[i])
+        end
+
+    end
+
+    if next(err_plugins) then
+        print("Plugin Check           ...FAIL (Plugin not found: " .. table.concat(err_plugins, ', ') .. ")")
+        os.exit(1)
+    else
+        print("Plugin Check           ...OK")
     end
 end
 
@@ -180,6 +210,7 @@ local function execute()
 
     validate_database()
     validate_consul()
+    validate_plugin()
 end
 
 return {

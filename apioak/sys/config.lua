@@ -1,5 +1,4 @@
 local ngx          = ngx
-local pdk          = require("apioak.pdk")
 local yaml         = require("tinyyaml")
 local events       = require("resty.worker.events")
 local io_open      = io.open
@@ -21,7 +20,7 @@ local function worker_event_configure()
     }
 
     if not ok then
-        pdk.log.error("[sys.router] worker event configure failure, ", err)
+        ngx.log(ngx.ERR, "[sys.router] worker event configure failure, ", err)
         return
     end
 end
@@ -33,7 +32,7 @@ local function loading_configs(premature)
 
     local file, err = io_open(ngx_config_prefix() .. "conf/apioak.yaml", "r")
     if err then
-        pdk.log.error("[sys.config] failed to open configuration file, ", err)
+        ngx.log(ngx.ERR, "[sys.config] failed to open configuration file, ", err)
         return
     end
 
@@ -42,7 +41,7 @@ local function loading_configs(premature)
 
     local config = yaml.parse(content)
     if not config then
-        pdk.log.error("[sys.config] failed to parse configuration file")
+        ngx.log(ngx.ERR, "[sys.config] failed to parse configuration file")
         return
     end
 
