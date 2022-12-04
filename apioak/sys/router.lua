@@ -132,61 +132,7 @@ local function automatic_sync_hash_id(premature)
     end
 end
 
-local function plugins_map_id()
-
-    local list, err = dao.common.list_keys(dao.common.PREFIX_MAP.plugins)
-
-    if err then
-        pdk.log.error("plugins_map_id: get plugin list FAIL [".. err .."]")
-        return nil
-    end
-
-    if not list or not list.list or (#list.list == 0) then
-        pdk.log.error("plugins_map_id: plugin list null [" .. pdk.json.encode(list, true) .. "]")
-        return nil
-    end
-
-    local plugins_map = {}
-
-    for i = 1, #list.list do
-
-        repeat
-            local _, err = pdk.schema.check(schema.plugin.plugin_data, list.list[i])
-
-            if err then
-                pdk.log.error("upstream_nodes_map_id: plugin schema check err:[" .. err .. "]["
-                                      .. pdk.json.encode(list.list[i], true) .. "]")
-                break
-            end
-
-            local schema_key = list.list[i].key
-
-            local plugin_schema = require("apioak.plugin." .. schema_key .. ".schema-" .. schema_key)
-
-            local _, err = pdk.schema.check(plugin_schema, list.list[i].config)
-
-            if err then
-                pdk.log.error("upstream_nodes_map_id: plugin config schema check err:[" .. err .. "]["
-                                      .. pdk.json.encode(list.list[i], true) .. "]")
-                break
-            end
-
-            plugins_map[list.list[i].id] = {
-                key    = list.list[i].key,
-                config = list.list[i].config,
-            }
-        until true
-
-    end
-
-    if next(plugins_map) then
-        return plugins_map
-    end
-
-   return nil
-end
-
-local function router_map_service_id(plugin_map)
+local function router_map_service_id()
 
     local list, err = dao.common.list_keys(dao.common.PREFIX_MAP.routers)
 
@@ -215,26 +161,6 @@ local function router_map_service_id(plugin_map)
 
             if list.list[i].enabled == false then
                 break
-            end
-
-            if #list.list[i].plugins > 0 then
-
-                local plugin_data = {}
-
-                for j = 1, #list.list[i].plugins do
-
-                    repeat
-                        if not list.list[i].plugins[j].id or not plugin_map[list.list[i].plugins[j].id] then
-                            break
-                        end
-
-                        table.insert(plugin_data, plugin_map[list.list[i].plugins[j].id])
-
-                    until true
-                end
-
-                list.list[i].plugins = plugin_data
-
             end
 
             if not router_map_service[list.list[i].service.id] then
@@ -304,9 +230,7 @@ local function sync_update_router_data()
         return nil
     end
 
-    local plugin_map = plugins_map_id()
-
-    local router_map = router_map_service_id(plugin_map)
+    local router_map = router_map_service_id()
 
     local service_router_list = {}
 
@@ -324,26 +248,6 @@ local function sync_update_router_data()
             end
 
             service_list[j].routers = routers
-
-            if #service_list[j].plugins > 0 then
-
-                local plugin_data = {}
-
-                for k = 1, #service_list[j].plugins do
-
-                    repeat
-
-                        if not service_list[j].plugins[k].id or not plugin_map[service_list[j].plugins[k].id] then
-                            break
-                        end
-
-                        table.insert(plugin_data, plugin_map[service_list[j].plugins[k].id])
-
-                    until true
-                end
-
-                service_list[j].plugins = plugin_data
-            end
 
             table.insert(service_router_list, service_list[j])
 

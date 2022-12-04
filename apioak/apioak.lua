@@ -5,22 +5,67 @@ local sys    = require("apioak.sys")
 
 local function run_plugin(phase, oak_ctx)
 
-    -- @todo 处理插件执行
+    -- 提取服务上的插件列表和路由上的插件列表
+    local service_router  = oak_ctx.config.service_router
+    local service_plugins = service_router.plugins
+    local router_plugins  = service_router.router.plugins
 
-    --local
-    --
-    --
-    --local plugin_objects = sys.plugin.plugin_subjects()
-    --
-    --
+    local plugin_objects = sys.plugin.plugin_subjects()
 
+    local router_plugin_keys_map = {}
 
-    --for i = 1, #plugins do
-    --    local plugin = plugins[i]
-    --    if plugin[phase] then
-    --        plugin[phase](oak_ctx)
-    --    end
-    --end
+    if #router_plugins > 0 then
+
+        for i = 1, #router_plugins do
+
+            repeat
+
+                if not plugin_objects[router_plugins[i].id] then
+                    break
+                end
+
+                local router_plugin_object = plugin_objects[router_plugins[i].id]
+
+                router_plugin_keys_map[router_plugin_object.key] = 0
+
+                if not router_plugin_object.handler[phase] then
+                    break
+                end
+
+                router_plugin_object.handler[phase](oak_ctx, router_plugin_object.config)
+
+            until true
+        end
+
+    end
+
+    if #service_plugins > 0 then
+
+        for j = 1, #service_plugins do
+
+            repeat
+
+                if not plugin_objects[service_plugins[j].id] then
+                    break
+                end
+
+                local service_plugin_object = plugin_objects[service_plugins[j].id]
+
+                if router_plugin_keys_map[service_plugin_object.key] then
+                    break
+                end
+
+                if not service_plugin_object.handler[phase] then
+                    break
+                end
+
+                service_plugin_object.handler[phase](oak_ctx, service_plugin_object.config)
+
+            until true
+        end
+
+    end
+
 end
 
 local function options_request_handle()
