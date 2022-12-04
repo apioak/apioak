@@ -83,11 +83,13 @@ function _M.sync_update_ssl_data()
     local ssl_list, ssl_list_err = dao.certificate.lists()
 
     if ssl_list_err then
-        return nil, ssl_list_err
+        pdk.log.error("sync_update_ssl_data: get ssl list FAIL [".. ssl_list_err .."]")
+        return nil
     end
 
-    if not ssl_list.list then
-        return nil, nil
+    if not ssl_list or not ssl_list.list or (#ssl_list.list == 0) then
+        pdk.log.error("sync_update_ssl_data: ssl list null [" .. pdk.json.encode(ssl_list, true) .. "]")
+        return nil
     end
 
     local ssl_data = {}
@@ -114,11 +116,11 @@ function _M.sync_update_ssl_data()
         until true
     end
 
-    if not next(ssl_data) then
-        return nil, nil
+    if next(ssl_data) then
+        return ssl_data
     end
 
-    return ssl_data, nil
+    return nil
 end
 
 function _M.ssl_match(oak_ctx)

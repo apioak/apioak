@@ -2,14 +2,14 @@ local ngx      = ngx
 local pdk      = require("apioak.pdk")
 local dao      = require("apioak.dao")
 local schema   = require("apioak.schema")
-local process  = require("ngx.process")
 local events   = require("resty.worker.events")
-local resolver = require("resty.dns.resolver")
 local cache    = require("apioak.sys.cache")
+local resolver = require("resty.dns.resolver")
+local math_random        = math.random
 local ngx_sleep          = ngx.sleep
 local ngx_timer_at       = ngx.timer.at
-local math_random        = math.random
 local ngx_worker_exiting = ngx.worker.exiting
+local ngx_process        = require("ngx.process")
 local balancer           = require("ngx.balancer")
 local balancer_round     = require('resty.roundrobin')
 local balancer_chash     = require('resty.chash')
@@ -144,7 +144,7 @@ end
 
 local function automatic_sync_upstream()
 
-    if process.type() ~= "privileged agent" then
+    if ngx_process.type() ~= "privileged agent" then
         return
     end
 
@@ -316,7 +316,7 @@ local function worker_event_upstream_balancer_register()
 
     end
 
-    if process.type() ~= "privileged agent" then
+    if ngx_process.type() ~= "privileged agent" then
         events.register(upstream_balancer_handler, events_source_upstream, events_type_put_upstream)
     end
 end

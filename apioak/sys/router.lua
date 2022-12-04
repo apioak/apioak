@@ -1,13 +1,13 @@
-local ngx     = ngx
-local pdk     = require("apioak.pdk")
-local db      = require("apioak.db")
-local dao     = require("apioak.dao")
-local process = require("ngx.process")
-local events  = require("resty.worker.events")
-local schema  = require("apioak.schema")
-local pairs               = pairs
+local ngx    = ngx
+local pairs  = pairs
+local pdk    = require("apioak.pdk")
+local db     = require("apioak.db")
+local dao    = require("apioak.dao")
+local events = require("resty.worker.events")
+local schema = require("apioak.schema")
 local oakrouting          = require("resty.oakrouting")
 local sys_certificate     = require("apioak.sys.certificate")
+local ngx_process         = require("ngx.process")
 local ngx_var             = ngx.var
 local ngx_sleep           = ngx.sleep
 local ngx_timer_at        = ngx.timer.at
@@ -137,7 +137,7 @@ local function plugins_map_id()
     local list, err = dao.common.list_keys(dao.common.PREFIX_MAP.plugins)
 
     if err then
-        pdk.log.error("plugins_map_id: get upstream list FAIL [".. err .."]")
+        pdk.log.error("plugins_map_id: get plugin list FAIL [".. err .."]")
         return nil
     end
 
@@ -350,6 +350,10 @@ local function sync_update_router_data()
         until true
     end
 
+    if #service_router_list == 0 then
+        return nil
+    end
+
     return service_router_list
 end
 
@@ -358,7 +362,7 @@ local function automatic_sync_ssl_router(premature)
         return
     end
 
-    if process.type() ~= "privileged agent" then
+    if ngx_process.type() ~= "privileged agent" then
         return
     end
 
@@ -393,27 +397,12 @@ local function automatic_sync_ssl_router(premature)
 
             if not sync_data.new or (sync_data.new ~= sync_data.old) then
 
-                local sync_ssl_data, sync_ssl_err = sys_certificate.sync_update_ssl_data()
+                local sync_ssl_data = sys_certificate.sync_update_ssl_data()
 
-                if sync_ssl_err then
-                    pdk.log.error("automatic_sync_ssl_router: get sync ssl data err:["
-                                          .. i .."][" .. tostring(sync_ssl_err) .. "]")
-                end
-
-                local sync_router_data, sync_router_err = sync_update_router_data()
-
-                if sync_router_err then
-                    pdk.log.error("automatic_sync_ssl_router: get sync router data err:["
-                                          .. i .."][" .. tostring(sync_router_err) .. "]")
-                end
+                local sync_router_data = sync_update_router_data()
 
                 local post_ssl, post_ssl_err = events.post(
                         sys_certificate.events_source_ssl, sys_certificate.events_type_put_ssl, sync_ssl_data)
-
-                if post_ssl_err then
-                    pdk.log.error("automatic_sync_ssl_router: sync ssl data post err:["
-                                          .. i .."][" .. tostring(post_ssl_err) .. "]")
-                end
 
                 local post_router, post_router_err = events.post(
                         events_source_router, events_type_put_router, sync_router_data)
@@ -421,6 +410,11 @@ local function automatic_sync_ssl_router(premature)
                 if post_router_err then
                     pdk.log.error("automatic_sync_ssl_router: sync router data post err:["
                                           .. i .."][" .. tostring(post_router_err) .. "]")
+                end
+
+                if post_ssl_err then
+                    pdk.log.error("automatic_sync_ssl_router: sync ssl data post err:["
+                                          .. i .."][" .. tostring(post_ssl_err) .. "]")
                 end
 
                 if post_ssl and post_router then
@@ -551,7 +545,7 @@ local function worker_sync_event_register()
         router_objects = oakrouting.new(oak_router_data)
     end
 
-    if process.type() ~= "privileged agent" then
+    if ngx_process.type() ~= "privileged agent" then
         events.register(ssl_handler, sys_certificate.events_source_ssl, sys_certificate.events_type_put_ssl)
         events.register(router_handler, events_source_router, events_type_put_router)
     end

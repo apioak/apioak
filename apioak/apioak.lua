@@ -4,18 +4,23 @@ local pdk    = require("apioak.pdk")
 local sys    = require("apioak.sys")
 
 local function run_plugin(phase, oak_ctx)
-    local plugins, err = pdk.plugin.loading()
-    if err then
-        pdk.log.error("failure to loading plugins, ", err)
-        plugins = {}
-    end
 
-    for i = 1, #plugins do
-        local plugin = plugins[i]
-        if plugin[phase] then
-            plugin[phase](oak_ctx)
-        end
-    end
+    -- @todo 处理插件执行
+
+    --local
+    --
+    --
+    --local plugin_objects = sys.plugin.plugin_subjects()
+    --
+    --
+
+
+    --for i = 1, #plugins do
+    --    local plugin = plugins[i]
+    --    if plugin[phase] then
+    --        plugin[phase](oak_ctx)
+    --    end
+    --end
 end
 
 local function options_request_handle()
@@ -70,7 +75,7 @@ function APIOAK.init_worker()
 
     sys.router.init_worker()
 
-    --sys.plugin.init_worker()
+    sys.plugin.init_worker()
 end
 
 function APIOAK.ssl_certificate()
