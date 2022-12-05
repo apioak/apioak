@@ -1,17 +1,17 @@
 local pdk = require("apioak.pdk")
 
+local plugin_common = require("apioak.plugin.plugin_common")
+
 local plugin_name = "cors"
 
 local _M = {}
 
 function _M.schema_config(config)
 
-    local plugin_schema = require("apioak.plugin." .. plugin_name .. ".schema-" .. plugin_name)
+    local plugin_schema_err = plugin_common.plugin_config_schema(plugin_name, config)
 
-    local _, err = pdk.schema.check(plugin_schema.schema, config)
-
-    if err then
-        return err
+    if plugin_schema_err then
+        return plugin_schema_err
     end
 
     if config.allow_methods and (#config.allow_methods > 0) then
@@ -21,6 +21,8 @@ function _M.schema_config(config)
         local allow_methods_num = #allow_methods_arr
 
         local new_methods = {}
+
+        local plugin_schema = require("apioak.plugin." .. plugin_name .. ".schema-" .. plugin_name)
 
         for i = 1, #allow_methods_arr do
 

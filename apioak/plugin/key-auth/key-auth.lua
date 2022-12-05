@@ -1,17 +1,17 @@
 local pdk = require("apioak.pdk")
 
+local plugin_common = require("apioak.plugin.plugin_common")
+
 local plugin_name = "key-auth"
 
 local _M = {}
 
 function _M.schema_config(config)
 
-    local plugin_schema = require("apioak.plugin." .. plugin_name .. ".schema-" .. plugin_name)
+    local plugin_schema_err = plugin_common.plugin_config_schema(plugin_name, config)
 
-    local _, err = pdk.schema.check(plugin_schema.schema, config)
-
-    if err then
-        return err
+    if plugin_schema_err then
+        return plugin_schema_err
     end
 
     return nil
