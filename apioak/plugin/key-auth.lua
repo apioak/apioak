@@ -1,6 +1,6 @@
 local pdk = require("apioak.pdk")
 
-local plugin_name = "key-auth"
+local plugin_name = "key-auth.lua"
 
 local _M = {
     name         = plugin_name,

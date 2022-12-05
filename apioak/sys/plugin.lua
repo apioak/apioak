@@ -77,14 +77,16 @@ local function plugins_list()
                 break
             end
 
-            local plugin_schema = require("apioak.plugin." .. plugin_key .. ".schema-" .. plugin_key)
+            local plugin_object = require("apioak.plugin." .. plugin_key .. "." .. plugin_key)
 
-            local _, err = pdk.schema.check(plugin_schema, list.list[i].config)
+            if plugin_object.schema_config then
+                local err = plugin_object.schema_config(list.list[i].config)
 
-            if err then
-                pdk.log.error("plugins_list: plugin config schema check err:[" .. err .. "]["
-                                      .. pdk.json.encode(list.list[i], true) .. "]")
-                break
+                if err then
+                    pdk.log.error("plugins_list: plugin config schema check err:[" .. err .. "]["
+                                          .. pdk.json.encode(list.list[i], true) .. "]")
+                    break
+                end
             end
 
             pdk.table.insert(plugins_data_list, {

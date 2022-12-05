@@ -5,7 +5,6 @@ local sys    = require("apioak.sys")
 
 local function run_plugin(phase, oak_ctx)
 
-    -- 提取服务上的插件列表和路由上的插件列表
     local service_router  = oak_ctx.config.service_router
     local service_plugins = service_router.plugins
     local router_plugins  = service_router.router.plugins

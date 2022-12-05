@@ -11,9 +11,16 @@ function plugin_controller.created()
 
     plugin_controller.check_schema(schema.plugin.created, body)
 
-    local plugin_config = require("apioak.plugin." .. body.key .. ".schema-" .. body.key)
+    local plugin_object = require("apioak.plugin." .. body.key .. "." .. body.key)
 
-    plugin_controller.check_schema(plugin_config.config, body.config)
+    if plugin_object.schema_config then
+        local err = plugin_object.schema_config(body.config)
+
+        if err then
+            pdk.log.error("[" .. body.key .. "] plugin config schema err: [" .. tostring(err) .. "]")
+            pdk.response.exit(400, { message = "Parameter error" })
+        end
+    end
 
     local check_name = dao.common.check_key_exists(body.name, pdk.const.CONSUL_PRFX_PLUGINS)
 
@@ -56,9 +63,16 @@ function plugin_controller.updated(params)
 
     if body.config then
 
-        local plugin_config = require("apioak.plugin." .. detail.key .. ".schema-" .. detail.key)
+        local plugin_object = require("apioak.plugin." .. detail.key .. "." .. detail.key)
 
-        plugin_controller.check_schema(plugin_config.config, body.config)
+        if plugin_object.schema_config then
+            local err = plugin_object.schema_config(body.config)
+
+            if err then
+                pdk.log.error("[" .. detail.key .. "] plugin config schema err: [" .. tostring(err) .. "]")
+                pdk.response.exit(400, { message = "Parameter error" })
+            end
+        end
 
     end
 
