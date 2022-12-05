@@ -120,10 +120,6 @@ function APIOAK.init_worker()
 
     sys.balancer.init_worker()
 
-    --sys.o_balancer.init_worker()
-
-    --sys.balancer.init_worker_event()
-
     sys.router.init_worker()
 
     sys.plugin.init_worker()
@@ -155,21 +151,11 @@ function APIOAK.http_access()
 
     sys.router.parameter(oak_ctx)
 
-    --local match_succeed = sys.router.matched(oak_ctx)
-
     local match_succeed = sys.router.router_match(oak_ctx)
 
     if not match_succeed then
         pdk.response.exit(404, { err_message = "\"URI\" Undefined" })
     end
-
-    -- @todo mock数据（该功能后期也会放在插件中作为一个单独的插件来实现该功能）
-    --if oak_ctx.router.is_mock_request then
-    --    pdk.response.set_header(pdk.const.RESPONSE_MOCK_REQUEST_KEY, true)
-    --    pdk.response.exit(200, oak_ctx.router.response_success, oak_ctx.router.response_type)
-    --end
-
-    --sys.router.mapping(oak_ctx)
 
     sys.balancer.init_resolver()
 
