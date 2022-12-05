@@ -1,7 +1,7 @@
 local _M = {}
 
 _M.schema = {
-    type = "object",
+    type       = "object",
     properties = {
         secret = {
             type      = "string",
@@ -9,7 +9,7 @@ _M.schema = {
             maxLength = 32,
         }
     },
-    required = { "secret" }
+    required   = { "secret" }
 }
 
 return _M
