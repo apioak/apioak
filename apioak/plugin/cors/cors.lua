@@ -58,7 +58,7 @@ function _M.schema_config(config)
     return nil
 end
 
-function _M.header_filter(oak_ctx, plugin_config)
+function _M.http_header_filter(oak_ctx, plugin_config)
 
     if plugin_config.allow_methods and (#plugin_config.allow_methods > 0) then
         pdk.response.set_header("Access-Control-Allow-Methods", plugin_config.allow_methods)
