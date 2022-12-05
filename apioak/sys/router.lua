@@ -575,7 +575,7 @@ function _M.router_match(oak_ctx)
 
     if not router_objects then
         pdk.log.error("router_match: router_objects is null")
-        return
+        return false
     end
 
     local match_path = oak_ctx.matched.host .. ":" .. oak_ctx.matched.uri

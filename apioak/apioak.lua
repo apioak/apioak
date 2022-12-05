@@ -5,7 +5,14 @@ local sys    = require("apioak.sys")
 
 local function run_plugin(phase, oak_ctx)
 
-    local service_router  = oak_ctx.config.service_router
+    local config = oak_ctx.config
+
+    if not config then
+        pdk.log.error("run_plugin plugin data not ready!")
+        pdk.response.exit(500, { message = "config not ready" })
+    end
+
+    local service_router  = config.service_router
     local service_plugins = service_router.plugins
     local router_plugins  = service_router.router.plugins
 
@@ -150,17 +157,11 @@ function APIOAK.http_access()
 
     --local match_succeed = sys.router.matched(oak_ctx)
 
-    -- @todo 新版路由匹配
     local match_succeed = sys.router.router_match(oak_ctx)
 
     if not match_succeed then
         pdk.response.exit(404, { err_message = "\"URI\" Undefined" })
     end
-
-    -- @todo 跨域配置（该功能会放在插件中单独的作为一个插件来实现）
-    --if oak_ctx.router.enable_cors == 1 then
-    --    enable_cors_handle()
-    --end
 
     -- @todo mock数据（该功能后期也会放在插件中作为一个单独的插件来实现该功能）
     --if oak_ctx.router.is_mock_request then

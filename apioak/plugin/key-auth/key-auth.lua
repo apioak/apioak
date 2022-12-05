@@ -26,6 +26,7 @@ function _M.http_access(oak_ctx, plugin_config)
     end
 
     local header_key = matched.header["APIOAK-KEY-AUTH"]
+
     if not header_key then
         pdk.response.exit(
                 401, { message = "[key-auth] Authorization FAIL, header \"APIOAK-KEY-AUTH\" is required" })

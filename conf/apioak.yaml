@@ -18,7 +18,9 @@ database:
 
 plugins:
   - cors
-  - waf
+  - mock
+  - key-auth
+  - jwt-auth
 
 consul:
   host: 192.168.10.21
