@@ -4,10 +4,6 @@ local schema      = require("apioak.schema")
 local events      = require("resty.worker.events")
 local ngx_process = require("ngx.process")
 
-local ngx_sleep          = ngx.sleep
-local ngx_timer_at       = ngx.timer.at
-local ngx_worker_exiting = ngx.worker.exiting
-
 local plugin_objects = {}
 
 local _M = {}
@@ -106,44 +102,6 @@ function _M.sync_update_plugin_data()
     return plugins_data_list
 end
 
-local function automatic_sync_plugin()
-
-    if ngx_process.type() ~= "privileged agent" then
-        return
-    end
-
-    local i, limit = 0, 10
-
-    while not ngx_worker_exiting() and i <= limit do
-        i = i + 1
-
-        repeat
-
-            local plugin_list = plugins_list()
-
-            if not plugin_list or #plugin_list == 0 then
-                pdk.log.error("automatic_sync_plugin: the plugin and nodes list null")
-                break
-            end
-
-            local _, post_plugin_err = events.post(events_source_plugin, events_type_put_plugin, plugin_list)
-
-            if post_plugin_err then
-                pdk.log.error("automatic_sync_plugin: sync plugin data post err:["
-                                      .. i .."][" .. tostring(post_plugin_err) .. "]")
-            end
-
-        until true
-
-        ngx_sleep(3)
-    end
-
-    if not ngx_worker_exiting() then
-        ngx_timer_at(0, automatic_sync_plugin)
-    end
-
-end
-
 local function worker_event_plugin_handler_register()
 
     local plugin_handler = function(data, event, source)
@@ -181,8 +139,6 @@ end
 function _M.init_worker()
 
     worker_event_plugin_handler_register()
-
-    --ngx_timer_at(0, automatic_sync_plugin)
 
 end
 
