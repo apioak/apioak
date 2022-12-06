@@ -14,9 +14,6 @@ local balancer           = require("ngx.balancer")
 local balancer_round     = require('resty.roundrobin')
 local balancer_chash     = require('resty.chash')
 
-local events_source_upstream   = "events_source_upstream"
-local events_type_put_upstream = "events_type_put_upstream"
-
 local resolver_address_cache_prefix = "resolver_address_cache_prefix"
 
 local upstream_objects = {}
@@ -24,17 +21,20 @@ local resolver_client
 
 local _M = {}
 
-local function upstream_nodes_list()
+_M.events_source_upstream   = "events_source_upstream"
+_M.events_type_put_upstream = "events_type_put_upstream"
+
+function _M.sync_update_upstream_data()
 
     local upstream_list, err = dao.common.list_keys(dao.common.PREFIX_MAP.upstreams)
 
     if err then
-        pdk.log.error("upstream_nodes_list: get upstream list FAIL [".. err .."]")
+        pdk.log.error("sync_update_upstream_data: get upstream list FAIL [".. err .."]")
         return nil
     end
 
     if not upstream_list or not upstream_list.list or (#upstream_list.list == 0) then
-        pdk.log.error("upstream_nodes_list: upstream list null ["
+        pdk.log.error("sync_update_upstream_data: upstream list null ["
                               .. pdk.json.encode(upstream_list, true) .. "]")
         return nil
     end
@@ -42,7 +42,7 @@ local function upstream_nodes_list()
     local node_list, err = dao.common.list_keys(dao.common.PREFIX_MAP.upstream_nodes)
 
     if err then
-        pdk.log.error("upstream_nodes_list: get upstream node list FAIL [".. err .."]")
+        pdk.log.error("sync_update_upstream_data: get upstream node list FAIL [".. err .."]")
         return nil
     end
 
@@ -58,7 +58,7 @@ local function upstream_nodes_list()
                 local _, err = pdk.schema.check(schema.upstream_node.upstream_node_data, node_list.list[i])
 
                 if err then
-                    pdk.log.error("upstream_nodes_list: upstream node schema check err:[" .. err .. "]["
+                    pdk.log.error("sync_update_upstream_data: upstream node schema check err:[" .. err .. "]["
                                           .. pdk.json.encode(node_list.list[i], true) .. "]")
                     break
                 end
@@ -92,7 +92,7 @@ local function upstream_nodes_list()
             local _, err = pdk.schema.check(schema.upstream.upstream_data, upstream_list.list[j])
 
             if err then
-                pdk.log.error("upstream_nodes_list: upstream schema check err:[" .. err .. "]["
+                pdk.log.error("sync_update_upstream_data: upstream schema check err:[" .. err .. "]["
                                       .. pdk.json.encode(upstream_list.list[j], true) .. "]")
                 break
             end
@@ -118,7 +118,7 @@ local function upstream_nodes_list()
             end
 
             if #upstream_nodes == 0 then
-                pdk.log.error("upstream_nodes_list: the upstream node does not match the data: ["
+                pdk.log.error("sync_update_upstream_data: the upstream node does not match the data: ["
                                       .. pdk.json.encode(upstream_list.list[j], true) .. "]")
                 break
             end
@@ -140,44 +140,6 @@ local function upstream_nodes_list()
     end
 
     return nil
-end
-
-local function automatic_sync_upstream()
-
-    if ngx_process.type() ~= "privileged agent" then
-        return
-    end
-
-    local i, limit = 0, 10
-
-    while not ngx_worker_exiting() and i <= limit do
-        i = i + 1
-
-        repeat
-
-            local upstream_node_list = upstream_nodes_list()
-
-            if not upstream_node_list then
-                pdk.log.error("automatic_sync_upstream: the upstream and nodes list null")
-                break
-            end
-
-            local _, post_upstream_err = events.post(
-                    events_source_upstream, events_type_put_upstream, upstream_node_list)
-
-            if post_upstream_err then
-                pdk.log.error("automatic_sync_upstream: sync upstream data post err:["
-                                      .. i .."][" .. tostring(post_upstream_err) .. "]")
-            end
-
-        until true
-
-        ngx_sleep(3)
-    end
-
-    if not ngx_worker_exiting() then
-        ngx_timer_at(0, automatic_sync_upstream)
-    end
 end
 
 local function generate_upstream_balancer(upstream_data)
@@ -290,15 +252,15 @@ local function renew_upstream_balancer_object(new_upstream_objects)
 
 end
 
-local function worker_event_upstream_balancer_register()
+local function worker_event_upstream_handler_register()
 
     local upstream_balancer_handler = function(data, event, source)
 
-        if source ~= events_source_upstream then
+        if source ~= _M.events_source_upstream then
             return
         end
 
-        if event ~= events_type_put_upstream then
+        if event ~= _M.events_type_put_upstream then
             return
         end
 
@@ -317,15 +279,13 @@ local function worker_event_upstream_balancer_register()
     end
 
     if ngx_process.type() ~= "privileged agent" then
-        events.register(upstream_balancer_handler, events_source_upstream, events_type_put_upstream)
+        events.register(upstream_balancer_handler, _M.events_source_upstream, _M.events_type_put_upstream)
     end
 end
 
 function _M.init_worker()
 
-    ngx_timer_at(0, worker_event_upstream_balancer_register)
-
-    ngx_timer_at(0, automatic_sync_upstream)
+    worker_event_upstream_handler_register()
 
 end
 

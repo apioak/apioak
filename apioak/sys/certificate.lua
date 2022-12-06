@@ -1,8 +1,10 @@
-local pdk        = require("apioak.pdk")
-local dao        = require("apioak.dao")
-local schema     = require("apioak.schema")
-local oakrouting = require("resty.oakrouting")
-local ngx_ssl    = require("ngx.ssl")
+local pdk         = require("apioak.pdk")
+local dao         = require("apioak.dao")
+local schema      = require("apioak.schema")
+local oakrouting  = require("resty.oakrouting")
+local events      = require("resty.worker.events")
+local ngx_ssl     = require("ngx.ssl")
+local ngx_process = require("ngx.process")
 
 local ssl_objects
 
@@ -43,39 +45,48 @@ local function generate_ssl_data(ssl_data)
     }, nil
 end
 
-_M.ssl_handler = function (data, event, source)
+local function worker_event_certificate_handler_register()
 
-    if source ~= _M.events_source_ssl then
-        return
+    local certificate_handler = function(data, event, source)
+
+        if source ~= _M.events_source_ssl then
+            return
+        end
+
+        if event ~= _M.events_type_put_ssl then
+            return
+        end
+
+        if (type(data) ~= "table") or (#data == 0) then
+            return
+        end
+
+        local oak_ssl_data = {}
+
+        for i = 1, #data do
+
+            repeat
+
+                local ssl_data, ssl_data_err = generate_ssl_data(data[i])
+
+                if ssl_data_err then
+                    pdk.log.error("certificate_handler: generate ssl data err: [" .. tostring(ssl_data_err) .. "]")
+                    break
+                end
+
+                table.insert(oak_ssl_data, ssl_data)
+
+            until true
+        end
+
+        ssl_objects = oakrouting.new(oak_ssl_data)
+
     end
 
-    if event ~= _M.events_type_put_ssl then
-        return
+    if ngx_process.type() ~= "privileged agent" then
+        events.register(certificate_handler, _M.events_source_ssl, _M.events_type_put_ssl)
     end
 
-    if (type(data) ~= "table") or not next(data) then
-        return
-    end
-
-    local oak_ssl_data = {}
-
-    for i = 1, #data do
-
-        repeat
-
-            local ssl_data, ssl_data_err = generate_ssl_data(data[i])
-
-            if ssl_data_err then
-                pdk.log.error("ssl_handler: generate ssl data err: [" .. tostring(ssl_data_err) .. "]")
-                break
-            end
-
-            table.insert(oak_ssl_data, ssl_data)
-
-        until true
-    end
-
-    ssl_objects = oakrouting.new(oak_ssl_data)
 end
 
 function _M.sync_update_ssl_data()
@@ -121,6 +132,12 @@ function _M.sync_update_ssl_data()
     end
 
     return nil
+end
+
+function _M.init_worker()
+
+    worker_event_certificate_handler_register()
+
 end
 
 function _M.ssl_match(oak_ctx)

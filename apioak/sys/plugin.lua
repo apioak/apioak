@@ -8,12 +8,12 @@ local ngx_sleep          = ngx.sleep
 local ngx_timer_at       = ngx.timer.at
 local ngx_worker_exiting = ngx.worker.exiting
 
-local events_source_plugin   = "events_source_plugin"
-local events_type_put_plugin = "events_type_put_plugin"
-
 local plugin_objects = {}
 
 local _M = {}
+
+_M.events_source_plugin   = "events_source_plugin"
+_M.events_type_put_plugin = "events_type_put_plugin"
 
 local function plugins_handler_map_name()
 
@@ -37,7 +37,7 @@ local function plugins_handler_map_name()
 
 end
 
-local function plugins_list()
+function _M.sync_update_plugin_data()
 
     local plugins_name_handler_map = plugins_handler_map_name()
 
@@ -144,15 +144,15 @@ local function automatic_sync_plugin()
 
 end
 
-local function worker_event_plugin_init_register()
+local function worker_event_plugin_handler_register()
 
-    local plugin_init_handler = function(data, event, source)
+    local plugin_handler = function(data, event, source)
 
-        if source ~= events_source_plugin then
+        if source ~= _M.events_source_plugin then
             return
         end
 
-        if event ~= events_type_put_plugin then
+        if event ~= _M.events_type_put_plugin then
             return
         end
 
@@ -173,16 +173,16 @@ local function worker_event_plugin_init_register()
     end
 
     if ngx_process.type() ~= "privileged agent" then
-        events.register(plugin_init_handler, events_source_plugin, events_type_put_plugin)
+        events.register(plugin_handler, _M.events_source_plugin, _M.events_type_put_plugin)
     end
 
 end
 
 function _M.init_worker()
 
-    ngx_timer_at(0, worker_event_plugin_init_register)
+    worker_event_plugin_handler_register()
 
-    ngx_timer_at(0, automatic_sync_plugin)
+    --ngx_timer_at(0, automatic_sync_plugin)
 
 end
 

@@ -7,6 +7,8 @@ local events = require("resty.worker.events")
 local schema = require("apioak.schema")
 local oakrouting          = require("resty.oakrouting")
 local sys_certificate     = require("apioak.sys.certificate")
+local sys_balancer        = require("apioak.sys.balancer")
+local sys_plugin          = require("apioak.sys.plugin")
 local ngx_process         = require("ngx.process")
 local ngx_var             = ngx.var
 local ngx_sleep           = ngx.sleep
@@ -261,7 +263,7 @@ local function sync_update_router_data()
     return service_router_list
 end
 
-local function automatic_sync_ssl_router(premature)
+local function automatic_sync_resource_data(premature)
     if premature then
         return
     end
@@ -281,7 +283,7 @@ local function automatic_sync_ssl_router(premature)
             if err then
                 err_times = err_times + 1
 
-                pdk.log.error("automatic_sync_ssl_router_get_sync_data_err: ["
+                pdk.log.error("automatic_sync_resource_data: get_sync_data_err: ["
                                       .. err_times .. "] [" .. tostring(err) .. "]")
 
                 if err_times == err_times_limit then
@@ -301,27 +303,44 @@ local function automatic_sync_ssl_router(premature)
 
             if not sync_data.new or (sync_data.new ~= sync_data.old) then
 
-                local sync_ssl_data = sys_certificate.sync_update_ssl_data()
-
-                local sync_router_data = sync_update_router_data()
+                local sync_ssl_data      = sys_certificate.sync_update_ssl_data()
+                local sync_upstream_data = sys_balancer.sync_update_upstream_data()
+                local sync_plugin_data   = sys_plugin.sync_update_plugin_data()
+                local sync_router_data   = sync_update_router_data()
 
                 local post_ssl, post_ssl_err = events.post(
                         sys_certificate.events_source_ssl, sys_certificate.events_type_put_ssl, sync_ssl_data)
 
+                local post_upstream, post_upstream_err = events.post(
+                        sys_balancer.events_source_upstream, sys_balancer.events_type_put_upstream, sync_upstream_data)
+
+                local post_plugin, post_plugin_err = events.post(
+                        sys_plugin.events_source_plugin, sys_plugin.events_type_put_plugin, sync_plugin_data)
+
                 local post_router, post_router_err = events.post(
                         events_source_router, events_type_put_router, sync_router_data)
 
-                if post_router_err then
-                    pdk.log.error("automatic_sync_ssl_router: sync router data post err:["
-                                          .. i .."][" .. tostring(post_router_err) .. "]")
-                end
-
                 if post_ssl_err then
-                    pdk.log.error("automatic_sync_ssl_router: sync ssl data post err:["
+                    pdk.log.error("automatic_sync_resource_data: sync ssl data post err:["
                                           .. i .."][" .. tostring(post_ssl_err) .. "]")
                 end
 
-                if post_ssl and post_router then
+                if post_upstream_err then
+                    pdk.log.error("automatic_sync_resource_data: sync upstream data post err:["
+                                          .. i .."][" .. tostring(post_upstream_err) .. "]")
+                end
+
+                if post_plugin_err then
+                    pdk.log.error("automatic_sync_resource_data: sync plugin data post err:["
+                                          .. i .."][" .. tostring(post_plugin_err) .. "]")
+                end
+
+                if post_router_err then
+                    pdk.log.error("automatic_sync_resource_data: sync router data post err:["
+                                          .. i .."][" .. tostring(post_router_err) .. "]")
+                end
+
+                if post_ssl and post_upstream and post_plugin and post_router then
                     dao.common.update_sync_data_hash(true)
                 end
 
@@ -332,7 +351,7 @@ local function automatic_sync_ssl_router(premature)
     end
 
     if not ngx_worker_exiting() then
-        ngx_timer_at(0, automatic_sync_ssl_router)
+        ngx_timer_at(0, automatic_sync_resource_data)
     end
 end
 
@@ -404,9 +423,7 @@ local function generate_router_data(router_data)
     return nil, nil
 end
 
-local function worker_sync_event_register()
-
-    local ssl_handler = sys_certificate.ssl_handler
+local function worker_event_router_handler_register()
 
     local router_handler = function(data, event, source)
 
@@ -450,17 +467,16 @@ local function worker_sync_event_register()
     end
 
     if ngx_process.type() ~= "privileged agent" then
-        events.register(ssl_handler, sys_certificate.events_source_ssl, sys_certificate.events_type_put_ssl)
         events.register(router_handler, events_source_router, events_type_put_router)
     end
 end
 
 function _M.init_worker()
-    ngx_timer_at(0, automatic_sync_hash_id)
 
-    worker_sync_event_register()
+    worker_event_router_handler_register()
 
-    ngx_timer_at(0, automatic_sync_ssl_router)
+    ngx_timer_at(0, automatic_sync_resource_data)
+
 end
 
 local checked_request_params = function(rule, params)
