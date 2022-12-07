@@ -55,6 +55,7 @@ function _M.http_access(oak_ctx, plugin_config)
     end
 
     local limit = create_limit_object(matched, plugin_config)
+
     if not limit then
         pdk.response.exit(500, { message = "[limit-conn] Failed to instantiate a Limit-Conn object" })
     end
