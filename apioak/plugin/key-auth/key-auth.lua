@@ -22,7 +22,7 @@ function _M.http_access(oak_ctx, plugin_config)
     local matched = oak_ctx.matched
 
     if not matched.header then
-        pdk.log.error("[key-Auth] oak_ctx format err!")
+        pdk.log.error("[key-auth] oak_ctx format err!")
     end
 
     local header_key = matched.header["APIOAK-KEY-AUTH"]

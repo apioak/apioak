@@ -21,6 +21,9 @@ plugins:
   - mock
   - key-auth
   - jwt-auth
+  - limit-req
+  - limit-conn
+  - limit-count
 
 consul:
   host: 192.168.10.21
