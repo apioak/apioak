@@ -5,6 +5,7 @@ local oakrouting  = require("resty.oakrouting")
 local events      = require("resty.worker.events")
 local ngx_ssl     = require("ngx.ssl")
 local ngx_process = require("ngx.process")
+local sys_lru_cache = require("apioak.sys.cache")
 
 local ssl_objects
 
@@ -140,6 +141,40 @@ function _M.init_worker()
 
 end
 
+local function fetch_parsed_cert(sni, cert)
+
+    local cache_key       = sni .. "cert"
+     local parsed_cert = sys_lru_cache.get(cache_key)
+
+     if not parsed_cert then
+
+         parsed_cert, err = ngx_ssl.parse_pem_cert(cert)
+         if err ~= nil then
+            return nil, err
+         end
+         sys_lru_cache.set(cache_key, parsed_cert, 3600)
+     end
+
+    return parsed_cert, nil
+end
+
+local function fetch_parsed_priv_key(sni, priv_key)
+
+    local cache_key       = sni .. "priv_key"
+    local parsed_priv_key = sys_lru_cache.get(cache_key)
+
+    if not parsed_priv_key then
+
+        parsed_priv_key, err = ngx_ssl.parse_pem_priv_key(priv_key)
+        if err ~= nil then
+            return nil, err
+        end
+        sys_lru_cache.set(cache_key, parsed_priv_key, 3600)
+    end
+
+    return parsed_priv_key, nil
+end
+
 function _M.ssl_match(oak_ctx)
 
     if not oak_ctx.matched or not oak_ctx.matched.host then
@@ -166,8 +201,7 @@ function _M.ssl_match(oak_ctx)
 
     ngx_ssl.clear_certs()
 
-    -- TODO Store cdata to lrucache
-    local parsed_cert, err = ngx_ssl.parse_pem_cert(oak_ctx.config.cert_key.cert)
+    local parsed_cert, err = fetch_parsed_cert(oak_ctx.matched.host, oak_ctx.config.cert_key.cert)
 
     if err ~= nil then
         pdk.log.error("failed to parse pem cert" ,err)
@@ -181,8 +215,7 @@ function _M.ssl_match(oak_ctx)
         return false
     end
 
-    -- TODO Store cdata to lrucache
-    local parsed_priv_key, err = ngx_ssl.parse_pem_priv_key(oak_ctx.config.cert_key.key)
+    local parsed_priv_key, err = fetch_parsed_priv_key(oak_ctx.matched.host, oak_ctx.config.cert_key.key)
 
     if err ~= nil then
         pdk.log.error("failed to parse pem priv key" ,err)
@@ -198,5 +231,7 @@ function _M.ssl_match(oak_ctx)
 
     return true
 end
+
+
 
 return _M
