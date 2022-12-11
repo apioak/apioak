@@ -23,14 +23,7 @@ local methods = {
     uniqueItems = true,
     items       = {
         type = "string",
-        enum = {
-            pdk.const.METHODS_ALL,
-            pdk.const.METHODS_GET,
-            pdk.const.METHODS_POST,
-            pdk.const.METHODS_PUT,
-            pdk.const.METHODS_PATH,
-            pdk.const.METHODS_DELETE
-        }
+        enum = pdk.const.ALL_METHODS_ALL
     }
 }
 
@@ -48,14 +41,7 @@ _M.created = {
             uniqueItems = true,
             items       = {
                 type = "string",
-                enum = {
-                    pdk.const.METHODS_ALL,
-                    pdk.const.METHODS_GET,
-                    pdk.const.METHODS_POST,
-                    pdk.const.METHODS_PUT,
-                    pdk.const.METHODS_PATH,
-                    pdk.const.METHODS_DELETE,
-                }
+                enum = pdk.const.ALL_METHODS_ALL
             },
             default     = { pdk.const.METHODS_ALL }
         },
