@@ -65,6 +65,10 @@ function certificate_controller.updated(params)
         pdk.response.exit(500, { message = "get certificate detail exception" })
     end
 
+    if not detail then
+        pdk.response.exit(400, { message = "the certificate not found" })
+    end
+
     if (body.name ~= nil) and (body.name ~= detail.name) then
 
         local name_detail, _ = dao.certificate.detail(body.name)
@@ -105,6 +109,10 @@ function certificate_controller.detail(params)
     if err then
         pdk.log.error("certificate-detail get certificate detail exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "get certificate detail exception" })
+    end
+
+    if not detail then
+        pdk.response.exit(400, { message = "the certificate not found" })
     end
 
     pdk.response.exit(200, detail)

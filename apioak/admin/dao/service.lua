@@ -127,8 +127,12 @@ function _M.detail(key)
     if uuid.is_valid(key) then
         local tmp, err = common.get_key(common.SYSTEM_PREFIX_MAP.services .. key)
 
-        if err or not tmp then
+        if err then
             return nil, "service detail:[".. key .. "] does not exists"
+        end
+
+        if not tmp then
+            return nil, nil
         end
 
         key = tmp
@@ -136,8 +140,12 @@ function _M.detail(key)
 
     local res, err = common.detail_key(common.PREFIX_MAP.services .. key)
 
-    if err or not res then
+    if err then
         return nil, "service detail:[".. key .. "] does not exists"
+    end
+
+    if not res then
+        return nil, nil
     end
 
     return pdk.json.decode(res), nil

@@ -52,6 +52,10 @@ function plugin_controller.updated(params)
         pdk.response.exit(500, { message = "get plugin detail exception" })
     end
 
+    if not detail then
+        pdk.response.exit(400, { message = "the plugin not found" })
+    end
+
     if body.name and (body.name ~= detail.name) then
 
         local name_detail, _ = dao.plugin.detail(body.name)
@@ -90,14 +94,18 @@ function plugin_controller.detail(params)
 
     plugin_controller.check_schema(schema.plugin.detail, params)
 
-    local  res, err = dao.plugin.detail(params.plugin_key)
+    local  detail, err = dao.plugin.detail(params.plugin_key)
 
     if err then
         pdk.log.error("plugin-detail get plugin detail exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "get plugin detail exception" })
     end
 
-    pdk.response.exit(200, res)
+    if not detail then
+        pdk.response.exit(400, { message = "the plugin not found" })
+    end
+
+    pdk.response.exit(200, detail)
 end
 
 function plugin_controller.lists()

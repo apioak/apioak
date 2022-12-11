@@ -69,6 +69,10 @@ function upstream_node_controller.updated(params)
         pdk.response.exit(500, { message = "get upstream node detail exception" })
     end
 
+    if not detail then
+        pdk.response.exit(400, { message = "the upstream node not found" })
+    end
+
     if (body.name ~= nil) and (body.name ~= detail.name) then
 
         local name_detail, _ = dao.upstream_node.detail(body.name)
@@ -98,6 +102,10 @@ function upstream_node_controller.detail(params)
     if err then
         pdk.log.error("upstream-node-detail get upstream node detail exception: [" .. err .. "]")
         pdk.response.exit(500, { message = "get upstream node detail exception" })
+    end
+
+    if not detail then
+        pdk.response.exit(400, { message = "the upstream node not found" })
     end
 
     pdk.response.exit(200, detail)

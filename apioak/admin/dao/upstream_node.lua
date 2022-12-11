@@ -162,8 +162,12 @@ function _M.detail(key)
 
         local name, err = common.get_key(common.SYSTEM_PREFIX_MAP.upstream_nodes .. key)
 
-        if err or not name then
+        if err then
             return nil, "upstream_node key:[".. key .. "] does not exist"
+        end
+
+        if not name then
+            return nil, nil
         end
 
         key = name
@@ -171,8 +175,12 @@ function _M.detail(key)
 
     local detail, err = common.get_key(common.PREFIX_MAP.upstream_nodes .. key)
 
-    if err or not detail then
+    if err then
         return nil, "upstream_node detail:[".. key .."] does not exist"
+    end
+
+    if not detail then
+        return nil
     end
 
     return  pdk.json.decode(detail), nil
