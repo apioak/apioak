@@ -143,7 +143,7 @@ function upstream_controller.deleted(params)
         pdk.response.exit(400, { message = "the upstream not found" })
     end
 
-    local router_list, router_list_err = dao.router.router_list_by_service(detail)
+    local router_list, router_list_err = dao.router.router_list_by_upstream(detail)
 
     if router_list_err then
         pdk.log.error("upstream-delete exception when detecting upstream router: [" .. router_list_err .. "]")
