@@ -70,7 +70,7 @@ function upstream_node_controller.updated(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the upstream node not found" })
+        pdk.response.exit(404, { message = "the upstream node not found" })
     end
 
     if (body.name ~= nil) and (body.name ~= detail.name) then
@@ -105,7 +105,7 @@ function upstream_node_controller.detail(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the upstream node not found" })
+        pdk.response.exit(404, { message = "the upstream node not found" })
     end
 
     pdk.response.exit(200, detail)
@@ -123,7 +123,7 @@ function upstream_node_controller.deleted(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the upstream node not found" })
+        pdk.response.exit(404, { message = "the upstream node not found" })
     end
 
     local upstream_list, upstream_list_err = dao.upstream.upstream_list_by_node(detail)

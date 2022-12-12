@@ -74,7 +74,7 @@ function service_controller.updated(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the service not found" })
+        pdk.response.exit(404, { message = "the service not found" })
     end
 
     if (body.name ~= nil) and (body.name ~= detail.name) then
@@ -140,7 +140,7 @@ function service_controller.detail(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the service not found" })
+        pdk.response.exit(404, { message = "the service not found" })
     end
 
     pdk.response.exit(200, detail)
@@ -170,7 +170,7 @@ function service_controller.deleted(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the service not found" })
+        pdk.response.exit(404, { message = "the service not found" })
     end
 
     local router_list, router_list_err = dao.router.router_list_by_service(detail)

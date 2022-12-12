@@ -53,7 +53,7 @@ function plugin_controller.updated(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the plugin not found" })
+        pdk.response.exit(404, { message = "the plugin not found" })
     end
 
     if body.name and (body.name ~= detail.name) then
@@ -102,7 +102,7 @@ function plugin_controller.detail(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the plugin not found" })
+        pdk.response.exit(404, { message = "the plugin not found" })
     end
 
     pdk.response.exit(200, detail)
@@ -132,7 +132,7 @@ function plugin_controller.deleted(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the plugin not found" })
+        pdk.response.exit(404, { message = "the plugin not found" })
     end
 
     local router_list, router_list_err = dao.router.router_list_by_plugin(detail)

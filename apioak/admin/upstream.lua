@@ -62,7 +62,7 @@ function upstream_controller.updated(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the upstream not found" })
+        pdk.response.exit(404, { message = "the upstream not found" })
     end
 
     if (body.name ~= nil) and (body.name ~= detail.name) then
@@ -130,7 +130,7 @@ function upstream_controller.detail(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the upstream not found" })
+        pdk.response.exit(404, { message = "the upstream not found" })
     end
 
     pdk.response.exit(200, detail)
@@ -148,7 +148,7 @@ function upstream_controller.deleted(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the upstream not found" })
+        pdk.response.exit(404, { message = "the upstream not found" })
     end
 
     local router_list, router_list_err = dao.router.router_list_by_upstream(detail)

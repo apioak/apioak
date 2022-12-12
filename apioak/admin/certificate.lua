@@ -66,7 +66,7 @@ function certificate_controller.updated(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the certificate not found" })
+        pdk.response.exit(404, { message = "the certificate not found" })
     end
 
     if (body.name ~= nil) and (body.name ~= detail.name) then
@@ -112,7 +112,7 @@ function certificate_controller.detail(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the certificate not found" })
+        pdk.response.exit(404, { message = "the certificate not found" })
     end
 
     pdk.response.exit(200, detail)
@@ -130,7 +130,7 @@ function certificate_controller.deleted(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the certificate not found" })
+        pdk.response.exit(404, { message = "the certificate not found" })
     end
 
     local res, err = dao.certificate.deleted(detail)

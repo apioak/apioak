@@ -104,7 +104,7 @@ function router_controller.updated(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the router not found" })
+        pdk.response.exit(404, { message = "the router not found" })
     end
 
     if body.name and (body.name ~= detail.name) then
@@ -203,7 +203,7 @@ function router_controller.detail(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the router not found" })
+        pdk.response.exit(404, { message = "the router not found" })
     end
 
     pdk.response.exit(200, detail)
@@ -233,7 +233,7 @@ function router_controller.deleted(params)
     end
 
     if not detail then
-        pdk.response.exit(400, { message = "the router not found" })
+        pdk.response.exit(404, { message = "the router not found" })
     end
 
     local _, err = dao.router.deleted(detail)
