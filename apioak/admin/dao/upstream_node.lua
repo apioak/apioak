@@ -176,7 +176,7 @@ function _M.detail(key)
     local detail, err = common.get_key(common.PREFIX_MAP.upstream_nodes .. key)
 
     if err then
-        return nil, "upstream_node detail:[".. key .."] does not exist"
+        return nil, "upstream_node detail:[".. key .."] does not exist[" .. tostring(err) .. "]"
     end
 
     if not detail then

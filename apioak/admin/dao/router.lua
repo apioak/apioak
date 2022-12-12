@@ -147,7 +147,7 @@ function _M.detail(key)
         key = tmp
     end
 
-    local res, err = common.detail_key(common.PREFIX_MAP.routers .. key)
+    local res, err = common.get_key(common.PREFIX_MAP.routers .. key)
 
     if err then
         return nil, "router:[".. key .. "] does not exists, err [".. tostring(err) .."]"

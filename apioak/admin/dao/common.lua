@@ -116,7 +116,7 @@ function _M.detail_key(key)
     end
 
     if not d then
-        return nil, "failed to get Key-Value detail with key [" .. key .. "]"
+        return nil, nil
     end
 
     return d, nil
