@@ -9,7 +9,7 @@ _M.schema = {
             maxLength = 32,
         }
     },
-    required   = { "jwt_key" }
+    required   = { "secret" }
 }
 
 return _M
