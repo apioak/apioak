@@ -33,7 +33,7 @@ end
 
 local function validate_consul()
     local res, err = get_config()
-    if not res.database then
+    if not res.consul then
         print("Config Consul          ...FAIL (".. err ..")")
         os.exit(1)
     else
