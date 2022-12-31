@@ -17,7 +17,7 @@ function _M.created(params)
         protocols = params.protocols or { _M.PROTOCOLS_HTTP },
         hosts     = params.hosts,
         plugins   = params.plugins or {},
-        enabled   = params.enabled or true
+        enabled   = params.enabled
     }
 
     local payload = {
@@ -69,7 +69,9 @@ function _M.updated(params, detail)
         detail.plugins = params.plugins
     end
     if params.enabled then
-        detail.enabled = params.enabled
+        detail.enabled = true
+    else
+        detail.enabled = false
     end
 
     local payload = {

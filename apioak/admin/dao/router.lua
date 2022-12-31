@@ -17,7 +17,7 @@ function _M.created(params)
         service   = params.service,
         plugins   = params.plugins or {},
         upstream  = params.upstream or {},
-        enabled   = params.enabled or true
+        enabled   = params.enabled
     }
 
     local payload = {
@@ -78,7 +78,9 @@ function _M.updated(params, detail)
         detail.upstream = params.upstream
     end
     if params.enabled then
-        detail.enabled = params.enabled
+        detail.enabled = true
+    else
+        detail.enabled = false
     end
 
     local payload = {
