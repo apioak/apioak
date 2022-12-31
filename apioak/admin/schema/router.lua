@@ -9,7 +9,9 @@ local paths = {
     uniqueItems = true,
     items       = {
         type    = "string",
-        pattern = "^\\/\\*?[0-9a-zA-Z-.=?_*/{}]+$"
+        --pattern = "^\\/\\*?[0-9a-zA-Z-.=?_*/{}]+$"
+        minLength = 1,
+        maxLength = 2000
     }
 }
 
