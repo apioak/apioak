@@ -4,6 +4,9 @@ local pdk    = require("apioak.pdk")
 local sys    = require("apioak.sys")
 
 local function run_plugin(phase, oak_ctx)
+    if oak_ctx == nil or oak_ctx.config == nil then
+        return
+    end
 
     local config = oak_ctx.config
 
@@ -75,7 +78,7 @@ local function run_plugin(phase, oak_ctx)
 end
 
 local function options_request_handle()
-    if pdk.request.get_method() == "OPTIONS" or ngx.var.uri == "/" then
+    if pdk.request.get_method() == "OPTIONS" then
         pdk.response.exit(200, {
             err_message = "Welcome to APIOAK"
         })

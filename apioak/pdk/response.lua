@@ -17,7 +17,7 @@ function _M.exit(code, body, content_type)
 
     if body then
         if type(body) == "table" then
-            local res, err = json.encode(body)
+            local res, err = json.encode(body, true)
             if err then
                 ngx_header[const.CONTENT_TYPE] = const.CONTENT_TYPE_HTML
                 ngx_say(err)

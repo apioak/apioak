@@ -368,7 +368,6 @@ function _M.gogogo(oak_ctx)
             not oak_ctx.config.service_router.router.upstream or
             not next(oak_ctx.config.service_router.router.upstream) then
         pdk.log.error("[sys.balancer.gogogo] oak_ctx.config.service_router.router.upstream is null!")
-        pdk.response.exit(500)
         return
     end
 
@@ -388,7 +387,6 @@ function _M.gogogo(oak_ctx)
 
         if not upstream_object then
             pdk.log.error("[sys.balancer.gogogo] upstream undefined, upstream_object is null!")
-            pdk.response.exit(500)
             return
         end
 
@@ -412,7 +410,6 @@ function _M.gogogo(oak_ctx)
 
         if not address_port then
             pdk.log.error("[sys.balancer.gogogo] upstream undefined, upstream_object find null!")
-            pdk.response.exit(500)
             return
         end
 
@@ -421,7 +418,6 @@ function _M.gogogo(oak_ctx)
         if #address_port_table ~= 2 then
             pdk.log.error("[sys.balancer.gogogo] address port format error: ["
                                   .. pdk.json.encode(address_port_table, true) .. "]")
-            pdk.response.exit(500)
             return
         end
 
@@ -432,7 +428,6 @@ function _M.gogogo(oak_ctx)
 
         if not upstream.address or not upstream.port then
             pdk.log.error("[sys.balancer.gogogo] upstream address and port undefined")
-            pdk.response.exit(500)
             return
         end
 
@@ -445,7 +440,6 @@ function _M.gogogo(oak_ctx)
         pdk.log.error("[sys.balancer.gogogo] address or port is null ["
                               .. pdk.json.encode(address, true) .. "]["
                               ..  pdk.json.encode(port, true) .. "]")
-        pdk.response.exit(500)
         return
     end
 
@@ -453,7 +447,6 @@ function _M.gogogo(oak_ctx)
 
     if err then
         pdk.log.error("[sys.balancer.gogogo] address schema check err:[" .. address .. "][" .. err .. "]")
-        pdk.response.exit(500)
         return
     end
 
@@ -461,7 +454,6 @@ function _M.gogogo(oak_ctx)
 
     if err then
         pdk.log.error("[sys.balancer.gogogo] port schema check err:[" .. port .. "][" .. err .. "]")
-        pdk.response.exit(500)
         return
     end
 
@@ -477,7 +469,6 @@ function _M.gogogo(oak_ctx)
 
     if not ok then
         pdk.log.error("[sys.balancer] failed to set the current peer: ", err)
-        pdk.response.exit(500)
         return
     end
 end
