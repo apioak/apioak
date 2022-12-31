@@ -1,6 +1,6 @@
 local ngx          = ngx
-local pdk          = require("apioak.pdk")
 local yaml         = require("tinyyaml")
+local events       = require("resty.worker.events")
 local io_open      = io.open
 local ngx_timer_at      = ngx.timer.at
 local ngx_config_prefix = ngx.config.prefix
@@ -9,6 +9,22 @@ local config_objects
 
 local _M = {}
 
+local function worker_event_configure()
+
+    local ok, err = events.configure {
+        shm = "worker_events",
+        timeout = 3,
+        interval = 1,
+        wait_interval = 0.1,
+        wait_max = 0.5,
+    }
+
+    if not ok then
+        ngx.log(ngx.ERR, "[sys.router] worker event configure failure, ", err)
+        return
+    end
+end
+
 local function loading_configs(premature)
     if premature then
         return
@@ -16,7 +32,7 @@ local function loading_configs(premature)
 
     local file, err = io_open(ngx_config_prefix() .. "conf/apioak.yaml", "r")
     if err then
-        pdk.log.error("[sys.config] failed to open configuration file, ", err)
+        ngx.log(ngx.ERR, "[sys.config] failed to open configuration file, ", err)
         return
     end
 
@@ -25,7 +41,7 @@ local function loading_configs(premature)
 
     local config = yaml.parse(content)
     if not config then
-        pdk.log.error("[sys.config] failed to parse configuration file")
+        ngx.log(ngx.ERR, "[sys.config] failed to parse configuration file")
         return
     end
 
@@ -33,6 +49,8 @@ local function loading_configs(premature)
 end
 
 function _M.init_worker()
+    worker_event_configure()
+
     ngx_timer_at(0, loading_configs)
 end
 

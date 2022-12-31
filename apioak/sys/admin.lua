@@ -8,88 +8,71 @@ function _M.init_worker()
 
     router = oakrouting.new()
 
-    -- Common Service Related APIs
-    router:get("/apioak/admin/plugins", admin.common.plugins)
+    -- New Services Related APIs
+    router:post("/apioak/admin/services", admin.service.created)
 
-    router:get("/apioak/admin/users", admin.common.users)
+    router:put("/apioak/admin/services/{service_key}", admin.service.updated)
 
-    router:get("/apioak/admin/members", admin.common.members)
+    router:get("/apioak/admin/services", admin.service.lists)
 
-    router:get("/apioak/admin/projects", admin.common.projects)
+    router:get("/apioak/admin/services/{service_key}", admin.service.detail)
 
-    router:get("/apioak/admin/routers", admin.common.routers)
+    router:delete("/apioak/admin/services/{service_key}", admin.service.deleted)
 
+    -- New Routers Related APIs
+    router:post("/apioak/admin/routers", admin.router.created)
 
-    -- Account Related APIs
-    router:post("/apioak/admin/account/register", admin.account.register)
+    router:put("/apioak/admin/routers/{router_key}", admin.router.updated)
 
-    router:put("/apioak/admin/account/login", admin.account.login)
+    router:get("/apioak/admin/routers", admin.router.lists)
 
-    router:delete("/apioak/admin/account/logout", admin.account.logout)
+    router:get("/apioak/admin/routers/{router_key}", admin.router.detail)
 
-    router:get("/apioak/admin/account/status", admin.account.status)
+    router:delete("/apioak/admin/routers/{router_key}", admin.router.deleted)
 
+    -- New Plugins Related APIs
+    router:post("/apioak/admin/plugins", admin.plugin.created)
 
-    -- Project Related APIs
-    router:post("/apioak/admin/project", admin.project.created)
+    router:put("/apioak/admin/plugins/{plugin_key}", admin.plugin.updated)
 
-    router:put("/apioak/admin/project/{project_id}", admin.project.updated)
+    router:get("/apioak/admin/plugins", admin.plugin.lists)
 
-    router:get("/apioak/admin/project/{project_id}", admin.project.selected)
+    router:get("/apioak/admin/plugins/{plugin_key}", admin.plugin.detail)
 
-    router:delete("/apioak/admin/project/{project_id}", admin.project.deleted)
+    router:delete("/apioak/admin/plugins/{plugin_key}", admin.plugin.deleted)
 
-    router:get("/apioak/admin/project/{project_id}/routers", admin.project.routers)
+    -- Upstreams Related APIs
+    router:post("/apioak/admin/upstreams", admin.upstream.created)
 
-    router:get("/apioak/admin/project/{project_id}/plugins", admin.project.plugins)
+    router:put("/apioak/admin/upstreams/{upstream_key}", admin.upstream.updated)
 
-    router:post("/apioak/admin/project/{project_id}/plugin", admin.project.plugin_created)
+    router:get("/apioak/admin/upstreams", admin.upstream.lists)
 
-    router:put("/apioak/admin/project/{project_id}/plugin/{plugin_id}", admin.project.plugin_updated)
+    router:get("/apioak/admin/upstreams/{upstream_key}", admin.upstream.detail)
 
-    router:delete("/apioak/admin/project/{project_id}/plugin/{plugin_id}", admin.project.plugin_deleted)
+    router:delete("/apioak/admin/upstreams/{upstream_key}", admin.upstream.deleted)
 
-    router:get("/apioak/admin/project/{project_id}/members", admin.project.members)
+    -- Upstream nodes Related APIs
+    router:post("/apioak/admin/upstream/nodes", admin.upstream_node.created)
 
-    router:post("/apioak/admin/project/{project_id}/member", admin.project.member_created)
+    router:put("/apioak/admin/upstream/nodes/{upstream_node_key}", admin.upstream_node.updated)
 
-    router:delete("/apioak/admin/project/{project_id}/member/{user_id}", admin.project.member_deleted)
+    router:get("/apioak/admin/upstream/nodes", admin.upstream_node.lists)
 
-    router:put("/apioak/admin/project/{project_id}/member/{user_id}", admin.project.member_updated)
+    router:get("/apioak/admin/upstream/nodes/{upstream_node_key}", admin.upstream_node.detail)
 
+    router:delete("/apioak/admin/upstream/nodes/{upstream_node_key}", admin.upstream_node.deleted)
 
-    -- Router Related APIs
-    router:post("/apioak/admin/router", admin.router.created)
+    -- Certificates Related APIs
+    router:post("/apioak/admin/certificates", admin.certificates.created)
 
-    router:get("/apioak/admin/router/{router_id}", admin.router.query)
+    router:put("/apioak/admin/certificates/{certificate_key}", admin.certificates.updated)
 
-    router:put("/apioak/admin/router/{router_id}", admin.router.updated)
+    router:get("/apioak/admin/certificates", admin.certificates.lists)
 
-    router:delete("/apioak/admin/router/{router_id}", admin.router.deleted)
+    router:get("/apioak/admin/certificates/{certificate_key}", admin.certificates.detail)
 
-    router:get("/apioak/admin/router/{router_id}/plugins", admin.router.plugins)
-
-    router:post("/apioak/admin/router/{router_id}/plugin", admin.router.plugin_created)
-
-    router:put("/apioak/admin/router/{router_id}/plugin/{plugin_id}", admin.router.plugin_updated)
-
-    router:delete("/apioak/admin/router/{router_id}/plugin/{plugin_id}", admin.router.plugin_deleted)
-
-    router:post("/apioak/admin/router/{router_id}/env/{env}", admin.router.env_push)
-
-    router:delete("/apioak/admin/router/{router_id}/env/{env}", admin.router.env_pull)
-
-
-    -- User Manager API
-    router:post("/apioak/admin/user", admin.user.created)
-
-    router:delete("/apioak/admin/user/{user_id}", admin.user.deleted)
-
-    router:put("/apioak/admin/user/{user_id}/password", admin.user.password)
-
-    router:put("/apioak/admin/user/{user_id}/enable", admin.user.enable)
-
-    router:put("/apioak/admin/user/{user_id}/disable", admin.user.disable)
+    router:delete("/apioak/admin/certificates/{certificate_key}", admin.certificates.deleted)
 
 end
 

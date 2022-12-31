@@ -25,6 +25,12 @@ _M.null     = ngx.null
 
 _M.tonumber = tonumber
 
+_M.trim     = function(str)
+    str = ngx.re.gsub(str, [[^\s+]], "", "mjo")
+    str = ngx.re.gsub(str, [[\s+$]], "", "mjo")
+    return str
+end
+
 -- 验证IPV4 or IPV6
 function _M.parse_address(address)
     local address_obj

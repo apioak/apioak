@@ -10,8 +10,7 @@ return {
     response = require("apioak.pdk.response"),
     schema   = require("apioak.pdk.schema"),
     plugin   = require("apioak.pdk.plugin"),
-    admin    = require("apioak.pdk.admin"),
     pool     = require("apioak.pdk.tablepool"),
     const    = require("apioak.pdk.const"),
-    database = require("apioak.pdk.database"),
+    consul   = require("apioak.pdk.consul")
 }

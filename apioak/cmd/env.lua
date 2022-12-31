@@ -1,9 +1,11 @@
-local common = require "apioak/cmd/utils/common"
+local common  = require "apioak/cmd/utils/common"
+local io_open = io.open
 
 local lapp = [[
 Usage: apioak env
 ]]
 
+local config
 
 local function get_config()
     local res, err = io.open(common.apioak_home .. "/conf/apioak.yaml", "r")
@@ -29,87 +31,78 @@ local function get_config()
     return config_table, nil
 end
 
-
-local function validate_database()
+local function validate_consul()
     local res, err = get_config()
-    if not res.database then
-        print("Config Database        ...FAIL(".. err ..")")
+    if not res.consul then
+        print("Config Consul          ...FAIL (".. err ..")")
         os.exit(1)
     else
-        print("Config Database        ...OK")
+        print("Config Consul          ...OK")
     end
 
-    local db_config = res.database
+    local conf = res.consul
 
-    local mysql  = require("resty.mysql")
-    res, err = mysql:new()
-    if not res then
-        print("Database Init          ...FAIL(".. err ..")")
-        os.exit(1)
-    else
-        print("Database Init          ...OK")
-    end
-    local db = res
-
-    res, err = db:connect({
-        host     = db_config.host     or "127.0.0.1",
-        port     = db_config.port     or 3306,
-        database = db_config.db_name  or "apioak",
-        user     = db_config.user     or "apioak",
-        password = db_config.password or ""
+    local resty_consul = require("resty.consul")
+    local consul = resty_consul:new({
+        host            = conf.host or '127.0.0.1',
+        port            = conf.port or 8500,
+        connect_timeout = conf.connect_timeout or 60*1000, -- 60s
+        read_timeout    = conf.read_timeout or 60*1000, -- 60s
+        default_args    = {},
+        ssl             = conf.ssl or false,
+        ssl_verify      = conf.ssl_verify or true,
+        sni_host        = conf.sni_host or nil,
     })
 
-    if not res then
-        print("Database Connect       ...FAIL(".. err ..")")
+    local agent_config, err = consul:get('/agent/self')
+
+    if not agent_config then
+        print("Consul Connect         ...FAIL (".. err ..")")
         os.exit(1)
     else
-        print("Database Connect       ...OK")
+        print("Consul Connect         ...OK")
     end
 
-    res, err = db:query("SELECT version() AS version")
-    if not res then
-        print("Database Query Version ...FAIL(".. err ..")")
+    if agent_config.status ~= 200 then
+        print("Consul Config          ...FAIL(" .. agent_config.status ..
+                ": " .. string.gsub(agent_config.body, "\n", "") ..")")
+        os.exit(1)
+    end
+
+    local consul_version_num = tonumber(string.match(agent_config.body.Config.Version, "^%d+%.%d+"))
+    if consul_version_num < 1.13 then
+        print("Consul Version         ...FAIL (consul version be greater than 1.13)")
         os.exit(1)
     else
-        print("Database Query Version ...OK")
+        print("Consul Version         ...OK")
     end
 
-    local db_version = res[1].version
-    local db_version_num = tonumber(string.match(db_version, "^%d+%.%d+"))
-    if string.find(db_version, "MariaDB") then
-        if db_version_num < 10.2 then
-            print("Database Version       ...FAIL(MariaDB version be greater than 10.2)")
-            os.exit(1)
-        else
-            print("Database Version       ...OK")
+    config = res
+end
+
+local function validate_plugin()
+
+    local plugins = config.plugins
+
+    local err_plugins = {}
+
+    for i = 1, #plugins do
+
+        local file_path = common.apioak_home .. "/apioak/plugin/" .. plugins[i] .. "/" .. plugins[i] .. ".lua"
+
+        local _, err = io_open(file_path, "r")
+
+        if err then
+            table.insert(err_plugins, plugins[i])
         end
-    else
-        if db_version_num < 5.7 then
-            print("Database Version       ...FAIL(MySQL version be greater than 5.7)")
-            os.exit(1)
-        else
-            print("Database Version       ...OK")
-        end
+
     end
 
-    res, err = db:query("SHOW tables")
-    if not res then
-        print("Database Query Tables  ...FAIL(".. err ..")")
+    if next(err_plugins) then
+        print("Plugin Check           ...FAIL (Plugin not found: " .. table.concat(err_plugins, ', ') .. ")")
         os.exit(1)
     else
-        print("Database Query Tables  ...OK")
-    end
-
-    local db_tables = {}
-    local conf_tables = db_config.tables
-    local table_field = 'Tables_in_' .. db_config.db_name
-    for i = 1, #res do
-        table.insert(db_tables, res[i][table_field])
-    end
-    if table.sort(db_tables) == table.sort(conf_tables) then
-        print("Database Tables        ...OK")
-    else
-        print("Database Tables        ...FAIL")
+        print("Plugin Check           ...OK")
     end
 end
 
@@ -131,7 +124,9 @@ local function execute()
         print("OpenResty Version      ...OK")
     end
 
-    validate_database()
+    validate_consul()
+
+    validate_plugin()
 end
 
 return {

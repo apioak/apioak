@@ -1,7 +1,7 @@
-local db         = require("apioak.db")
-local pdk        = require("apioak.pdk")
-local schema     = require("apioak.schema")
+local pdk = require("apioak.pdk")
+local schema = require("apioak.schema")
 local controller = require("apioak.admin.controller")
+local dao = require("apioak.dao")
 
 local router_controller = controller.new("router")
 
@@ -11,245 +11,243 @@ function router_controller.created()
 
     router_controller.check_schema(schema.router.created, body)
 
-    router_controller.user_authenticate()
+    local check_name = dao.common.check_key_exists(body.name, pdk.const.CONSUL_PRFX_ROUTERS)
 
-    if not router_controller.is_owner then
-        router_controller.project_authenticate(body.project_id, router_controller.uid)
+    if check_name then
+        pdk.response.exit(400, { message = "the router name[" .. body.name .. "] already exists" })
     end
 
-    local res, err = db.router.created(body)
+    local check_service, err = dao.common.check_kv_exists(body.service, pdk.const.CONSUL_PRFX_SERVICES)
+
     if err then
-        pdk.response.exit(500, { err_message = err })
+        pdk.log.error("router-create detect service exceptions: [" .. err .. "]")
+        pdk.response.exit(500, { message = "detect service exceptions" })
     end
 
-    if res.insert_id == 0 then
-        pdk.response.exit(500, { err_message = "FAIL" })
-    else
-        pdk.response.exit(200, { err_message = "OK" })
-    end
-end
-
-function router_controller.query(params)
-
-    router_controller.check_schema(schema.router.query, params)
-
-    router_controller.user_authenticate()
-
-    if not router_controller.is_owner then
-        router_controller.router_authenticate(params.router_id, router_controller.uid)
+    if not check_service then
+        pdk.response.exit(400, { message = "detect service not found" })
     end
 
-    local res, err = db.router.query(params.router_id)
+    body.service = {id = check_service.id}
+
+    if body.plugins then
+
+        local check_plugin, err = dao.common.batch_check_kv_exists(body.plugins, pdk.const.CONSUL_PRFX_PLUGINS)
+
+        if err then
+            pdk.log.error("router-create detect plugin exceptions: [" .. err .. "]")
+            pdk.response.exit(500, { message = "detect plugin exceptions" })
+        end
+
+        if not check_plugin then
+            pdk.response.exit(400, { message = "detect plugin not found" })
+        end
+
+        local plugin_ids = {}
+
+        for i = 1, #check_plugin do
+            table.insert(plugin_ids, {id = check_plugin[i].id})
+        end
+
+        body.plugins = plugin_ids
+    end
+
+    if body.upstream and
+            ((body.upstream.id ~= nil and #body.upstream.id > 0) or
+                    (body.upstream.name ~= nil and #body.upstream.name > 0)) then
+
+        local check_upstream, err = dao.common.check_kv_exists(body.upstream, pdk.const.CONSUL_PRFX_UPSTREAMS)
+
+        if err then
+            pdk.log.error("router-create detect upstream exceptions: [" .. err .. "]")
+            pdk.response.exit(500, { message = "detect upstream exceptions" })
+        end
+
+        if not check_upstream then
+            pdk.response.exit(400, { message = "detect upstream not found" })
+        end
+
+        body.upstream = {id = check_upstream.id}
+    end
+
+    local exist_paths, exist_paths_err = dao.router.exist_path(body.paths)
+
+    if exist_paths_err ~= nil then
+        pdk.log.error("router-create exception when checking if path exists: [" .. exist_paths_err .. "]")
+        pdk.response.exit(500, { message = "exception when checking if path exists" })
+    end
+
+    if exist_paths and (#exist_paths > 0) then
+        pdk.response.exit(400, { message = "exists paths [" .. table.concat(exist_paths, ",") .. "]" })
+    end
+
+    local res, err = dao.router.created(body)
+
     if err then
-        pdk.response.exit(500, { err_message = err })
+        pdk.log.error("router-create create router exception: [" .. err .. "]")
+        pdk.response.exit(500, { message = "create router exception" })
     end
 
-    if #res == 0 then
-        pdk.response.exit(500, { err_message = "router: " .. params.router_id .. "not exists" })
-    end
-
-    pdk.response.exit(200, { err_message = "OK", router = res[1] })
+    pdk.response.exit(200, { id = res.id })
 end
 
 function router_controller.updated(params)
 
-    local body      = router_controller.get_body()
-    body.router_id  = params.router_id
+    local body = router_controller.get_body()
+    body.router_key = params.router_key
 
     router_controller.check_schema(schema.router.updated, body)
 
-    router_controller.user_authenticate()
+    local detail, err = dao.router.detail(params.router_key)
 
-    if not router_controller.is_owner then
-        router_controller.router_authenticate(params.router_id, router_controller.uid)
-    end
-
-    local res, err = db.router.updated(params.router_id, body)
     if err then
-        pdk.response.exit(500, { err_message = err })
+        pdk.log.error("router-update get router detail exception: [" .. err .. "]")
+        pdk.response.exit(500, { message = "get router detail exception" })
     end
 
-    if res.affected_rows == 0 then
-        pdk.response.exit(500, { err_message = "FAIL" })
-    else
-        pdk.response.exit(200, { err_message = "OK" })
+    if not detail then
+        pdk.response.exit(404, { message = "the router not found" })
     end
+
+    if body.name and (body.name ~= detail.name) then
+
+        local name_detail, _ = dao.service.detail(body.name)
+
+        if name_detail then
+            pdk.response.exit(400, { message = "the router name[" .. body.name .. "] already exists" })
+        end
+    end
+
+    local exist_paths, exist_paths_err = dao.router.exist_path(body.paths, detail.id)
+
+    if exist_paths_err then
+        pdk.log.error("router-update exception when checking if path exists: [" .. exist_paths_err .. "]")
+        pdk.response.exit(500, { message = "exception when checking if path exists" })
+    end
+
+    if exist_paths and (#exist_paths > 0) then
+        pdk.response.exit(400, { message = "exists paths [" .. table.concat(exist_paths, ",") .. "]" })
+    end
+
+    if body.upstream and
+            ((body.upstream.id ~= nil and #body.upstream.id > 0) or
+                    (body.upstream.name ~= nil and #body.upstream.name > 0)) then
+
+        local check_upstream, err = dao.common.check_kv_exists(body.upstream, pdk.const.CONSUL_PRFX_UPSTREAMS)
+
+        if err then
+            pdk.log.error("router-update detect upstream exceptions: [" .. err .. "]")
+            pdk.response.exit(500, { message = "detect upstream exceptions" })
+        end
+
+        if not check_upstream then
+            pdk.response.exit(400, { message = "detect upstream not found" })
+        end
+
+        body.upstream = {id = check_upstream.id}
+    end
+
+    if body.service then
+
+        local check_service, err = dao.common.check_kv_exists(body.service, pdk.const.CONSUL_PRFX_SERVICES)
+
+        if err then
+            pdk.log.error("router-update detect service exceptions: [" .. err .. "]")
+            pdk.response.exit(500, { message = "detect service exceptions" })
+        end
+
+        if not check_service then
+            pdk.response.exit(400, { message = "detect service not found" })
+        end
+
+        body.service = {id = check_service.id}
+    end
+
+    if body.plugins and (#body.plugins > 0) then
+
+        local check_plugin, err = dao.common.batch_check_kv_exists(body.plugins, pdk.const.CONSUL_PRFX_PLUGINS)
+
+        if err then
+            pdk.log.error("router-update detect plugin exceptions: [" .. err .. "]")
+            pdk.response.exit(500, { message = "detect plugin exceptions" })
+        end
+
+        if not check_plugin then
+            pdk.response.exit(400, { message = "detect plugin not found" })
+        end
+
+        local plugin_ids = {}
+
+        for i = 1, #check_plugin do
+            table.insert(plugin_ids, {id = check_plugin[i].id})
+        end
+
+        body.plugins = plugin_ids
+    end
+
+    local res, err = dao.router.updated(body, detail)
+
+    if err then
+        pdk.log.error("router-update update route exception: [" .. err .. "]")
+        pdk.response.exit(500, { message = "update route exception" })
+    end
+
+    pdk.response.exit(200, { id = res.id })
+end
+
+function router_controller.detail(params)
+
+    router_controller.check_schema(schema.router.detail, params)
+
+    local detail, err = dao.router.detail(params.router_key)
+
+    if err then
+        pdk.log.error("router-detail get route detail exception: [" .. err .. "]")
+        pdk.response.exit(500, { message = "get route detail exception" })
+    end
+
+    if not detail then
+        pdk.response.exit(404, { message = "the router not found" })
+    end
+
+    pdk.response.exit(200, detail)
+end
+
+function router_controller.lists()
+
+    local res, err = dao.router.lists()
+
+    if err then
+        pdk.log.error("router-list get route list exception: [" .. err .. "]")
+        pdk.response.exit(500, { message = "get route list exception" })
+    end
+
+    pdk.response.exit(200, res)
 end
 
 function router_controller.deleted(params)
 
     router_controller.check_schema(schema.router.deleted, params)
 
-    router_controller.user_authenticate()
+    local detail, err = dao.router.detail(params.router_key)
 
-    if not router_controller.is_owner then
-        router_controller.router_authenticate(params.router_id, router_controller.uid)
-    end
-
-    local res, err = db.router.deleted(params.router_id)
     if err then
-        pdk.response.exit(500, { err_message = err })
+        pdk.log.error("router-delete get route detail exception: [" .. err .. "]")
+        pdk.response.exit(500, { message = "get route detail exception" })
     end
 
-    if res.affected_rows == 0 then
-        pdk.response.exit(500, { err_message = "FAIL" })
-    else
-        pdk.response.exit(200, { err_message = "OK" })
-    end
-end
-
-function router_controller.env_push(params)
-
-    router_controller.check_schema(schema.router.env_push, params)
-
-    router_controller.user_authenticate()
-    if not router_controller.is_owner then
-        router_controller.router_authenticate(params.router_id, router_controller.uid)
+    if not detail then
+        pdk.response.exit(404, { message = "the router not found" })
     end
 
-    local res, err = db.router.query(params.router_id)
+    local _, err = dao.router.deleted(detail)
+
     if err then
-        pdk.response.exit(500, { err_message = err })
+        pdk.log.error("router-delete remove route exception: [" .. err .. "]")
+        pdk.response.exit(500, { message = "remove route exception" })
     end
 
-    local router = res[1]
-    if router.response_type == pdk.const.CONTENT_TYPE_JSON then
-        router.response_success = pdk.json.decode(router.response_success)
-        router.response_failure = pdk.json.decode(router.response_failure)
-    end
-
-    local plugins = {}
-    res, err = db.plugin.query_by_res(db.plugin.RESOURCES_TYPE_ROUTER, params.router_id)
-    if err then
-        pdk.response.exit(500, { err_message = err })
-    end
-    for q = 1, #res do
-        plugins[res[q].name] = res[q]
-    end
-    router.plugins = plugins
-
-    res, err = db.router.env_push(params.router_id, pdk.string.upper(params.env), router)
-    if err then
-        pdk.response.exit(500, { err_message = err })
-    end
-
-    if res.affected_rows == 0 then
-        pdk.response.exit(500, { err_message = "FAIL" })
-    else
-        pdk.response.exit(200, { err_message = "OK" })
-    end
-end
-
-function router_controller.env_pull(params)
-
-    router_controller.check_schema(schema.router.env_pull, params)
-
-    router_controller.user_authenticate()
-    if not router_controller.is_owner then
-        router_controller.router_authenticate(params.router_id, router_controller.uid)
-    end
-
-    local res, err = db.router.env_pull(params.router_id, pdk.string.upper(params.env))
-    if err then
-        pdk.response.exit(500, { err_message = err })
-    end
-
-    if res.affected_rows == 0 then
-        pdk.response.exit(500, { err_message = "FAIL" })
-    else
-        pdk.response.exit(200, { err_message = "OK" })
-    end
-end
-
-function router_controller.plugins(params)
-
-    router_controller.check_schema(schema.router.plugins, params)
-
-    router_controller.user_authenticate()
-
-    if not router_controller.is_owner then
-        router_controller.router_authenticate(params.router_id, router_controller.uid)
-    end
-
-    local res, err = db.plugin.query_by_res(db.plugin.RESOURCES_TYPE_ROUTER, params.router_id)
-    if err then
-        pdk.response.exit(500, { err_message = err })
-    end
-
-    pdk.response.exit(200, { err_message = "OK", plugins = res })
-end
-
-function router_controller.plugin_created(params)
-
-    local body      = router_controller.get_body()
-    body.router_id  = params.router_id
-
-    router_controller.check_schema(schema.router.plugin_created, body)
-
-    router_controller.user_authenticate()
-
-    if not router_controller.is_owner then
-        router_controller.router_authenticate(params.router_id, router_controller.uid)
-    end
-
-    local res, err = db.plugin.create_by_res(db.plugin.RESOURCES_TYPE_ROUTER, params.router_id, body)
-    if err then
-        pdk.response.exit(500, { err_message = err })
-    end
-
-    if res.insert_id == 0 then
-        pdk.response.exit(500, { err_message = "FAIL" })
-    else
-        pdk.response.exit(200, { err_message = "OK" })
-    end
-end
-
-function router_controller.plugin_updated(params)
-
-    local body      = router_controller.get_body()
-    body.router_id  = params.router_id
-    body.plugin_id  = params.plugin_id
-
-    router_controller.check_schema(schema.router.plugin_updated, body)
-
-    router_controller.user_authenticate()
-
-    if not router_controller.is_owner then
-        router_controller.router_authenticate(params.router_id, router_controller.uid)
-    end
-
-    local res, err = db.plugin.update_by_res(db.plugin.RESOURCES_TYPE_ROUTER, params.router_id, params.plugin_id, body)
-    if err then
-        pdk.response.exit(500, { err_message = err })
-    end
-
-    if res.affected_rows == 0 then
-        pdk.response.exit(500, { err_message = "FAIL" })
-    else
-        pdk.response.exit(200, { err_message = "OK" })
-    end
-end
-
-function router_controller.plugin_deleted(params)
-
-    router_controller.check_schema(schema.router.plugin_deleted, params)
-
-    router_controller.user_authenticate()
-
-    if not router_controller.is_owner then
-        router_controller.router_authenticate(params.router_id, router_controller.uid)
-    end
-
-    local res, err = db.plugin.delete_by_res(db.plugin.RESOURCES_TYPE_ROUTER, params.router_id, params.plugin_id)
-    if err then
-        pdk.response.exit(500, { err_message = err })
-    end
-
-    if res.affected_rows == 0 then
-        pdk.response.exit(500, { err_message = "FAIL" })
-    else
-        pdk.response.exit(200, { err_message = "OK" })
-    end
+    pdk.response.exit(200, {})
 end
 
 return router_controller

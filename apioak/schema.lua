@@ -1,7 +1,9 @@
 return {
-    user    = require("apioak.schema.user"),
-    router  = require("apioak.schema.router"),
-    project = require("apioak.schema.project"),
-    account = require("apioak.schema.account"),
-    common  = require("apioak.schema.common"),
+    common        = require("apioak.admin.schema.common"),
+    service       = require("apioak.admin.schema.service"),
+    router        = require("apioak.admin.schema.router"),
+    plugin        = require("apioak.admin.schema.plugin"),
+    upstream      = require("apioak.admin.schema.upstream"),
+    certificate   = require("apioak.admin.schema.certificate"),
+    upstream_node = require("apioak.admin.schema.upstream_node"),
 }

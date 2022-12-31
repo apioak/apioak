@@ -15,20 +15,21 @@ description = {
 }
 
 dependencies = {
+    "lua-resty-worker-events = 2.0.1-1",
     "lua-resty-balancer = 0.02rc5",
     "lua-resty-jwt = 0.2.0",
     "lua-resty-oakrouting = 0.1.0-1",
     "lua-resty-http = 0.15-0",
-    "lua-resty-mysql = 0.15-0",
     "lua-resty-lrucache = 0.09-2",
-    "jsonschema = 0.4",
+    "jsonschema = 0.9.8-0",
     "luasocket = 3.0rc1-2",
     "luafilesystem = 1.7.0-2",
     "lua-tinyyaml = 0.1",
     "multipart = 0.5.5-1",
     "penlight = 1.5.4-1",
-    "lua-resty-healthcheck = 1.2.0-1",
-    "lua-resty-prometheus = 1.1"
+    "lua-resty-consul = 0.3-2",
+    "lua-resty-jit-uuid = 0.0.7-2",
+    "lua-resty-dns = 0.21-1"
 }
 
 build = {

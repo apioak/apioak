@@ -19,6 +19,9 @@ end
 
 local _M = {}
 
+_M.fixed_key_ssl_cache_key    = "fixed_key_ssl_cache_key"
+_M.fixed_key_router_cache_key = "fixed_key_router_cache_key"
+
 function _M.init_worker()
     ngx_timer_at(0, created_cache)
 end
