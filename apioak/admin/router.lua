@@ -52,7 +52,9 @@ function router_controller.created()
         body.plugins = plugin_ids
     end
 
-    if body.upstream and ((body.upstream.id ~= nil and #body.upstream.id > 0) or (body.upstream.name ~= nil and #body.upstream.name > 0)) then
+    if body.upstream and
+            ((body.upstream.id ~= nil and #body.upstream.id > 0) or
+                    (body.upstream.name ~= nil and #body.upstream.name > 0)) then
 
         local check_upstream, err = dao.common.check_kv_exists(body.upstream, pdk.const.CONSUL_PRFX_UPSTREAMS)
 
@@ -127,7 +129,9 @@ function router_controller.updated(params)
         pdk.response.exit(400, { message = "exists paths [" .. table.concat(exist_paths, ",") .. "]" })
     end
 
-    if body.upstream and ((body.upstream.id ~= nil and #body.upstream.id > 0) or (body.upstream.name ~= nil and #body.upstream.name > 0)) then
+    if body.upstream and
+            ((body.upstream.id ~= nil and #body.upstream.id > 0) or
+                    (body.upstream.name ~= nil and #body.upstream.name > 0)) then
 
         local check_upstream, err = dao.common.check_kv_exists(body.upstream, pdk.const.CONSUL_PRFX_UPSTREAMS)
 
