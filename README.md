@@ -17,60 +17,56 @@ APIOAK performance is almost comparable to native `Nginx`, and provides dynamic 
 
 ## Features
 
-- **Projects**
+- **Serve**
 
-    - Support project prefix for multi-tenant isolation.
-    
-    - Support multi-environment configuration, `Production Environment`,` Pre-launch Environment`, `Test Environment` completely isolated to meet the full life cycle management of `CI` and `CD`.
-    
-    - Support dynamic weighted `Round-Robin` load balancing.
-    
-    - Support dynamic consistency `Hash` load balancing.
-    
-    - Support dynamic node configuration, dynamic `Host` configuration.
-    
-    - Support upstream service `Connection`,` Send`, `Read` timeout setting.
-    
-    - Support plug-in hot plug, project plug-in can be inherited by all routes(APIs) under the project.
-    
-    - Support automatic generation of project documents.
-    
-    - Support project member management.
+  - Support project multi-service configuration for multi-tenant isolation.
+
+  - Support custom multi-domain name configuration, and manage multiple domain names under the same service.
+
+  - Support multi-domain name hot swapping under service.
+
+  - Support service-level plug-in configuration, and execute plugins with the priority of `routing` > `service`.
+
+  - Support service-level plug-in hot-swap.
+
+  - Support service-level plug-ins can be inherited by all routes under the service.
 
 - **Routers**
 
-    - Support front-end and back-end request routing mapping.
-    
-    - Support front-end and back-end request method mapping.
-    
-    - Support cross mapping of front and back request parameters.
-    
-    - Support request constant parameter definition.
-    
-    - Support custom response data and response data type.
-    
-    - Support plug-in hot swap.
-    
-    - Support `Mock` request, accelerate the development process of front and back end separation.
-    
-    - Supports automatic generation of routing (APIs) documents.
-    
-    - Support multi-environment routing (APIs) online and offline.
-    
-    - Support multi-environment routing (APIs) one-click replication.
+  - Support route binding upstream configuration.
+
+  - Support routing without upstream automatic resolution service domain name configuration.
+
+  - Support route matching `header` configuration.
+
+  - Supports multi-request method configuration for routing.
+
+  - Support `round-robin` load balancing with upstream dynamic weighting.
+
+  - Support upstream dynamic consistency `hash` load balancing.
+
+  - Support upstream dynamic node configuration, dynamic `Host` configuration.
+
+  - Support upstream service `Connect`, `Send`, `Read` timeout settings.
+
+  - Support custom response data and response data types.
+
+  - Supports router-level multi-plugin configuration.
+
+  - Support routing-level plug-in hot-swapping.
+
+  - Support `Mock` request to speed up the development process of front-end and back-end separation.
+
+  - Supports one-click copying of routes (supports routing plug-in binding copying).
 
 - **Users**
 
-    - Support users login and registration.
-    
-    - Support users to create, edit and delete.
-    
-    - Support users to disable globally.
+  - Support user registration, login, and logout.
 
 
 ## Installation
 
-System dependencies (`OpenResty >= 1.15.8.2`、`luarocks >= 2.3`、`MySQL >= 5.7 or MariaDB >= 10.2`, etc.) necessary to install `APIOAK` on different operating systems, See: [Install Dependencies](doc/en_US/install-dependencies.md) Document.
+For the system dependencies necessary to install `APIOAK` on different operating systems (`OpenResty >= 1.15.8.2`, `luarocks >= 2.3`, `Consul >= 1.13`, etc.), please refer to: [Dependency Installation Documentation]( doc/en_US/install-dependencies.md).
 
 > Installation via LuaRocks
 
@@ -96,9 +92,7 @@ sudo dpkg -i apioak-{VERSION}-1_amd64.deb
 
 > Configure APIOAK
 
-- Import the database configuration file into `MySQL` or` MariaDB`, the configuration file path `/path/conf/apioak.sql`.
-
-- Edit database connection information of the `database` option in the` APIOAK` configuration file, the configuration file path `/path/conf/apioak.yaml`.
+- Edit the connection information of the `consul` item in the `APIOAK` configuration file, the configuration file path `/path/conf/apioak.yaml`.
 
 > Launch APIOAK
 
@@ -108,7 +102,7 @@ sudo apioak start
 
 > Access APIOAK
 
-- Enter `http://127.0.0.1:10080/apioak/dashboard` in the browser to access dashboard management panel.
+- Enter `http://127.0.0.1:10888` in the browser to access `Welcome to APIOAK`.
 
 At this point, `APIOAK` has all been installed and configured, please enjoy it.
 
@@ -117,9 +111,9 @@ At this point, `APIOAK` has all been installed and configured, please enjoy it.
 
 > Test environment & parameters
 
- - Use Google Cloud N1 series basic version (1 vCPU + 3.75 GB RAM) server for testing.
- 
- - Runs benchmark for 20 seconds, using 2 threads, keeping 200 HTTP connections open.
+- Use Google Cloud N1 series basic version (1 vCPU + 3.75 GB RAM) server for testing.
+
+- Runs benchmark for 20 seconds, using 2 threads, keeping 200 HTTP connections open.
 
 > RTT & QPS
 
@@ -147,11 +141,6 @@ Requests/sec:  24012.38
 ![FlameGraph](doc/images/APIOAK-flamegraph.svg)
 
 
-## Dashboard
-
-![Projects](doc/images/APIOAK-dashboard.jpg)
-
-
 ## Documentation
 
 See [APIOAK's Documentation](https://github.com/apioak/apioak-document).
@@ -164,6 +153,8 @@ See [APIOAK's Documentation](https://github.com/apioak/apioak-document).
 APIOAK enriches the [CNCF API Gateway Landscape](https://landscape.cncf.io/card-mode?category=api-gateway&grouping=category)
 
 
-## Thanks
+## Communicate
 
-![Thanks](doc/images/APIOAK-thanks.jpg)
+Welcome to join the APIOAK gateway exchange group for common communication and progress.
+
+![qq](doc/images/APIOAK-QQ.png)

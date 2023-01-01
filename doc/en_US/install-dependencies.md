@@ -33,33 +33,27 @@ sudo yum -y install gcc \
 ```
 
 
-> Install MariaDB
+> Install Consul
 
 ```shell
-# Addition `MariaDB` Repo.
+# Configure the Consul source directly, and then install it
 
-sudo cat > /etc/yum.repos.d/MariaDB.repo <<EOF
-[mariadb]
-name = MariaDB
-baseurl = http://yum.mariadb.org/10.2/centos7-amd64
-gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-gpgcheck=1
-EOF
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+sudo yum -y install consul
 
 
-# Install `MariaDB` Server and Client.
+# Or go directly to the official address to install according to the official installation document, or directly download the corresponding installation package and install it directly
 
-sudo yum -y install MariaDB-server MariaDB-client
-
-
-# Start `MariaDB` Server.
-
-sudo systemctl start mariadb
+https://developer.hashicorp.com/consul/downloads
 
 
-# Initialize `MariaDB` and set root password.
+# Start Consul (the following startup is started in developer mode. The production environment can directly execute the executable file of consul and add the corresponding parameters)
 
-sudo mysql_secure_installation
+sudo consul agent -dev
+
+
+# After consul is installed, you can directly access http://127.0.0.1:8500/ui to use consul's official dashboard
 ```
 
 
@@ -101,18 +95,17 @@ sudo openresty -s stop
 ```
 
 
-> Install MariaDB
+> Install Consul
 
 ```shell
-# Key is imported and the repository added.
+# Download the corresponding installation file and install it directly.
 
-sudo apt-get -y install software-properties-common
-sudo apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
-sudo add-apt-repository 'deb [arch=amd64,arm64,ppc64el] http://mirror.hosting90.cz/mariadb/repo/10.2/ubuntu bionic main'
-sudo apt update
+wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update && sudo apt install consul
 
 
-# Install `MariaDB` and set root password (After installation, set the root password according to the system prompt).
+# Start Consul
 
-sudo apt-get -y install mariadb-server
+sudo consul agent -dev
 ```

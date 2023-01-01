@@ -33,33 +33,27 @@ sudo yum -y install gcc \
 ```
 
 
-> 安装 MariaDB
+> 安装 Consul
 
 ```shell
-# 添加 MariaDB 镜像源。
+# 直接配置Consul源，然后安装即可
 
-sudo cat > /etc/yum.repos.d/MariaDB.repo <<EOF
-[mariadb]
-name = MariaDB
-baseurl = https://mirrors.aliyun.com/mariadb/yum/10.2/centos7-amd64/
-gpgkey=https://mirrors.aliyun.com/mariadb/yum/RPM-GPG-KEY-MariaDB
-gpgcheck=1
-EOF
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+sudo yum -y install consul
 
 
-# 安装 MariaDB 服务器和客户端。
+# 或者至直接到官方地址根据官方安装文档进行安装也可，或者直接下载对应的安装包直接安装
 
-sudo yum -y install MariaDB-server MariaDB-client
-
-
-# 启动 MariaDB 服务器。
-
-sudo systemctl start mariadb
+https://developer.hashicorp.com/consul/downloads
 
 
-# 初始化 MariaDB 并设置 root 密码。
+# 启动 Consul（以下启动为开发者模式启动。生产环境启动直接执行consul的可执行文件增加相应的参数即可）
 
-sudo mysql_secure_installation
+sudo consul agent -dev
+
+
+# consul安装后可直接访问 http://127.0.0.1:8500/ui 使用consul官方的dashboard
 ```
 
 
@@ -101,18 +95,17 @@ sudo openresty -s stop
 ```
 
 
-> 安装 MariaDB
+> 安装 Consul
 
 ```shell
-# 导入密钥并添加存储库。
+# 下载对应安装文件直接安装。
 
-sudo apt-get -y install software-properties-common
-sudo apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
-sudo add-apt-repository 'deb [arch=amd64,arm64,ppc64el] https://mirrors.aliyun.com/mariadb/repo/10.2/ubuntu bionic main'
-sudo apt update
+wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update && sudo apt install consul
 
 
-# 初始化 MariaDB 并设置 root 密码（安装过程中会提示设置 root 密码）。
+# 启动 Consul
 
-sudo apt-get -y install mariadb-server
+sudo consul agent -dev
 ```
