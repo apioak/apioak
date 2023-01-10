@@ -159,4 +159,4 @@ APIOAK 被纳入 [云原生计算基金会API网关全景图](https://landscape.
 ## 交流
 欢迎加入APIOAK网关交流群进行共同交流与进步。
 
-![qq](doc/images/APIOAK-QQ.png)
+<img width="260px;" src="./doc/images/APIOAK-QQ.png">
