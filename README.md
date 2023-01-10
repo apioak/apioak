@@ -157,4 +157,4 @@ APIOAK enriches the [CNCF API Gateway Landscape](https://landscape.cncf.io/card-
 
 Welcome to join the APIOAK gateway exchange group for common communication and progress.
 
-![qq](doc/images/APIOAK-QQ.png)
+<img width="260px;" src="./doc/images/APIOAK-QQ.png">
