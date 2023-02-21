@@ -128,7 +128,7 @@ local function sync_update_router_data()
         repeat
             local routers = {}
 
-            if router_map[service_list[j].id] then
+            if router_map and router_map[service_list[j].id] then
                 routers = router_map[service_list[j].id]
             end
 
