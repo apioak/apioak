@@ -1,5 +1,7 @@
 #!/usr/bin/env resty
 
+package.path = "/usr/local/apioak/?.lua;" .. package.path
+
 require("apioak.cmd.utils.common")
 
 require("apioak.cmd.init")(arg)
