@@ -16,17 +16,13 @@ ngx_lua: %s
 nginx: %s
 Lua: %s]]
 
-local function execute(args)
-  if args.all then
-    print(string.format(str,
-      meta.__VERSION,
-      ngx.config.ngx_lua_version,
-      ngx.config.nginx_version,
-      jit and jit.version or _VERSION
-    ))
-  else
-    print(meta.__VERSION)
-  end
+local function execute()
+  print(string.format(str,
+                      meta.__VERSION,
+                      ngx.config.ngx_lua_version,
+                      ngx.config.nginx_version,
+                      jit and jit.version or _VERSION
+  ))
 end
 
 return {

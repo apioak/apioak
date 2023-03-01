@@ -1,3 +1,23 @@
+## 0.6.1
+> Released on 2023.03.01
+
+#### Feature
+
+- Added route wildcard `*` matching.
+
+
+#### FIX
+
+- Fixed the problem of abnormal loading of initial configuration.
+
+
+#### Change
+
+- Upgrade dependent library ```lua-resty-oakrouting```, changed from ```0.1.0-1``` to ```0.2.0-1```.
+- Change all dependent libraries to localized installations.
+
+
+
 ## 0.6.0
 > Released on 2023.01.01
 

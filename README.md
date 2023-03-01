@@ -40,6 +40,10 @@ APIOAK performance is almost comparable to native `Nginx`, and provides dynamic 
   - Support route matching `header` configuration.
 
   - Supports multi-request method configuration for routing.
+  
+  - Support routing wildcard `*` matching.
+  
+  - Support upstream automatic resolution (upstream can not be configured).
 
   - Support `round-robin` load balancing with upstream dynamic weighting.
 
@@ -88,11 +92,25 @@ sudo yum -y install aoioak-{VERSION}-1.el7.x86_64.rpm
 sudo dpkg -i apioak-{VERSION}-1_amd64.deb
 ```
 
+Install by downloading the source code, find the source package of the corresponding version in [Releases](https://github.com/apioak/apioak/releases), or directly use `git` to clone the project.
+
+> Install from source
+
+```shell
+sudo make deps && sudo make install
+```
+
 ## Quickstart
 
 > Configure APIOAK
 
 - Edit the connection information of the `consul` item in the `APIOAK` configuration file, the configuration file path `/path/conf/apioak.yaml`.
+
+> Check dependencies and configuration
+
+```bash
+sudo apioak env
+```
 
 > Launch APIOAK
 
