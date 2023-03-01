@@ -104,7 +104,7 @@ sudo make deps && sudo make install
 
 > Configure APIOAK
 
-- Edit the connection information of the `consul` item in the `APIOAK` configuration file, the configuration file path `/{path}/conf/apioak.yaml`.
+- Edit the connection information of the `consul` item in the `APIOAK` configuration file, the configuration file path `/path/conf/apioak.yaml`.
 
 > Check dependencies and configuration
 

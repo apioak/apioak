@@ -104,7 +104,7 @@ sudo make deps && sudo make install
 
 > 配置 APIOAK
 
-- 编辑 `APIOAK` 配置文件中 `consul` 项的连接信息，配置文件路径 `/{path}/conf/apioak.yaml`。
+- 编辑 `APIOAK` 配置文件中 `consul` 项的连接信息，配置文件路径 `/path/conf/apioak.yaml`。
 
 > 检测依赖和配置
 ```bash
