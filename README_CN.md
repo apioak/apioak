@@ -40,6 +40,10 @@ APIOAK 提供了几乎可以媲美原生 `Nginx` 的强劲性能，通过插件�
   - 支持路由匹配 `header` 配置。
 
   - 支持路由的多请求方法配置。
+  
+  - 支持路由通配符`*`匹配。
+  
+  - 支持上游自动解析（可不配置上游）。
 
   - 支持上游动态加权的 `round-robin` 负载均衡。
 
@@ -74,7 +78,7 @@ APIOAK 提供了几乎可以媲美原生 `Nginx` 的强劲性能，通过插件�
 sudo luarocks install apioak
 ```
 
-请在 [发行列表](https://gitee.com/apioak/apioak/releases) 中获得相应版本的 `RPM` 或 `DEB` 安装包。
+可以在 [发行列表（gitee）](https://gitee.com/apioak/apioak/releases) 中获得相应版本的 `RPM` 或 `DEB` 安装包。
 
 > 通过 PRM 安装 (CentOS 7)
 
@@ -88,13 +92,24 @@ sudo yum -y install aoioak-{VERSION}-1.el7.x86_64.rpm
 sudo dpkg -i apioak-{VERSION}-1_amd64.deb
 ```
 
+通过下载源码的方式进行安装，在 [发行列表（gitee）](https://gitee.com/apioak/apioak/releases) 中找到对应版本的源码包，或者直接使用`git`进行clone项目。
+
+> 通过 源码 安装
+
+```shell
+sudo make deps && sudo make install
+```
 
 ## 快速开始
 
 > 配置 APIOAK
 
-- 编辑 `APIOAK` 配置文件中 `consul` 项的连接信息，配置文件路径 `/path/conf/apioak.yaml`。
+- 编辑 `APIOAK` 配置文件中 `consul` 项的连接信息，配置文件路径 `/{path}/conf/apioak.yaml`。
 
+> 检测依赖和配置
+```bash
+sudo apioak env
+```
 
 > 启动 APIOAK
 
