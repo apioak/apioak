@@ -226,7 +226,7 @@ function _M.check_kv_exists(params, prefix)
         return nil, "the parameter must be a table:[" .. type(params) .. "][" .. pdk.json.encode(params) .. "]"
     end
 
-    if params == empty_table then
+    if next(params) == nil then
         return nil, "parameter cannot be empty:[" .. pdk.json.encode(params, true) .. "]"
     end
 
