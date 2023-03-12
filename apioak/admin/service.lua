@@ -29,13 +29,13 @@ function service_controller.created()
             pdk.response.exit(400, { message = "detect plugin not found" })
         end
 
-        local plugin_ids = {}
+        local plugins = {}
 
         for i = 1, #check_plugin do
-            table.insert(plugin_ids, {id = check_plugin[i].id})
+            table.insert(plugins, { id = check_plugin[i].id, name = check_plugin[i].name })
         end
 
-        body.plugins = plugin_ids
+        body.plugins = plugins
     end
 
     local exist_hosts, exist_hosts_err = dao.service.exist_host(body.hosts)
@@ -109,13 +109,13 @@ function service_controller.updated(params)
             pdk.response.exit(400, { message = "detect plugin not found" })
         end
 
-        local plugin_ids = {}
+        local plugins = {}
 
         for i = 1, #check_plugin do
-            table.insert(plugin_ids, {id = check_plugin[i].id})
+            table.insert(plugins, { id = check_plugin[i].id, name = check_plugin[i].name })
         end
 
-        body.plugins = plugin_ids
+        body.plugins = plugins
     end
 
     local res, err = dao.service.updated(body, detail)

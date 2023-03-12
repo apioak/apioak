@@ -180,7 +180,7 @@ function _M.batch_check_kv_exists(params, prefix)
         return nil, "params format error, err:[table expected, got " .. type(params) .. "]"
     end
 
-    if params.len == 0 then
+    if #params == 0 then
         return nil, "parameter cannot be empty:[" .. pdk.json.encode(params, true) .. "]"
     end
 
@@ -213,7 +213,7 @@ function _M.batch_check_kv_exists(params, prefix)
         until true
     end
 
-    if exists_data ~= empty_table then
+    if next(exists_data) ~= nil then
         return exists_data, nil
     end
 
