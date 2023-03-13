@@ -1,6 +1,7 @@
 local pdk    = require("apioak.pdk")
 local uuid   = require("resty.jit-uuid")
 local common = require("apioak.admin.dao.common")
+local route  = require("apioak.admin.dao.router")
 
 local _M = {}
 
@@ -112,6 +113,12 @@ function _M.updated(params, detail)
 
     if err or not res then
         return nil, "update upstream FAIL, err[".. tostring(err) .."]"
+    end
+
+    local update_upstream_name_err = route.update_associate_upstream_name(detail)
+
+    if update_upstream_name_err then
+        pdk.log.error("dao-upstream-update update_associate_upstream_name err: [" .. update_upstream_name_err .. "]")
     end
 
     local _, update_hash_err = common.update_sync_data_hash()
@@ -231,16 +238,16 @@ function _M.upstream_list_by_node(detail)
     return upstream_list
 end
 
-function _M.update_upstream_node_name (node)
+function _M.update_associate_node_name (node)
 
     if not node.id then
-        return nil, nil
+        return nil
     end
 
     local list, err = common.list_keys(common.PREFIX_MAP.upstreams)
 
     if err then
-        return nil, "update_upstream_node_name: get upstream list FAIL [".. err .."]"
+        return "update_associate_node_name: get upstream list FAIL [".. err .."]"
     end
 
     for i = 1, #list['list'] do
@@ -259,23 +266,29 @@ function _M.update_upstream_node_name (node)
 
             local upstream_nodes = upstream_info['nodes']
 
+            local update = false
             for j = 1, #upstream_nodes do
 
                 if upstream_nodes[j].id and (upstream_nodes[j].id == node.id) then
+                    update = true
                     table.insert(new_node_list.nodes, { id = node.id, name = node.name })
                 else
                     table.insert(new_node_list.nodes, upstream_nodes[j])
                 end
             end
 
-            local _, up_err = _M.updated(new_node_list, upstream_info)
+            if update then
+                local _, update_err = _M.updated(new_node_list, upstream_info)
 
-            if up_err then
-                return nil, "update_upstream_node_name: update node name FAIL [".. up_err .."]"
+                if update_err then
+                    return "update_associate_node_name: update node name FAIL [".. update_err .."]"
+                end
             end
 
         until true
     end
+
+    return nil
 end
 
 
