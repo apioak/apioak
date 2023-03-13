@@ -1,6 +1,7 @@
 local pdk    = require("apioak.pdk")
 local uuid   = require("resty.jit-uuid")
 local common = require("apioak.admin.dao.common")
+local router = require("apioak.admin.dao.router")
 
 local _M = {}
 
@@ -102,6 +103,12 @@ function _M.updated(params, detail)
 
     if err or not res then
         return nil, "update service FAIL, err[".. tostring(err) .."]"
+    end
+
+    local update_service_name_err = router.update_associate_service_name(detail)
+
+    if update_service_name_err then
+        pdk.log.error("dao-service-update update_associate_service_name err: [" .. update_service_name_err .. "]")
     end
 
     local _, update_hash_err = common.update_sync_data_hash()

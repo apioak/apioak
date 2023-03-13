@@ -1,7 +1,7 @@
 local pdk    = require("apioak.pdk")
 local uuid   = require("resty.jit-uuid")
 local common = require("apioak.admin.dao.common")
-local route  = require("apioak.admin.dao.router")
+local router = require("apioak.admin.dao.router")
 
 local _M = {}
 
@@ -115,7 +115,7 @@ function _M.updated(params, detail)
         return nil, "update upstream FAIL, err[".. tostring(err) .."]"
     end
 
-    local update_upstream_name_err = route.update_associate_upstream_name(detail)
+    local update_upstream_name_err = router.update_associate_upstream_name(detail)
 
     if update_upstream_name_err then
         pdk.log.error("dao-upstream-update update_associate_upstream_name err: [" .. update_upstream_name_err .. "]")
@@ -256,7 +256,7 @@ function _M.update_associate_node_name (node)
 
         repeat
 
-            if not upstream_info['nodes'] then
+            if not upstream_info['nodes'] or (next(upstream_info['nodes']) == nil) then
                 break
             end
 
