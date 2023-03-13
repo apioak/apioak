@@ -195,7 +195,7 @@ function _M.upstream_list_by_node(detail)
     local list, err = common.list_keys(common.PREFIX_MAP.upstreams)
 
     if err then
-        return nil, "get upstream list FAIL [".. err .."]"
+        return nil, "upstream_list_by_node: get upstream list FAIL [".. err .."]"
     end
 
     local upstream_list = {}
@@ -229,6 +229,53 @@ function _M.upstream_list_by_node(detail)
     end
 
     return upstream_list
+end
+
+function _M.update_upstream_node_name (node)
+
+    if not node.id then
+        return nil, nil
+    end
+
+    local list, err = common.list_keys(common.PREFIX_MAP.upstreams)
+
+    if err then
+        return nil, "update_upstream_node_name: get upstream list FAIL [".. err .."]"
+    end
+
+    for i = 1, #list['list'] do
+
+        local upstream_info = list['list'][i]
+
+        repeat
+
+            if not upstream_info['nodes'] then
+                break
+            end
+
+            local new_node_list = {
+                nodes = {}
+            }
+
+            local upstream_nodes = upstream_info['nodes']
+
+            for j = 1, #upstream_nodes do
+
+                if upstream_nodes[j].id and (upstream_nodes[j].id == node.id) then
+                    table.insert(new_node_list.nodes, { id = node.id, name = node.name })
+                else
+                    table.insert(new_node_list.nodes, upstream_nodes[j])
+                end
+            end
+
+            local _, up_err = _M.updated(new_node_list, upstream_info)
+
+            if up_err then
+                return nil, "update_upstream_node_name: update node name FAIL [".. up_err .."]"
+            end
+
+        until true
+    end
 end
 
 

@@ -2,7 +2,6 @@ local ngx         = ngx
 local rand        = math.random
 local pdk         = require("apioak.pdk")
 local config      = require("apioak.sys.config")
-local empty_table = {}
 
 local _M = {}
 
