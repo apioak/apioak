@@ -1,6 +1,7 @@
 local pdk    = require("apioak.pdk")
 local uuid   = require("resty.jit-uuid")
 local common = require("apioak.admin.dao.common")
+local router = require("apioak.admin.dao.router")
 
 local _M = {}
 
@@ -102,6 +103,12 @@ function _M.updated(params, detail)
 
     if err or not res then
         return nil, "update service FAIL, err[".. tostring(err) .."]"
+    end
+
+    local update_service_name_err = router.update_associate_service_name(detail)
+
+    if update_service_name_err then
+        pdk.log.error("dao-service-update update_associate_service_name err: [" .. update_service_name_err .. "]")
     end
 
     local _, update_hash_err = common.update_sync_data_hash()
@@ -275,6 +282,59 @@ function _M.service_list_by_plugin(detail)
     end
 
     return service_list
+end
+
+function _M.update_associate_plugin_name(plugin)
+
+    if not plugin.id  then
+        return nil
+    end
+
+    local list, err = common.list_keys(common.PREFIX_MAP.services)
+
+    if err then
+        return "update_associate_plugin_name: get service list FAIL [".. err .."]"
+    end
+
+    for i = 1, #list['list'] do
+
+        local service_info = list['list'][i]
+
+        repeat
+
+            if not service_info['plugins'] or (next(service_info['plugins']) == nil) then
+                break
+            end
+
+            local associate_plugins = service_info['plugins']
+
+            local new_plugins = {
+                plugins = {}
+            }
+
+            local update = false
+            for j = 1, #associate_plugins do
+
+                if associate_plugins[j].id and (associate_plugins[j].id == plugin.id) then
+                    update = true
+                    table.insert(new_plugins.plugins, { id = plugin.id, name = plugin.name })
+                else
+                    table.insert(new_plugins.plugins, associate_plugins[j])
+                end
+            end
+
+            if update then
+                local _, update_err = _M.updated(new_plugins, service_info)
+
+                if update_err then
+                    return "update_associate_plugin_name: update plugin name FAIL [".. update_err .."]"
+                end
+            end
+
+        until true
+    end
+
+    return nil
 end
 
 return _M

@@ -366,4 +366,141 @@ function _M.router_list_by_upstream(detail)
     return router_list
 end
 
+function _M.update_associate_upstream_name(upstream)
+
+    if not upstream.id  then
+        return nil
+    end
+
+    local list, err = common.list_keys(common.PREFIX_MAP.routers)
+
+    if err then
+        return "update_associate_upstream_name: get router list FAIL [".. err .."]"
+    end
+
+    for i = 1, #list['list'] do
+
+        local router_info = list['list'][i]
+
+        repeat
+
+            if not router_info['upstream'] or (next(router_info['upstream']) == nil) then
+                break
+            end
+
+            if not router_info['upstream'].id or (router_info['upstream'].id ~= upstream.id) then
+                break
+            end
+
+            local new_upstream = {
+                upstream = { id = upstream.id, name = upstream.name }
+            }
+
+            local _, update_err = _M.updated(new_upstream, router_info)
+
+            if update_err then
+                return "update_associate_upstream_name: update upstream name FAIL [".. update_err .."]"
+            end
+
+        until true
+    end
+
+    return nil
+end
+
+function _M.update_associate_service_name(service)
+
+    if not service.id  then
+        return nil
+    end
+
+    local list, err = common.list_keys(common.PREFIX_MAP.routers)
+
+    if err then
+        return "update_associate_service_name: get router list FAIL [".. err .."]"
+    end
+
+    for i = 1, #list['list'] do
+
+        local router_info = list['list'][i]
+
+        repeat
+
+            if not router_info['service'] or (next(router_info['service']) == nil) then
+                break
+            end
+
+            if not router_info['service'].id or (router_info['service'].id ~= service.id) then
+                break
+            end
+
+            local new_service = {
+                service = { id = service.id, name = service.name }
+            }
+
+            local _, update_err = _M.updated(new_service, router_info)
+
+            if update_err then
+                return "update_associate_service_name: update service name FAIL [".. update_err .."]"
+            end
+
+        until true
+    end
+
+    return nil
+end
+
+function _M.update_associate_plugin_name(plugin)
+
+    if not plugin.id  then
+        return nil
+    end
+
+    local list, err = common.list_keys(common.PREFIX_MAP.routers)
+
+    if err then
+        return "update_associate_plugin_name: get router list FAIL [".. err .."]"
+    end
+
+    for i = 1, #list['list'] do
+
+        local router_info = list['list'][i]
+
+        repeat
+
+            if not router_info['plugins'] or (next(router_info['plugins']) == nil) then
+                break
+            end
+
+            local associate_plugins = router_info['plugins']
+
+            local new_plugins = {
+                plugins = {}
+            }
+
+            local update = false
+            for j = 1, #associate_plugins do
+
+                if associate_plugins[j].id and (associate_plugins[j].id == plugin.id) then
+                    update = true
+                    table.insert(new_plugins.plugins, { id = plugin.id, name = plugin.name })
+                else
+                    table.insert(new_plugins.plugins, associate_plugins[j])
+                end
+            end
+
+            if update then
+                local _, update_err = _M.updated(new_plugins, router_info)
+
+                if update_err then
+                    return "update_associate_plugin_name: update plugin name FAIL [".. update_err .."]"
+                end
+            end
+
+        until true
+    end
+
+    return nil
+end
+
 return _M

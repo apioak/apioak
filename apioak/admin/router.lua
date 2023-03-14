@@ -1,7 +1,7 @@
-local pdk = require("apioak.pdk")
-local schema = require("apioak.schema")
+local pdk        = require("apioak.pdk")
+local schema     = require("apioak.schema")
 local controller = require("apioak.admin.controller")
-local dao = require("apioak.dao")
+local dao        = require("apioak.dao")
 
 local router_controller = controller.new("router")
 
@@ -28,7 +28,7 @@ function router_controller.created()
         pdk.response.exit(400, { message = "detect service not found" })
     end
 
-    body.service = {id = check_service.id}
+    body.service = { id = check_service.id, name = check_service.name }
 
     if body.plugins then
 
@@ -43,13 +43,13 @@ function router_controller.created()
             pdk.response.exit(400, { message = "detect plugin not found" })
         end
 
-        local plugin_ids = {}
+        local plugins = {}
 
         for i = 1, #check_plugin do
-            table.insert(plugin_ids, {id = check_plugin[i].id})
+            table.insert(plugins, { id = check_plugin[i].id, name = check_plugin[i].name })
         end
 
-        body.plugins = plugin_ids
+        body.plugins = plugins
     end
 
     if body.upstream and
@@ -67,7 +67,7 @@ function router_controller.created()
             pdk.response.exit(400, { message = "detect upstream not found" })
         end
 
-        body.upstream = {id = check_upstream.id}
+        body.upstream = { id = check_upstream.id, name = check_upstream.name }
     end
 
     local exist_paths, exist_paths_err = dao.router.exist_path(body.paths)
@@ -144,7 +144,7 @@ function router_controller.updated(params)
             pdk.response.exit(400, { message = "detect upstream not found" })
         end
 
-        body.upstream = {id = check_upstream.id}
+        body.upstream = { id = check_upstream.id, name = check_upstream.name }
     end
 
     if body.service then
@@ -160,7 +160,7 @@ function router_controller.updated(params)
             pdk.response.exit(400, { message = "detect service not found" })
         end
 
-        body.service = {id = check_service.id}
+        body.service = { id = check_service.id, name = check_service.name }
     end
 
     if body.plugins and (#body.plugins > 0) then
@@ -176,13 +176,13 @@ function router_controller.updated(params)
             pdk.response.exit(400, { message = "detect plugin not found" })
         end
 
-        local plugin_ids = {}
+        local plugins = {}
 
         for i = 1, #check_plugin do
-            table.insert(plugin_ids, {id = check_plugin[i].id})
+            table.insert(plugins, { id = check_plugin[i].id, name = check_plugin[i].name })
         end
 
-        body.plugins = plugin_ids
+        body.plugins = plugins
     end
 
     local res, err = dao.router.updated(body, detail)

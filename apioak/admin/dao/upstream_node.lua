@@ -1,6 +1,7 @@
-local pdk    = require("apioak.pdk")
-local uuid   = require("resty.jit-uuid")
-local common = require("apioak.admin.dao.common")
+local pdk      = require("apioak.pdk")
+local uuid     = require("resty.jit-uuid")
+local common   = require("apioak.admin.dao.common")
+local upstream = require("apioak.admin.dao.upstream")
 
 local _M = {}
 
@@ -145,6 +146,12 @@ function _M.updated(params, detail)
 
     if err or not res then
         return nil, "update upstream_node FAIL, err[".. tostring(err) .."]"
+    end
+
+    local update_node_name_err = upstream.update_associate_node_name(detail)
+
+    if update_node_name_err then
+        pdk.log.error("dao-upstream-node-update update_upstream_node_name err: [" .. update_node_name_err .. "]")
     end
 
     local _, update_hash_err = common.update_sync_data_hash()

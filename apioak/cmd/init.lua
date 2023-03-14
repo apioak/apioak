@@ -23,7 +23,7 @@ table.sort(cmds_arr)
 local help = string.format([[
 Usage: apioak COMMAND
 The available commands are:
- %s]], table.concat(cmds_arr, "\n "))
+ %s]], table.concat(cmds_arr, "\n ") .. "\n ")
 
 return function(args)
     local cmd_name = table.remove(args, 1)

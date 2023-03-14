@@ -2,7 +2,6 @@ local ngx         = ngx
 local rand        = math.random
 local pdk         = require("apioak.pdk")
 local config      = require("apioak.sys.config")
-local empty_table = {}
 
 local _M = {}
 
@@ -180,7 +179,7 @@ function _M.batch_check_kv_exists(params, prefix)
         return nil, "params format error, err:[table expected, got " .. type(params) .. "]"
     end
 
-    if params.len == 0 then
+    if #params == 0 then
         return nil, "parameter cannot be empty:[" .. pdk.json.encode(params, true) .. "]"
     end
 
@@ -213,7 +212,7 @@ function _M.batch_check_kv_exists(params, prefix)
         until true
     end
 
-    if exists_data ~= empty_table then
+    if next(exists_data) ~= nil then
         return exists_data, nil
     end
 
@@ -226,7 +225,7 @@ function _M.check_kv_exists(params, prefix)
         return nil, "the parameter must be a table:[" .. type(params) .. "][" .. pdk.json.encode(params) .. "]"
     end
 
-    if params == empty_table then
+    if next(params) == nil then
         return nil, "parameter cannot be empty:[" .. pdk.json.encode(params, true) .. "]"
     end
 

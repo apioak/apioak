@@ -1,6 +1,8 @@
-local pdk    = require("apioak.pdk")
-local uuid   = require("resty.jit-uuid")
-local common = require("apioak.admin.dao.common")
+local pdk     = require("apioak.pdk")
+local uuid    = require("resty.jit-uuid")
+local common  = require("apioak.admin.dao.common")
+local service = require("apioak.admin.dao.service")
+local router  = require("apioak.admin.dao.router")
 
 local _M = {}
 
@@ -86,6 +88,18 @@ function _M.updated(params, detail)
 
     if err or not res then
         return nil, "update plugin FAIL, err[".. tostring(err) .."]"
+    end
+
+    local update_service_plugin_name_err = service.update_associate_plugin_name(detail)
+
+    if update_service_plugin_name_err then
+        pdk.log.error("dao-plugin-update update_service_plugin_name err: [" .. update_service_plugin_name_err .. "]")
+    end
+
+    local update_router_plugin_name_err = router.update_associate_plugin_name(detail)
+
+    if update_router_plugin_name_err then
+        pdk.log.error("dao-plugin-update update_router_plugin_name err: [" .. update_router_plugin_name_err .. "]")
     end
 
     local _, update_hash_err = common.update_sync_data_hash()
