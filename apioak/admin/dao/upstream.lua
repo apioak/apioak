@@ -238,7 +238,7 @@ function _M.upstream_list_by_node(detail)
     return upstream_list
 end
 
-function _M.update_associate_node_name (node)
+function _M.update_associate_node_name(node)
 
     if not node.id then
         return nil

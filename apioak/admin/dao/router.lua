@@ -366,7 +366,7 @@ function _M.router_list_by_upstream(detail)
     return router_list
 end
 
-function _M.update_associate_upstream_name (upstream)
+function _M.update_associate_upstream_name(upstream)
 
     if not upstream.id  then
         return nil
@@ -408,7 +408,7 @@ function _M.update_associate_upstream_name (upstream)
     return nil
 end
 
-function _M.update_associate_service_name (service)
+function _M.update_associate_service_name(service)
 
     if not service.id  then
         return nil
@@ -450,7 +450,7 @@ function _M.update_associate_service_name (service)
     return nil
 end
 
-function _M.update_associate_plugin_name (plugin)
+function _M.update_associate_plugin_name(plugin)
 
     if not plugin.id  then
         return nil

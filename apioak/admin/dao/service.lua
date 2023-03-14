@@ -284,7 +284,7 @@ function _M.service_list_by_plugin(detail)
     return service_list
 end
 
-function _M.update_associate_plugin_name (plugin)
+function _M.update_associate_plugin_name(plugin)
 
     if not plugin.id  then
         return nil
