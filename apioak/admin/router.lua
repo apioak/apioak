@@ -24,11 +24,9 @@ function router_controller.created()
         pdk.response.exit(500, { message = "detect service exceptions" })
     end
 
-    if not check_service then
-        pdk.response.exit(400, { message = "detect service not found" })
+    if check_service then
+        body.service = { id = check_service.id, name = check_service.name }
     end
-
-    body.service = { id = check_service.id, name = check_service.name }
 
     if body.plugins then
 
@@ -39,17 +37,32 @@ function router_controller.created()
             pdk.response.exit(500, { message = "detect plugin exceptions" })
         end
 
-        if not check_plugin then
-            pdk.response.exit(400, { message = "detect plugin not found" })
+        if check_plugin then
+            local exit_plugin_id_map, exit_plugin_name_map = {}, {}
+
+            for j = 1, #check_plugin do
+                exit_plugin_id_map[check_plugin[j]['id']] = check_plugin[j]['name']
+                exit_plugin_name_map[check_plugin[j]['name']] = check_plugin[j]['id']
+            end
+
+            for k = 1, #body.plugins do
+                if body.plugins[k]['id'] and exit_plugin_id_map[body.plugins[k]['id']] then
+
+                    body.plugins[k] = {
+                        id = body.plugins[k]['id'],
+                        name = exit_plugin_id_map[body.plugins[k]['id']]
+                    }
+
+                elseif body.plugins[k]['name'] and exit_plugin_name_map[body.plugins[k]['name']] then
+
+                    body.plugins[k] = {
+                        id = exit_plugin_name_map[body.plugins[k]['name']],
+                        name = body.plugins[k]['name']
+                    }
+
+                end
+            end
         end
-
-        local plugins = {}
-
-        for i = 1, #check_plugin do
-            table.insert(plugins, { id = check_plugin[i].id, name = check_plugin[i].name })
-        end
-
-        body.plugins = plugins
     end
 
     if body.upstream and
@@ -63,11 +76,9 @@ function router_controller.created()
             pdk.response.exit(500, { message = "detect upstream exceptions" })
         end
 
-        if not check_upstream then
-            pdk.response.exit(400, { message = "detect upstream not found" })
+        if check_upstream then
+            body.upstream = { id = check_upstream.id, name = check_upstream.name }
         end
-
-        body.upstream = { id = check_upstream.id, name = check_upstream.name }
     end
 
     local exist_paths, exist_paths_err = dao.router.exist_path(body.paths)
@@ -140,11 +151,9 @@ function router_controller.updated(params)
             pdk.response.exit(500, { message = "detect upstream exceptions" })
         end
 
-        if not check_upstream then
-            pdk.response.exit(400, { message = "detect upstream not found" })
+        if check_upstream then
+            body.upstream = { id = check_upstream.id, name = check_upstream.name }
         end
-
-        body.upstream = { id = check_upstream.id, name = check_upstream.name }
     end
 
     if body.service then
@@ -156,11 +165,9 @@ function router_controller.updated(params)
             pdk.response.exit(500, { message = "detect service exceptions" })
         end
 
-        if not check_service then
-            pdk.response.exit(400, { message = "detect service not found" })
+        if check_service then
+            body.service = { id = check_service.id, name = check_service.name }
         end
-
-        body.service = { id = check_service.id, name = check_service.name }
     end
 
     if body.plugins and (#body.plugins > 0) then
@@ -172,17 +179,32 @@ function router_controller.updated(params)
             pdk.response.exit(500, { message = "detect plugin exceptions" })
         end
 
-        if not check_plugin then
-            pdk.response.exit(400, { message = "detect plugin not found" })
+        if check_plugin then
+            local exit_plugin_id_map, exit_plugin_name_map = {}, {}
+
+            for j = 1, #check_plugin do
+                exit_plugin_id_map[check_plugin[j]['id']] = check_plugin[j]['name']
+                exit_plugin_name_map[check_plugin[j]['name']] = check_plugin[j]['id']
+            end
+
+            for k = 1, #body.plugins do
+                if body.plugins[k]['id'] and exit_plugin_id_map[body.plugins[k]['id']] then
+
+                    body.plugins[k] = {
+                        id = body.plugins[k]['id'],
+                        name = exit_plugin_id_map[body.plugins[k]['id']]
+                    }
+
+                elseif body.plugins[k]['name'] and exit_plugin_name_map[body.plugins[k]['name']] then
+
+                    body.plugins[k] = {
+                        id = exit_plugin_name_map[body.plugins[k]['name']],
+                        name = body.plugins[k]['name']
+                    }
+
+                end
+            end
         end
-
-        local plugins = {}
-
-        for i = 1, #check_plugin do
-            table.insert(plugins, { id = check_plugin[i].id, name = check_plugin[i].name })
-        end
-
-        body.plugins = plugins
     end
 
     local res, err = dao.router.updated(body, detail)
