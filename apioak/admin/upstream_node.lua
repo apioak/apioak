@@ -142,8 +142,7 @@ function upstream_node_controller.deleted(params)
             table.insert(upstream_names, upstream_list[i]['name'])
         end
 
-        pdk.response.exit(400, {
-            message = "upstream node is in use by upstream [" .. table.concat(upstream_names, ",") .. "]" })
+        pdk.log.warn("upstream-node-delete node is in use by upstream [" .. table.concat(upstream_names, ",") .. "]")
     end
 
     local res, err = dao.upstream_node.deleted(detail)
