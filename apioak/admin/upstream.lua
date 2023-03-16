@@ -25,17 +25,32 @@ function upstream_controller.created()
         pdk.response.exit(500, { message = "detect upstream node exceptions" })
     end
 
-    if not check_nodes then
-        pdk.response.exit(400, { message = "the upstream nodes not found" })
+    if check_nodes then
+        local exit_node_id_map, exit_node_name_map = {}, {}
+
+        for j = 1, #check_nodes do
+            exit_node_id_map[check_nodes[j]['id']] = check_nodes[j]['name']
+            exit_node_name_map[check_nodes[j]['name']] = check_nodes[j]['id']
+        end
+
+        for k = 1, #body.nodes do
+            if body.nodes[k]['id'] and exit_node_id_map[body.nodes[k]['id']] then
+
+                body.nodes[k] = {
+                    id = body.nodes[k]['id'],
+                    name = exit_node_id_map[body.nodes[k]['id']]
+                }
+
+            elseif body.nodes[k]['name'] and exit_node_name_map[body.nodes[k]['name']] then
+
+                body.nodes[k] = {
+                    id = exit_node_name_map[body.nodes[k]['name']],
+                    name = body.nodes[k]['name']
+                }
+
+            end
+        end
     end
-
-    local nodes = {}
-
-    for i = 1, #check_nodes do
-        table.insert(nodes, { id = check_nodes[i].id, name = check_nodes[i].name })
-    end
-
-    body.nodes = nodes
 
     local res, err = dao.upstream.created(body)
 
@@ -83,17 +98,32 @@ function upstream_controller.updated(params)
             pdk.response.exit(500, { message = "detect upstream-node exceptions" })
         end
 
-        if not check_nodes then
-            pdk.response.exit(400, { message = "detect upstream-node not found" })
+        if check_nodes then
+            local exit_node_id_map, exit_node_name_map = {}, {}
+
+            for j = 1, #check_nodes do
+                exit_node_id_map[check_nodes[j]['id']] = check_nodes[j]['name']
+                exit_node_name_map[check_nodes[j]['name']] = check_nodes[j]['id']
+            end
+
+            for k = 1, #body.nodes do
+                if body.nodes[k]['id'] and exit_node_id_map[body.nodes[k]['id']] then
+
+                    body.nodes[k] = {
+                        id = body.nodes[k]['id'],
+                        name = exit_node_id_map[body.nodes[k]['id']]
+                    }
+
+                elseif body.nodes[k]['name'] and exit_node_name_map[body.nodes[k]['name']] then
+
+                    body.nodes[k] = {
+                        id = exit_node_name_map[body.nodes[k]['name']],
+                        name = body.nodes[k]['name']
+                    }
+
+                end
+            end
         end
-
-        local nodes = {}
-
-        for i = 1, #check_nodes do
-            table.insert(nodes, { id = check_nodes[i].id, name = check_nodes[i].name })
-        end
-
-        body.nodes = nodes
     end
 
     local res, err = dao.upstream.updated(body, detail)
@@ -166,7 +196,7 @@ function upstream_controller.deleted(params)
             table.insert(router_names, router_list[i]['name'])
         end
 
-        pdk.response.exit(400, { message = "upstream is in use by router [" .. table.concat(router_names, ",") .. "]" })
+        pdk.log.warn("upstream-delete upstream is in use by router [" .. table.concat(router_names, ",") .. "]")
     end
 
     local res, err = dao.upstream.deleted(detail)
