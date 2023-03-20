@@ -25,17 +25,33 @@ function service_controller.created()
             pdk.response.exit(500, { message = "detect plugin exceptions" })
         end
 
-        if not check_plugin then
-            pdk.response.exit(400, { message = "detect plugin not found" })
+        if check_plugin then
+
+            local exit_plugin_id_map, exit_plugin_name_map = {}, {}
+
+            for j = 1, #check_plugin do
+                exit_plugin_id_map[check_plugin[j]['id']] = check_plugin[j]['name']
+                exit_plugin_name_map[check_plugin[j]['name']] = check_plugin[j]['id']
+            end
+
+            for k = 1, #body.plugins do
+                if body.plugins[k]['id'] and exit_plugin_id_map[body.plugins[k]['id']] then
+
+                    body.plugins[k] = {
+                        id = body.plugins[k]['id'],
+                        name = exit_plugin_id_map[body.plugins[k]['id']]
+                    }
+
+                elseif body.plugins[k]['name'] and exit_plugin_name_map[body.plugins[k]['name']] then
+
+                    body.plugins[k] = {
+                        id = exit_plugin_name_map[body.plugins[k]['name']],
+                        name = body.plugins[k]['name']
+                    }
+
+                end
+            end
         end
-
-        local plugins = {}
-
-        for i = 1, #check_plugin do
-            table.insert(plugins, { id = check_plugin[i].id, name = check_plugin[i].name })
-        end
-
-        body.plugins = plugins
     end
 
     local exist_hosts, exist_hosts_err = dao.service.exist_host(body.hosts)
@@ -46,7 +62,7 @@ function service_controller.created()
     end
 
     if exist_hosts and (#exist_hosts > 0) then
-        pdk.response.exit(400, { message = "exists hosts [" .. table.concat(exist_hosts, ",") .. "]" })
+        pdk.log.warn("service-create exists hosts [" .. table.concat(exist_hosts, ",") .. "]")
     end
 
     local res, err = dao.service.created(body)
@@ -94,7 +110,7 @@ function service_controller.updated(params)
     end
 
     if exist_hosts and (#exist_hosts > 0) then
-        pdk.response.exit(400, { message = "exists hosts [" .. table.concat(exist_hosts, ",") .. "] " })
+        pdk.log.warn("service-update exists hosts [" .. table.concat(exist_hosts, ",") .. "]")
     end
 
     if body.plugins then
@@ -105,17 +121,33 @@ function service_controller.updated(params)
             pdk.response.exit(500, { message = "detect plugin exceptions" })
         end
 
-        if not check_plugin then
-            pdk.response.exit(400, { message = "detect plugin not found" })
+        if check_plugin then
+
+            local exit_plugin_id_map, exit_plugin_name_map = {}, {}
+
+            for j = 1, #check_plugin do
+                exit_plugin_id_map[check_plugin[j]['id']] = check_plugin[j]['name']
+                exit_plugin_name_map[check_plugin[j]['name']] = check_plugin[j]['id']
+            end
+
+            for k = 1, #body.plugins do
+                if body.plugins[k]['id'] and exit_plugin_id_map[body.plugins[k]['id']] then
+
+                    body.plugins[k] = {
+                        id = body.plugins[k]['id'],
+                        name = exit_plugin_id_map[body.plugins[k]['id']]
+                    }
+
+                elseif body.plugins[k]['name'] and exit_plugin_name_map[body.plugins[k]['name']] then
+
+                    body.plugins[k] = {
+                        id = exit_plugin_name_map[body.plugins[k]['name']],
+                        name = body.plugins[k]['name']
+                    }
+
+                end
+            end
         end
-
-        local plugins = {}
-
-        for i = 1, #check_plugin do
-            table.insert(plugins, { id = check_plugin[i].id, name = check_plugin[i].name })
-        end
-
-        body.plugins = plugins
     end
 
     local res, err = dao.service.updated(body, detail)
@@ -181,7 +213,7 @@ function service_controller.deleted(params)
     end
 
     if router_list and (#router_list > 0) then
-        pdk.response.exit(400, { message = "service is in use by router" })
+        pdk.log.warn("service-delete service is in use by router [" .. pdk.json.encode(router_list, true) .. "]")
     end
 
     local _, err = dao.service.deleted(detail)

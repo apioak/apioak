@@ -25,8 +25,7 @@ function certificate_controller.created()
     end
 
     if exist_snis and (#exist_snis > 0) then
-        pdk.response.exit(400, {
-            message = "exists certificate sni [" .. table.concat(exist_snis, ",") .. "] " })
+        pdk.log.warn("certificate-create exists certificate sni [" .. table.concat(exist_snis, ",") .. "]")
     end
 
     local res, err = dao.certificate.created(body)
@@ -86,8 +85,7 @@ function certificate_controller.updated(params)
     end
 
     if exist_sni and (#exist_sni > 0) then
-        pdk.response.exit(400, {
-            message = "exists certificate sni [" .. table.concat(exist_sni, ",") .. "] " })
+        pdk.log.warn("certificate-update exists certificate sni [" .. table.concat(exist_sni, ",") .. "]")
     end
 
     local res, err = dao.certificate.updated(body, detail)

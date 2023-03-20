@@ -245,7 +245,7 @@ function _M.check_kv_exists(params, prefix)
         end
 
         if not id_res then
-            return nil, "params-id no data found for parameter id [" .. id_key .. "]"
+            return nil, nil
         end
 
         local name_key = _M.PREFIX_MAP[prefix] .. id_res
@@ -258,7 +258,7 @@ function _M.check_kv_exists(params, prefix)
         end
 
         if not name_res then
-            return nil, "params-id no data found for parameter name [" .. id_key .. "|" .. name_key .. "]"
+            return nil, nil
         end
 
         return pdk.json.decode(name_res), nil
@@ -275,7 +275,7 @@ function _M.check_kv_exists(params, prefix)
         end
 
         if not name_res then
-            return nil, "params-name no data found for parameter name [" .. name_key .. "]"
+            return nil, nil
         end
 
         return pdk.json.decode(name_res), nil
@@ -301,19 +301,8 @@ function _M.check_kv_exists(params, prefix)
                     .. id_key .. "|" .. name_key .. "], err:[" .. tostring(name_err) .. "]"
         end
 
-        if id_res and not name_res then
-            return nil, "params-id-name id exists result, parameter name is wrong ["
-                    .. params.id .. "][" .. params.name .. "]"
-        end
-
-        if not id_res and name_res then
-            return nil, "params-id-name name exists result, parameter id is wrong ["
-                    .. params.id .. "][" .. params.name .. "]"
-        end
-
-        if id_res ~= params.name then
-            return nil, "params-id-name the parameter id and name are not the same result ["
-                    .. params.id .. "][" .. params.name .. "]"
+        if (id_res and not name_res) or (not id_res and name_res) or (id_res ~= params.name) then
+            return nil, nil
         end
 
         return pdk.json.decode(name_res), nil
