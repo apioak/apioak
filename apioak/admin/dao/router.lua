@@ -196,9 +196,9 @@ function _M.deleted(detail)
     return {}, nil
 end
 
-function _M.exist_path(paths, filter_id)
+function _M.exist_path(paths, service_info)
 
-    if #paths == 0 then
+    if (#paths == 0) or (service_info == nil) or ((service_info.id == nil) and (service_info.name == nil)) then
         return {}, nil
     end
 
@@ -215,18 +215,24 @@ function _M.exist_path(paths, filter_id)
 
     local exist_paths = {}
 
-    for i = 1, #list['list'] do
+    for i = 1, #list.list do
 
         repeat
 
-            if list['list'][i]['id'] == filter_id then
+            if (list.list[i].service == nil) or (next(list.list[i].service) == nil) then
                 break
             end
 
-            if #list['list'][i]['paths'] > 0 then
-                for j = 1, #list['list'][i]['paths'] do
-                    if paths_map[list['list'][i]['paths'][j]] then
-                        table.insert(exist_paths, list['list'][i]['paths'][j])
+            if #list.list[i].paths > 0 then
+                for j = 1, #list.list[i].paths do
+                    if service_info.id ~= nil then
+                        if (service_info.id == list.list[i].service.id) and paths_map[list.list[i].paths[j]] then
+                            table.insert(exist_paths, list.list[i].paths[j])
+                        end
+                    elseif service_info.name ~= nil then
+                        if (service_info.name == list.list[i].service.name) and paths_map[list.list[i].paths[j]] then
+                            table.insert(exist_paths, list.list[i].paths[j])
+                        end
                     end
                 end
             end
