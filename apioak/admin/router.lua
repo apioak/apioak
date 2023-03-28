@@ -131,7 +131,11 @@ function router_controller.updated(params)
         end
     end
 
-    local exist_paths, exist_paths_err = dao.router.exist_path(body.paths, detail.id)
+    local service_info
+    if next(body.service) ~= nil then
+        service_info = body.service
+    end
+    local exist_paths, exist_paths_err = dao.router.exist_path(body.paths, service_info)
 
     if exist_paths_err then
         pdk.log.error("router-update exception when checking if path exists: [" .. exist_paths_err .. "]")
