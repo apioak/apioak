@@ -142,7 +142,7 @@ function router_controller.updated(params)
         pdk.response.exit(500, { message = "exception when checking if path exists" })
     end
 
-    if exist_paths and (#exist_paths > 0) then
+    if exist_paths and (#exist_paths > 1) then
         pdk.response.exit(400, { message = "exists paths [" .. table.concat(exist_paths, ",") .. "]" })
     end
 
