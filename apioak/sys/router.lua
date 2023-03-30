@@ -17,7 +17,6 @@ local router_objects
 
 local events_source_router     = "events_source_router"
 local events_type_put_router   = "events_type_put_router"
-local oakrouting_router_method = "OPTIONS"
 
 local _M = {}
 
@@ -62,7 +61,7 @@ local function router_map_service_id()
 
             table.insert(router_map_service[list.list[i].service.id], {
                 paths    = list.list[i].paths,
-                methods  = list.list[i].methods,
+                methods  = pdk.const.DEFAULT_METHODS(list.list[i].methods),
                 headers  = list.list[i].headers,
                 upstream = list.list[i].upstream,
                 plugins  = list.list[i].plugins,
@@ -194,8 +193,9 @@ local function automatic_sync_resource_data(premature)
 
             if not sync_data.new or (sync_data.new ~= sync_data.old) then
 
-                local sync_router_data   = sync_update_router_data()
+                local sync_router_data = sync_update_router_data()
                 if sync_router_data == nil then
+                    dao.common.update_sync_data_hash(true)
                     break
                 end
 
@@ -262,7 +262,7 @@ local function automatic_sync_resource_data(premature)
                     end
                 end
 
-                local sync_ssl_data      = sys_certificate.sync_update_ssl_data()
+                local sync_ssl_data = sys_certificate.sync_update_ssl_data()
 
                 local post_ssl, post_ssl_err = events.post(
                         sys_certificate.events_source_ssl, sys_certificate.events_type_put_ssl, sync_ssl_data)
@@ -303,6 +303,7 @@ local function automatic_sync_resource_data(premature)
             end
 
             ngx_sleep(2)
+
         until true
     end
 
@@ -354,10 +355,16 @@ local function generate_router_data(router_data)
                             }
                         }
 
+                        local priority_num = 1
+                        if host_router_data.router.path == "/*" then
+                            priority_num = 0
+                        end
+
                         table.insert(router_data_list, {
-                            path    = host_router_data.host .. ":" .. host_router_data.router.path,
-                            method  = oakrouting_router_method,
-                            handler = function(params, oak_ctx)
+                            path     = host_router_data.host .. ":" .. host_router_data.router.path,
+                            method   = host_router_data.router.methods,
+                            priority = priority_num,
+                            handler  = function(params, oak_ctx)
 
                                 oak_ctx.matched.path = params
 
@@ -468,7 +475,7 @@ function _M.router_match(oak_ctx)
 
     local match_path = oak_ctx.matched.host .. ":" .. oak_ctx.matched.uri
 
-    local match, err = router_objects:dispatch(match_path, oakrouting_router_method, oak_ctx)
+    local match, err = router_objects:dispatch(match_path, string.upper(oak_ctx.matched.method), oak_ctx)
 
     if err then
         pdk.log.error("router_match: router_objects dispatch err: [" .. tostring(err) .. "]")
@@ -511,30 +518,6 @@ function _M.router_match(oak_ctx)
             return false
         end
 
-    end
-
-    local config_methods = {}
-
-    if service_router.router.methods and (#service_router.router.methods > 0) then
-
-        for i = 1, #service_router.router.methods do
-            if service_router.router.methods[i] == pdk.const.METHODS_ALL then
-                config_methods = {}
-
-                for j = 1, #pdk.const.ALL_METHODS do
-                    config_methods[pdk.string.upper(pdk.const.ALL_METHODS[j])] = 0
-                end
-
-                break
-            else
-                config_methods[pdk.string.upper(service_router.router.methods[i])] = 0
-            end
-        end
-
-    end
-
-    if not config_methods[pdk.string.upper(matched.method)] then
-        return false
     end
 
     return true

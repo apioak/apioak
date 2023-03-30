@@ -94,6 +94,8 @@ function router_controller.created()
         pdk.response.exit(400, { message = "exists paths [ " .. table.concat(exist_paths, ", ") .. " ]" })
     end
 
+    body.methods = pdk.const.DEFAULT_METHODS(body.methods)
+
     local res, err = dao.router.created(body)
 
     if err then
@@ -210,6 +212,8 @@ function router_controller.updated(params)
             end
         end
     end
+
+    body.methods = pdk.const.DEFAULT_METHODS(body.methods)
 
     local res, err = dao.router.updated(body, detail)
 

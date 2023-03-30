@@ -11,7 +11,7 @@ function _M.created(params)
     local router_body = {
         id        = router_id,
         name      = params.name,
-        methods   = params.methods or { pdk.const.METHODS_ALL },
+        methods   = params.methods or pdk.const.ALL_METHODS,
         paths     = params.paths,
         headers   = params.headers or {},
         service   = params.service,
