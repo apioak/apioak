@@ -384,7 +384,7 @@ function _M.update_associate_services_plugin()
                 local _, update_err = _M.updated(new_plugins, service_info)
 
                 if update_err then
-                    return "update_associate_services_plugin: update plugin FAIL [".. update_err .."]"
+                    return "update_associate_services_plugin: update plugins FAIL [".. update_err .."]"
                 end
 
             end

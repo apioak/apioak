@@ -58,6 +58,12 @@ function _M.created(params)
         return nil, "create upstream_node FAIL [".. err .."]"
     end
 
+    local update_associate_node_err = upstream.update_associate_node()
+
+    if update_associate_node_err then
+        pdk.log.error("dao-upstream-node-created update_associate_node err: [" .. update_associate_node_err .. "]")
+    end
+
     local _, update_hash_err = common.update_sync_data_hash()
 
     if update_hash_err then
@@ -148,10 +154,10 @@ function _M.updated(params, detail)
         return nil, "update upstream_node FAIL, err[".. tostring(err) .."]"
     end
 
-    local update_node_name_err = upstream.update_associate_node_name(detail)
+    local update_associate_node_err = upstream.update_associate_node()
 
-    if update_node_name_err then
-        pdk.log.error("dao-upstream-node-update update_upstream_node_name err: [" .. update_node_name_err .. "]")
+    if update_associate_node_err then
+        pdk.log.error("dao-upstream-node-update update_associate_node err: [" .. update_associate_node_err .. "]")
     end
 
     local _, update_hash_err = common.update_sync_data_hash()

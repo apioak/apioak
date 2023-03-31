@@ -244,51 +244,103 @@ function _M.upstream_list_by_node(detail)
     return upstream_list
 end
 
-function _M.update_associate_node_name(node)
+function _M.update_associate_node()
 
-    if not node.id then
+    local upstreams_list, upstreams_list_err = common.list_keys(common.PREFIX_MAP.upstreams)
+
+    if upstreams_list_err then
+        return "update_associate_node: get upstreams list FAIL [".. upstreams_list_err .."]"
+    end
+
+    if not upstreams_list.list or (#upstreams_list.list == 0) then
         return nil
     end
 
-    local list, err = common.list_keys(common.PREFIX_MAP.upstreams)
+    local nodes_list, nodes_list_err = common.list_keys(common.PREFIX_MAP.upstream_nodes)
 
-    if err then
-        return "update_associate_node_name: get upstream list FAIL [".. err .."]"
+    if nodes_list_err then
+        return "update_associate_node: get nodes list FAIL [".. nodes_list_err .."]"
     end
 
-    for i = 1, #list['list'] do
+    if not nodes_list.list or (#nodes_list.list == 0) then
+        return nil
+    end
 
-        local upstream_info = list['list'][i]
+    local nodes_id_map, nodes_name_map = {}, {}
+
+    for i = 1, #nodes_list.list do
+
+        if not nodes_id_map[nodes_list.list[i].id] then
+            nodes_id_map[nodes_list.list[i].id] = nodes_list.list[i].name
+        end
+
+        if not nodes_name_map[nodes_list.list[i].name] then
+            nodes_name_map[nodes_list.list[i].name] = nodes_list.list[i].id
+        end
+
+    end
+
+    for i = 1, #upstreams_list.list do
 
         repeat
 
-            if not upstream_info['nodes'] or (next(upstream_info['nodes']) == nil) then
+            local upstream_info = upstreams_list.list[i]
+
+            if not upstream_info.nodes or (#upstream_info.nodes == 0) then
                 break
             end
 
-            local new_node_list = {
+            local associate_nodes = upstream_info.nodes
+
+            local new_nodes = {
                 nodes = {}
             }
 
-            local upstream_nodes = upstream_info['nodes']
-
             local update = false
-            for j = 1, #upstream_nodes do
 
-                if upstream_nodes[j].id and (upstream_nodes[j].id == node.id) then
-                    update = true
-                    table.insert(new_node_list.nodes, { id = node.id, name = node.name })
-                else
-                    table.insert(new_node_list.nodes, upstream_nodes[j])
-                end
+            for j = 1, #associate_nodes do
+
+                repeat
+
+                    if associate_nodes[j].id and nodes_id_map[associate_nodes[j].id] and
+                            (associate_nodes[j].name ~= nodes_id_map[associate_nodes[j].id]) then
+
+                        update = true
+
+                        table.insert(new_nodes.nodes, {
+                            id = associate_nodes[j].id,
+                            name = nodes_id_map[associate_nodes[j].id]
+                        })
+
+                        break
+                    end
+
+                    if associate_nodes[j].name and nodes_name_map[associate_nodes[j].name] and
+                            (associate_nodes[j].id ~= nodes_name_map[associate_nodes[j].name]) then
+
+                        update = true
+
+                        table.insert(new_nodes.nodes, {
+                            id = nodes_name_map[associate_nodes[j].name],
+                            name = associate_nodes[j].name
+                        })
+
+                        break
+                    end
+
+                    table.insert(new_nodes.nodes, associate_nodes[j])
+
+                until true
             end
 
             if update then
-                local _, update_err = _M.updated(new_node_list, upstream_info)
+
+                local _, update_err = _M.updated(new_nodes, upstream_info)
 
                 if update_err then
-                    return "update_associate_node_name: update node name FAIL [".. update_err .."]"
+                    return "update_associate_node: update nodes FAIL [".. update_err .."]"
                 end
+
             end
 
         until true
