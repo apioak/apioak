@@ -548,51 +548,103 @@ function _M.update_associate_service()
     return nil
 end
 
-function _M.update_associate_plugin_name(plugin)
+function _M.update_associate_routers_plugin()
 
-    if not plugin.id  then
+    local routers_list, routers_list_err = common.list_keys(common.PREFIX_MAP.routers)
+
+    if routers_list_err then
+        return "update_associate_routers_plugin: get routers list FAIL [".. routers_list_err .."]"
+    end
+
+    if not routers_list.list or (#routers_list.list == 0) then
         return nil
     end
 
-    local list, err = common.list_keys(common.PREFIX_MAP.routers)
+    local plugins_list, plugins_list_err = common.list_keys(common.PREFIX_MAP.plugins)
 
-    if err then
-        return "update_associate_plugin_name: get router list FAIL [".. err .."]"
+    if plugins_list_err then
+        return "update_associate_routers_plugin: get plugins list FAIL [".. plugins_list_err .."]"
     end
 
-    for i = 1, #list['list'] do
+    if not plugins_list.list or (#plugins_list.list == 0) then
+        return nil
+    end
 
-        local router_info = list['list'][i]
+    local plugins_id_map, plugins_name_map = {}, {}
+
+    for i = 1, #plugins_list.list do
+
+        if not plugins_id_map[plugins_list.list[i].id] then
+            plugins_id_map[plugins_list.list[i].id] = plugins_list.list[i].name
+        end
+
+        if not plugins_name_map[plugins_list.list[i].name] then
+            plugins_name_map[plugins_list.list[i].name] = plugins_list.list[i].id
+        end
+
+    end
+
+    for i = 1, #routers_list.list do
 
         repeat
 
-            if not router_info['plugins'] or (next(router_info['plugins']) == nil) then
+            local routers_info = routers_list.list[i]
+
+            if not routers_info.plugins or (#routers_info.plugins == 0) then
                 break
             end
 
-            local associate_plugins = router_info['plugins']
+            local associate_plugins = routers_info.plugins
 
             local new_plugins = {
                 plugins = {}
             }
 
             local update = false
+
             for j = 1, #associate_plugins do
 
-                if associate_plugins[j].id and (associate_plugins[j].id == plugin.id) then
-                    update = true
-                    table.insert(new_plugins.plugins, { id = plugin.id, name = plugin.name })
-                else
+                repeat
+
+                    if associate_plugins[j].id and plugins_id_map[associate_plugins[j].id] and
+                            (associate_plugins[j].name ~= plugins_id_map[associate_plugins[j].id]) then
+
+                        update = true
+
+                        table.insert(new_plugins.plugins, {
+                            id = associate_plugins[j].id,
+                            name = plugins_id_map[associate_plugins[j].id]
+                        })
+
+                        break
+                    end
+
+                    if associate_plugins[j].name and plugins_name_map[associate_plugins[j].name] and
+                            (associate_plugins[j].id ~= plugins_name_map[associate_plugins[j].name]) then
+
+                        update = true
+
+                        table.insert(new_plugins.plugins, {
+                            id = plugins_name_map[associate_plugins[j].name],
+                            name = associate_plugins[j].name
+                        })
+
+                        break
+                    end
+
                     table.insert(new_plugins.plugins, associate_plugins[j])
-                end
+
+                until true
             end
 
             if update then
-                local _, update_err = _M.updated(new_plugins, router_info)
+
+                local _, update_err = _M.updated(new_plugins, routers_info)
 
                 if update_err then
-                    return "update_associate_plugin_name: update plugin name FAIL [".. update_err .."]"
+                    return "update_associate_routers_plugin: update plugin FAIL [".. update_err .."]"
                 end
+
             end
 
         until true

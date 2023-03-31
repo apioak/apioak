@@ -40,6 +40,18 @@ function _M.created(params)
         return nil, "create plugin FAIL, err:[".. tostring(err) .."]"
     end
 
+    local update_services_plugin_err = service.update_associate_services_plugin()
+
+    if update_services_plugin_err then
+        pdk.log.error("dao-plugin-created update_services_plugin err: [" .. update_services_plugin_err .. "]")
+    end
+
+    local update_routers_plugin_err = router.update_associate_routers_plugin()
+
+    if update_routers_plugin_err then
+        pdk.log.error("dao-plugin-created update_routers_plugin err: [" .. update_routers_plugin_err .. "]")
+    end
+
     local _, update_hash_err = common.update_sync_data_hash()
 
     if update_hash_err then
@@ -90,16 +102,16 @@ function _M.updated(params, detail)
         return nil, "update plugin FAIL, err[".. tostring(err) .."]"
     end
 
-    local update_service_plugin_name_err = service.update_associate_plugin_name(detail)
+    local update_services_plugin_err = service.update_associate_services_plugin()
 
-    if update_service_plugin_name_err then
-        pdk.log.error("dao-plugin-update update_service_plugin_name err: [" .. update_service_plugin_name_err .. "]")
+    if update_services_plugin_err then
+        pdk.log.error("dao-plugin-update update_services_plugin err: [" .. update_services_plugin_err .. "]")
     end
 
-    local update_router_plugin_name_err = router.update_associate_plugin_name(detail)
+    local update_routers_plugin_err = router.update_associate_routers_plugin()
 
-    if update_router_plugin_name_err then
-        pdk.log.error("dao-plugin-update update_router_plugin_name err: [" .. update_router_plugin_name_err .. "]")
+    if update_routers_plugin_err then
+        pdk.log.error("dao-plugin-update update_routers_plugin err: [" .. update_routers_plugin_err .. "]")
     end
 
     local _, update_hash_err = common.update_sync_data_hash()
