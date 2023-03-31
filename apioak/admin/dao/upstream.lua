@@ -45,7 +45,7 @@ function _M.created(params)
     local update_associate_upstream_err = router.update_associate_upstream()
 
     if update_associate_upstream_err then
-        pdk.log.error("dao-upstream-update update_associate_upstream err: [" .. update_associate_upstream_err .. "]")
+        pdk.log.error("dao-upstream-created update_associate_upstream err: [" .. update_associate_upstream_err .. "]")
     end
 
     local _, update_hash_err = common.update_sync_data_hash()

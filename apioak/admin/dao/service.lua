@@ -44,6 +44,12 @@ function _M.created(params)
         return nil, "create service FAIL [".. err .."]"
     end
 
+    local update_associate_service_err = router.update_associate_service()
+
+    if update_associate_service_err then
+        pdk.log.error("dao-service-created update_associate_service err: [" .. update_associate_service_err .. "]")
+    end
+
     local _, update_hash_err = common.update_sync_data_hash()
 
     if update_hash_err then
@@ -105,10 +111,10 @@ function _M.updated(params, detail)
         return nil, "update service FAIL, err[".. tostring(err) .."]"
     end
 
-    local update_service_name_err = router.update_associate_service_name(detail)
+    local update_associate_service_err = router.update_associate_service()
 
-    if update_service_name_err then
-        pdk.log.error("dao-service-update update_associate_service_name err: [" .. update_service_name_err .. "]")
+    if update_associate_service_err then
+        pdk.log.error("dao-service-update update_associate_service err: [" .. update_associate_service_err .. "]")
     end
 
     local _, update_hash_err = common.update_sync_data_hash()

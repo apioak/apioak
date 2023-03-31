@@ -419,6 +419,7 @@ function _M.update_associate_upstream()
             end
 
             if router_info.upstream.id and upstream_id_map[router_info.upstream.id] then
+
                 if (router_info.upstream.name == upstream_id_map[router_info.upstream.id]) then
                     break
                 end
@@ -437,6 +438,7 @@ function _M.update_associate_upstream()
             end
 
             if router_info.upstream.name and upstream_name_map[router_info.upstream.name] then
+
                 if router_info.upstream.id == upstream_name_map[router_info.upstream.name] then
                     break
                 end
@@ -458,40 +460,86 @@ function _M.update_associate_upstream()
     return nil
 end
 
-function _M.update_associate_service_name(service)
+function _M.update_associate_service()
 
-    if not service.id  then
+    local router_list, router_list_err = common.list_keys(common.PREFIX_MAP.routers)
+
+    if router_list_err then
+        return "update_associate_service: get router list FAIL [".. router_list_err .."]"
+    end
+
+    if not router_list.list or (#router_list.list == 0) then
         return nil
     end
 
-    local list, err = common.list_keys(common.PREFIX_MAP.routers)
+    local services_list, services_list_err = common.list_keys(common.PREFIX_MAP.services)
 
-    if err then
-        return "update_associate_service_name: get router list FAIL [".. err .."]"
+    if services_list_err then
+        return "update_associate_service: get services list FAIL [".. services_list_err .."]"
     end
 
-    for i = 1, #list['list'] do
+    if not services_list.list or (#services_list.list == 0) then
+        return nil
+    end
 
-        local router_info = list['list'][i]
+    local services_id_map, services_name_map = {}, {}
+
+    for i = 1, #services_list.list do
+
+        if not services_id_map[services_list.list[i].id] then
+            services_id_map[services_list.list[i].id] = services_list.list[i].name
+        end
+
+        if not services_name_map[services_list.list[i].name] then
+            services_name_map[services_list.list[i].name] = services_list.list[i].id
+        end
+
+    end
+
+    for j = 1, #router_list.list do
 
         repeat
 
-            if not router_info['service'] or (next(router_info['service']) == nil) then
+            local router_info = router_list.list[j]
+
+            if not router_info.service or (next(router_info.service) == nil) then
                 break
             end
 
-            if not router_info['service'].id or (router_info['service'].id ~= service.id) then
+            if router_info.service.id and services_id_map[router_info.service.id] then
+
+                if (router_info.service.name == services_id_map[router_info.service.id]) then
+                    break
+                end
+
+                local new_service = {
+                    service = { id = router_info.service.id, name = services_id_map[router_info.service.id] }
+                }
+
+                local _, update_name_err = _M.updated(new_service, router_info)
+
+                if update_name_err then
+                    return "update_associate_service: update service name FAIL [".. update_name_err .."]"
+                end
+
                 break
             end
 
-            local new_service = {
-                service = { id = service.id, name = service.name }
-            }
+            if router_info.service.name and services_name_map[router_info.service.name] then
 
-            local _, update_err = _M.updated(new_service, router_info)
+                if router_info.service.id == services_name_map[router_info.service.name] then
+                    break
+                end
 
-            if update_err then
-                return "update_associate_service_name: update service name FAIL [".. update_err .."]"
+                local new_service = {
+                    service = { id = services_name_map[router_info.service.name], name = router_info.service.name }
+                }
+
+                local _, update_id_err = _M.updated(new_service, router_info)
+
+                if update_id_err then
+                    return "update_associate_service: update service id FAIL [".. update_id_err .."]"
+                end
             end
 
         until true
