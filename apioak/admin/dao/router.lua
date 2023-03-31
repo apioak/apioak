@@ -372,40 +372,84 @@ function _M.router_list_by_upstream(detail)
     return router_list
 end
 
-function _M.update_associate_upstream_name(upstream)
+function _M.update_associate_upstream()
 
-    if not upstream.id  then
+    local router_list, router_list_err = common.list_keys(common.PREFIX_MAP.routers)
+
+    if router_list_err then
+        return "update_associate_upstream: get router list FAIL [".. router_list_err .."]"
+    end
+
+    if not router_list.list or (#router_list.list == 0) then
         return nil
     end
 
-    local list, err = common.list_keys(common.PREFIX_MAP.routers)
+    local upstream_list, upstream_list_err = common.list_keys(common.PREFIX_MAP.upstreams)
 
-    if err then
-        return "update_associate_upstream_name: get router list FAIL [".. err .."]"
+    if upstream_list_err then
+        return "update_associate_upstream: get upstream list FAIL [".. upstream_list_err .."]"
     end
 
-    for i = 1, #list['list'] do
+    if not upstream_list.list or (#upstream_list.list == 0) then
+        return nil
+    end
 
-        local router_info = list['list'][i]
+    local upstream_id_map, upstream_name_map = {}, {}
+
+    for i = 1, #upstream_list.list do
+
+        if not upstream_id_map[upstream_list.list[i].id] then
+            upstream_id_map[upstream_list.list[i].id] = upstream_list.list[i].name
+        end
+
+        if not upstream_name_map[upstream_list.list[i].name] then
+            upstream_name_map[upstream_list.list[i].name] = upstream_list.list[i].id
+        end
+
+    end
+
+    for j = 1, #router_list.list do
 
         repeat
 
-            if not router_info['upstream'] or (next(router_info['upstream']) == nil) then
+            local router_info = router_list.list[j]
+
+            if not router_info.upstream or (next(router_info.upstream) == nil) then
                 break
             end
 
-            if not router_info['upstream'].id or (router_info['upstream'].id ~= upstream.id) then
+            if router_info.upstream.id and upstream_id_map[router_info.upstream.id] then
+                if (router_info.upstream.name == upstream_id_map[router_info.upstream.id]) then
+                    break
+                end
+
+                local new_upstream = {
+                    upstream = { id = router_info.upstream.id, name = upstream_id_map[router_info.upstream.id] }
+                }
+
+                local _, update_name_err = _M.updated(new_upstream, router_info)
+
+                if update_name_err then
+                    return "update_associate_upstream: update upstream name FAIL [".. update_name_err .."]"
+                end
+
                 break
             end
 
-            local new_upstream = {
-                upstream = { id = upstream.id, name = upstream.name }
-            }
+            if router_info.upstream.name and upstream_name_map[router_info.upstream.name] then
+                if router_info.upstream.id == upstream_name_map[router_info.upstream.name] then
+                    break
+                end
 
-            local _, update_err = _M.updated(new_upstream, router_info)
+                local new_upstream = {
+                    upstream = { id = upstream_name_map[router_info.upstream.name], name = router_info.upstream.name }
+                }
 
-            if update_err then
-                return "update_associate_upstream_name: update upstream name FAIL [".. update_err .."]"
+                local _, update_id_err = _M.updated(new_upstream, router_info)
+
+                if update_id_err then
+                    return "update_associate_upstream: update upstream id FAIL [".. update_id_err .."]"
+                end
             end
 
         until true

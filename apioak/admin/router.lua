@@ -65,7 +65,7 @@ function router_controller.created()
         end
     end
 
-    if next(body.upstream) ~= nil then
+    if body.upstream and next(body.upstream) ~= nil then
 
         local check_upstream, err = dao.common.check_kv_exists(body.upstream, pdk.const.CONSUL_PRFX_UPSTREAMS)
 
@@ -80,7 +80,7 @@ function router_controller.created()
     end
 
     local service_info
-    if next(body.service) ~= nil then
+    if body.service and next(body.service) ~= nil then
         service_info = body.service
     end
     local exist_paths, exist_paths_err = dao.router.exist_path(body.paths, service_info)
@@ -134,7 +134,7 @@ function router_controller.updated(params)
     end
 
     local service_info
-    if next(body.service) ~= nil then
+    if body.service and next(body.service) ~= nil then
         service_info = body.service
     end
     local exist_paths, exist_paths_err = dao.router.exist_path(body.paths, service_info)
@@ -148,7 +148,7 @@ function router_controller.updated(params)
         pdk.response.exit(400, { message = "exists paths [" .. table.concat(exist_paths, ",") .. "]" })
     end
 
-    if  next(body.upstream) ~= nil then
+    if body.upstream and next(body.upstream) ~= nil then
 
         local check_upstream, err = dao.common.check_kv_exists(body.upstream, pdk.const.CONSUL_PRFX_UPSTREAMS)
 

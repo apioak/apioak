@@ -42,6 +42,12 @@ function _M.created(params)
         return nil, "create upstream FAIL [".. err .."]"
     end
 
+    local update_associate_upstream_err = router.update_associate_upstream()
+
+    if update_associate_upstream_err then
+        pdk.log.error("dao-upstream-update update_associate_upstream err: [" .. update_associate_upstream_err .. "]")
+    end
+
     local _, update_hash_err = common.update_sync_data_hash()
 
     if update_hash_err then
@@ -115,10 +121,10 @@ function _M.updated(params, detail)
         return nil, "update upstream FAIL, err[".. tostring(err) .."]"
     end
 
-    local update_upstream_name_err = router.update_associate_upstream_name(detail)
+    local update_associate_upstream_err = router.update_associate_upstream()
 
-    if update_upstream_name_err then
-        pdk.log.error("dao-upstream-update update_associate_upstream_name err: [" .. update_upstream_name_err .. "]")
+    if update_associate_upstream_err then
+        pdk.log.error("dao-upstream-update update_associate_upstream err: [" .. update_associate_upstream_err .. "]")
     end
 
     local _, update_hash_err = common.update_sync_data_hash()
