@@ -211,6 +211,10 @@ function _M.upstream_list_by_node(detail)
         return nil, "upstream_list_by_node: get upstream list FAIL [".. err .."]"
     end
 
+    if not list or not list.list or (#list.list == 0) then
+        return nil, nil
+    end
+
     local upstream_list = {}
 
     for i = 1, #list['list'] do
@@ -252,7 +256,7 @@ function _M.update_associate_node()
         return "update_associate_node: get upstreams list FAIL [".. upstreams_list_err .."]"
     end
 
-    if not upstreams_list.list or (#upstreams_list.list == 0) then
+    if not upstreams_list or not upstreams_list.list or (#upstreams_list.list == 0) then
         return nil
     end
 
@@ -262,7 +266,7 @@ function _M.update_associate_node()
         return "update_associate_node: get nodes list FAIL [".. nodes_list_err .."]"
     end
 
-    if not nodes_list.list or (#nodes_list.list == 0) then
+    if not nodes_list or not nodes_list.list or (#nodes_list.list == 0) then
         return nil
     end
 

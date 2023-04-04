@@ -209,28 +209,11 @@ end
 function APIOAK.http_header_filter()
     local oak_ctx = ngx.ctx.oak_ctx
     run_plugin("http_header_filter", oak_ctx)
-
-    local upstream_status_num = tonumber(ngx.var.upstream_status)
-    if upstream_status_num and upstream_status_num >= 500 then
-        ngx.header.content_length = nil
-    end
 end
 
 function APIOAK.http_body_filter()
     local oak_ctx = ngx.ctx.oak_ctx
     run_plugin("http_body_filter", oak_ctx)
-
-    local upstream_status_num = tonumber(ngx.var.upstream_status)
-    if upstream_status_num and upstream_status_num >= 500 then
-        local chunk, eof = ngx.arg[1], ngx.arg[2]
-        if chunk ~= "" and not ngx.is_subrequest then
-            ngx.arg[1] = nil
-        end
-
-        if eof then
-            ngx.arg[1] = "Upstream Error!"
-        end
-    end
 end
 
 function APIOAK.http_log()

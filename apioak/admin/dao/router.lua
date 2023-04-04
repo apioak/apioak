@@ -198,8 +198,8 @@ end
 
 function _M.exist_path(paths, service_info)
 
-    if (#paths == 0) or (service_info == nil) or ((service_info.id == nil) and (service_info.name == nil)) then
-        return {}, nil
+    if #paths == 0 or not service_info or (not service_info.id and not service_info.name) then
+        return nil, nil
     end
 
     local paths_map = {}
@@ -211,6 +211,10 @@ function _M.exist_path(paths, service_info)
 
     if err then
         return nil, "get paths list FAIL [".. err .."]"
+    end
+
+    if not list or not list.list or (#list.list == 0) then
+        return nil, nil
     end
 
     local exist_paths = {}
@@ -259,6 +263,10 @@ function _M.router_list_by_service(detail)
         return nil, "get router list FAIL [".. err .."]"
     end
 
+    if not list or not list.list or (#list.list == 0) then
+        return nil, nil
+    end
+
     local router_list = {}
 
     for i = 1, #list['list'] do
@@ -297,6 +305,10 @@ function _M.router_list_by_plugin(detail)
 
     if err then
         return nil, "get router list FAIL [".. err .."]"
+    end
+
+    if not list or not list.list or (#list.list == 0) then
+        return nil, nil
     end
 
     local router_list = {}
@@ -344,6 +356,10 @@ function _M.router_list_by_upstream(detail)
         return nil, "get router list FAIL [".. err .."]"
     end
 
+    if not list or not list.list or (#list.list == 0) then
+        return nil, nil
+    end
+
     local router_list = {}
 
     for i = 1, #list['list'] do
@@ -380,7 +396,7 @@ function _M.update_associate_upstream()
         return "update_associate_upstream: get router list FAIL [".. router_list_err .."]"
     end
 
-    if not router_list.list or (#router_list.list == 0) then
+    if not router_list or not router_list.list or (#router_list.list == 0) then
         return nil
     end
 
@@ -390,7 +406,7 @@ function _M.update_associate_upstream()
         return "update_associate_upstream: get upstream list FAIL [".. upstream_list_err .."]"
     end
 
-    if not upstream_list.list or (#upstream_list.list == 0) then
+    if not upstream_list or not upstream_list.list or (#upstream_list.list == 0) then
         return nil
     end
 
@@ -468,7 +484,7 @@ function _M.update_associate_service()
         return "update_associate_service: get router list FAIL [".. router_list_err .."]"
     end
 
-    if not router_list.list or (#router_list.list == 0) then
+    if not router_list or not router_list.list or (#router_list.list == 0) then
         return nil
     end
 
@@ -478,7 +494,7 @@ function _M.update_associate_service()
         return "update_associate_service: get services list FAIL [".. services_list_err .."]"
     end
 
-    if not services_list.list or (#services_list.list == 0) then
+    if not services_list or not services_list.list or (#services_list.list == 0) then
         return nil
     end
 
@@ -556,7 +572,7 @@ function _M.update_associate_routers_plugin()
         return "update_associate_routers_plugin: get routers list FAIL [".. routers_list_err .."]"
     end
 
-    if not routers_list.list or (#routers_list.list == 0) then
+    if not routers_list or not routers_list.list or (#routers_list.list == 0) then
         return nil
     end
 
@@ -566,7 +582,7 @@ function _M.update_associate_routers_plugin()
         return "update_associate_routers_plugin: get plugins list FAIL [".. plugins_list_err .."]"
     end
 
-    if not plugins_list.list or (#plugins_list.list == 0) then
+    if not plugins_list or not plugins_list.list or (#plugins_list.list == 0) then
         return nil
     end
 

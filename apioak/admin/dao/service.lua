@@ -203,7 +203,7 @@ end
 function _M.exist_host(hosts, filter_id)
 
     if #hosts == 0 then
-        return {}, nil
+        return nil, nil
     end
 
     local hosts_map = {}
@@ -215,6 +215,10 @@ function _M.exist_host(hosts, filter_id)
 
     if err then
         return nil, "get services list FAIL [".. err .."]"
+    end
+
+    if not list or not list.list or (#list.list == 0) then
+        return nil, nil
     end
 
     local exist_hosts = {}
@@ -255,6 +259,10 @@ function _M.service_list_by_plugin(detail)
 
     if err then
         return nil, "get service list FAIL [".. err .."]"
+    end
+
+    if not list or not list.list or (#list.list == 0) then
+        return nil, nil
     end
 
     local service_list = {}
@@ -298,7 +306,7 @@ function _M.update_associate_services_plugin()
         return "update_associate_services_plugin: get services list FAIL [".. services_list_err .."]"
     end
 
-    if not services_list.list or (#services_list.list == 0) then
+    if not services_list or not services_list.list or (#services_list.list == 0) then
         return nil
     end
 
@@ -308,7 +316,7 @@ function _M.update_associate_services_plugin()
         return "update_associate_services_plugin: get plugins list FAIL [".. plugins_list_err .."]"
     end
 
-    if not plugins_list.list or (#plugins_list.list == 0) then
+    if not plugins_list or not plugins_list.list or (#plugins_list.list == 0) then
         return nil
     end
 
