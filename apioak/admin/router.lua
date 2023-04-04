@@ -28,7 +28,7 @@ function router_controller.created()
         body.service = { id = check_service.id, name = check_service.name }
     end
 
-    if body.plugins then
+    if body.plugins and (#body.plugins > 0) then
 
         local check_plugin, err = dao.common.batch_check_kv_exists(body.plugins, pdk.const.CONSUL_PRFX_PLUGINS)
 
@@ -65,9 +65,7 @@ function router_controller.created()
         end
     end
 
-    if body.upstream and
-            ((body.upstream.id ~= nil and #body.upstream.id > 0) or
-                    (body.upstream.name ~= nil and #body.upstream.name > 0)) then
+    if body.upstream and next(body.upstream) ~= nil then
 
         local check_upstream, err = dao.common.check_kv_exists(body.upstream, pdk.const.CONSUL_PRFX_UPSTREAMS)
 
@@ -81,7 +79,11 @@ function router_controller.created()
         end
     end
 
-    local exist_paths, exist_paths_err = dao.router.exist_path(body.paths)
+    local service_info
+    if body.service and next(body.service) ~= nil then
+        service_info = body.service
+    end
+    local exist_paths, exist_paths_err = dao.router.exist_path(body.paths, service_info)
 
     if exist_paths_err ~= nil then
         pdk.log.error("router-create exception when checking if path exists: [" .. exist_paths_err .. "]")
@@ -89,8 +91,10 @@ function router_controller.created()
     end
 
     if exist_paths and (#exist_paths > 0) then
-        pdk.response.exit(400, { message = "exists paths [" .. table.concat(exist_paths, ",") .. "]" })
+        pdk.response.exit(400, { message = "exists paths [ " .. table.concat(exist_paths, ", ") .. " ]" })
     end
+
+    body.methods = pdk.const.DEFAULT_METHODS(body.methods)
 
     local res, err = dao.router.created(body)
 
@@ -129,20 +133,22 @@ function router_controller.updated(params)
         end
     end
 
-    local exist_paths, exist_paths_err = dao.router.exist_path(body.paths, detail.id)
+    local service_info
+    if body.service and next(body.service) ~= nil then
+        service_info = body.service
+    end
+    local exist_paths, exist_paths_err = dao.router.exist_path(body.paths, service_info)
 
     if exist_paths_err then
         pdk.log.error("router-update exception when checking if path exists: [" .. exist_paths_err .. "]")
         pdk.response.exit(500, { message = "exception when checking if path exists" })
     end
 
-    if exist_paths and (#exist_paths > 0) then
+    if exist_paths and (#exist_paths > 1) then
         pdk.response.exit(400, { message = "exists paths [" .. table.concat(exist_paths, ",") .. "]" })
     end
 
-    if body.upstream and
-            ((body.upstream.id ~= nil and #body.upstream.id > 0) or
-                    (body.upstream.name ~= nil and #body.upstream.name > 0)) then
+    if body.upstream and next(body.upstream) ~= nil then
 
         local check_upstream, err = dao.common.check_kv_exists(body.upstream, pdk.const.CONSUL_PRFX_UPSTREAMS)
 
@@ -206,6 +212,8 @@ function router_controller.updated(params)
             end
         end
     end
+
+    body.methods = pdk.const.DEFAULT_METHODS(body.methods)
 
     local res, err = dao.router.updated(body, detail)
 

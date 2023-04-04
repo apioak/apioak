@@ -29,10 +29,12 @@ local function generate_ssl_data(ssl_data)
                 .. pdk.json.encode(ssl_data, true) .. "]"
     end
 
+    local reverse_sni = string.reverse(ssl_data.sni)
     return {
-        path    = oakrouting_ssl_prefix .. ":" .. ssl_data.sni,
-        method  = oakrouting_ssl_method,
-        handler = function(params, oak_ctx)
+        path     = oakrouting_ssl_prefix .. ":" .. reverse_sni,
+        method   = oakrouting_ssl_method,
+        priority = #reverse_sni,
+        handler  = function(params, oak_ctx)
 
             oak_ctx.params = params
 
@@ -184,7 +186,8 @@ function _M.ssl_match(oak_ctx)
         return false
     end
 
-    local match_sni = oakrouting_ssl_prefix .. ":" .. oak_ctx.matched.host
+    local reverse_host = string.reverse(oak_ctx.matched.host)
+    local match_sni = oakrouting_ssl_prefix .. ":" .. reverse_host
 
     if not ssl_objects then
         return false

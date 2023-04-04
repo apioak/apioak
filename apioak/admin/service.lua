@@ -17,7 +17,7 @@ function service_controller.created()
         pdk.response.exit(400, { message = "the service name[" .. body.name .. "] already exists" })
     end
 
-    if body.plugins then
+    if #body.plugins > 0 then
         local check_plugin, err = dao.common.batch_check_kv_exists(body.plugins, pdk.const.CONSUL_PRFX_PLUGINS)
 
         if err then
@@ -113,7 +113,7 @@ function service_controller.updated(params)
         pdk.log.warn("service-update exists hosts [" .. table.concat(exist_hosts, ",") .. "]")
     end
 
-    if body.plugins then
+    if #body.plugins > 0 then
         local check_plugin, err = dao.common.batch_check_kv_exists(body.plugins, pdk.const.CONSUL_PRFX_PLUGINS)
 
         if err then

@@ -181,7 +181,7 @@ end
 function _M.exist_sni(snis, filter_id)
 
     if #snis == 0 then
-        return {}, nil
+        return nil, nil
     end
 
     local sni_map = {}
@@ -193,6 +193,10 @@ function _M.exist_sni(snis, filter_id)
 
     if err then
         return nil, "get certificate list FAIL [".. err .."]"
+    end
+
+    if not list or not list.list or (#list.list == 0) then
+        return nil, nil
     end
 
     local exist_snis = {}

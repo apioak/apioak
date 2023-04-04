@@ -44,6 +44,12 @@ function _M.created(params)
         return nil, "create service FAIL [".. err .."]"
     end
 
+    local update_associate_service_err = router.update_associate_service()
+
+    if update_associate_service_err then
+        pdk.log.error("dao-service-created update_associate_service err: [" .. update_associate_service_err .. "]")
+    end
+
     local _, update_hash_err = common.update_sync_data_hash()
 
     if update_hash_err then
@@ -105,10 +111,10 @@ function _M.updated(params, detail)
         return nil, "update service FAIL, err[".. tostring(err) .."]"
     end
 
-    local update_service_name_err = router.update_associate_service_name(detail)
+    local update_associate_service_err = router.update_associate_service()
 
-    if update_service_name_err then
-        pdk.log.error("dao-service-update update_associate_service_name err: [" .. update_service_name_err .. "]")
+    if update_associate_service_err then
+        pdk.log.error("dao-service-update update_associate_service err: [" .. update_associate_service_err .. "]")
     end
 
     local _, update_hash_err = common.update_sync_data_hash()
@@ -197,7 +203,7 @@ end
 function _M.exist_host(hosts, filter_id)
 
     if #hosts == 0 then
-        return {}, nil
+        return nil, nil
     end
 
     local hosts_map = {}
@@ -209,6 +215,10 @@ function _M.exist_host(hosts, filter_id)
 
     if err then
         return nil, "get services list FAIL [".. err .."]"
+    end
+
+    if not list or not list.list or (#list.list == 0) then
+        return nil, nil
     end
 
     local exist_hosts = {}
@@ -251,6 +261,10 @@ function _M.service_list_by_plugin(detail)
         return nil, "get service list FAIL [".. err .."]"
     end
 
+    if not list or not list.list or (#list.list == 0) then
+        return nil, nil
+    end
+
     local service_list = {}
 
     for i = 1, #list['list'] do
@@ -284,51 +298,103 @@ function _M.service_list_by_plugin(detail)
     return service_list
 end
 
-function _M.update_associate_plugin_name(plugin)
+function _M.update_associate_services_plugin()
 
-    if not plugin.id  then
+    local services_list, services_list_err = common.list_keys(common.PREFIX_MAP.services)
+
+    if services_list_err then
+        return "update_associate_services_plugin: get services list FAIL [".. services_list_err .."]"
+    end
+
+    if not services_list or not services_list.list or (#services_list.list == 0) then
         return nil
     end
 
-    local list, err = common.list_keys(common.PREFIX_MAP.services)
+    local plugins_list, plugins_list_err = common.list_keys(common.PREFIX_MAP.plugins)
 
-    if err then
-        return "update_associate_plugin_name: get service list FAIL [".. err .."]"
+    if plugins_list_err then
+        return "update_associate_services_plugin: get plugins list FAIL [".. plugins_list_err .."]"
     end
 
-    for i = 1, #list['list'] do
+    if not plugins_list or not plugins_list.list or (#plugins_list.list == 0) then
+        return nil
+    end
 
-        local service_info = list['list'][i]
+    local plugins_id_map, plugins_name_map = {}, {}
+
+    for i = 1, #plugins_list.list do
+
+        if not plugins_id_map[plugins_list.list[i].id] then
+            plugins_id_map[plugins_list.list[i].id] = plugins_list.list[i].name
+        end
+
+        if not plugins_name_map[plugins_list.list[i].name] then
+            plugins_name_map[plugins_list.list[i].name] = plugins_list.list[i].id
+        end
+
+    end
+
+    for i = 1, #services_list.list do
 
         repeat
 
-            if not service_info['plugins'] or (next(service_info['plugins']) == nil) then
+            local service_info = services_list.list[i]
+
+            if not service_info.plugins or (#service_info.plugins == 0) then
                 break
             end
 
-            local associate_plugins = service_info['plugins']
+            local associate_plugins = service_info.plugins
 
             local new_plugins = {
                 plugins = {}
             }
 
             local update = false
+
             for j = 1, #associate_plugins do
 
-                if associate_plugins[j].id and (associate_plugins[j].id == plugin.id) then
-                    update = true
-                    table.insert(new_plugins.plugins, { id = plugin.id, name = plugin.name })
-                else
+                repeat
+
+                    if associate_plugins[j].id and plugins_id_map[associate_plugins[j].id] and
+                            (associate_plugins[j].name ~= plugins_id_map[associate_plugins[j].id]) then
+
+                        update = true
+
+                        table.insert(new_plugins.plugins, {
+                            id = associate_plugins[j].id,
+                            name = plugins_id_map[associate_plugins[j].id]
+                        })
+
+                        break
+                    end
+
+                    if associate_plugins[j].name and plugins_name_map[associate_plugins[j].name] and
+                            (associate_plugins[j].id ~= plugins_name_map[associate_plugins[j].name]) then
+
+                        update = true
+
+                        table.insert(new_plugins.plugins, {
+                            id = plugins_name_map[associate_plugins[j].name],
+                            name = associate_plugins[j].name
+                        })
+
+                        break
+                    end
+
                     table.insert(new_plugins.plugins, associate_plugins[j])
-                end
+
+                until true
             end
 
             if update then
+
                 local _, update_err = _M.updated(new_plugins, service_info)
 
                 if update_err then
-                    return "update_associate_plugin_name: update plugin name FAIL [".. update_err .."]"
+                    return "update_associate_services_plugin: update plugins FAIL [".. update_err .."]"
                 end
+
             end
 
         until true

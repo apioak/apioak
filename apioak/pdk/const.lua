@@ -65,7 +65,7 @@ _M.METHODS_PUT    = "PUT"
 
 _M.METHODS_POST   = "POST"
 
-_M.METHODS_PATH   = "PATH"
+_M.METHODS_PATCH  = "PATCH"
 
 _M.METHODS_DELETE = "DELETE"
 
@@ -75,7 +75,7 @@ _M.ALL_METHODS    = {
     _M.METHODS_GET,
     _M.METHODS_PUT,
     _M.METHODS_POST,
-    _M.METHODS_PATH,
+    _M.METHODS_PATCH,
     _M.METHODS_DELETE,
     _M.METHODS_OPTIONS,
 }
@@ -85,13 +85,35 @@ _M.ALL_METHODS_ALL    = {
     _M.METHODS_GET,
     _M.METHODS_PUT,
     _M.METHODS_POST,
-    _M.METHODS_PATH,
+    _M.METHODS_PATCH,
     _M.METHODS_DELETE,
     _M.METHODS_OPTIONS,
 }
 
 _M.PLUGINS = function ()
     return config.query("plugins")
+end
+
+_M.DEFAULT_METHODS = function(methods)
+
+    if (type(methods) ~= "table") or (#methods == 0) then
+        return _M.ALL_METHODS
+    end
+
+    local all = false
+
+    for i = 1, #methods do
+        methods[i] = string.upper(methods[i])
+        if methods[i] == _M.METHODS_ALL then
+            all = true
+        end
+    end
+
+    if all then
+        return _M.ALL_METHODS
+    end
+
+    return methods
 end
 
 return _M
