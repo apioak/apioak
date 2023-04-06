@@ -16,8 +16,6 @@ local snis = {
         type      = "string",
         minLength = 1,
         maxLength = 35,
-        --pattern   = "^(?=^.{3,255}$)[a-zA-Z0-9-*-.][-a-zA-Z0-9]{0,62}(\\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$",
-        --pattern   = "^(?=^.{3,255}$)[a-zA-Z0-9][a-zA-Z0-9-._]{0,62}(\\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$",
     }
 }
 
