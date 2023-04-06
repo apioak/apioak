@@ -1,3 +1,22 @@
+## 0.6.2
+> Released on 2023.04.06
+
+#### Feature
+
+- Added certificate wildcard `*` matching.
+- Added `name` field for associated configuration.
+- Upgrade route `*` matches to increase default weight.
+- Upgrade the routing configuration `path` verification method to repeated verification within the service.
+- Upgrade the association relationship between existing association configurations to automatic maintenance.
+- Upgrade config load to automatically phase out invalid config load memory.
+
+
+#### FIX
+
+- Fixed the verification rule of the associated plug-in to not pass and not verify.
+
+
+
 ## 0.6.1
 > Released on 2023.03.01
 
