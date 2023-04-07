@@ -1,9 +1,19 @@
+<p align="center">
+  <img width="150" src="doc/images/APIOPAK-logo.png">
+</p>
+
+<p align="center">
+  <a href="https://github.com/apioak/apioak">
+    <img src="https://img.shields.io/badge/Apioak-Master-blue" alt="Apioak-Master">
+  </a>
+
+  <a href="https://github.com/apioak/apioak/blob/master/LICENSE">
+    <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License-Apache">
+  </a>
+</p>
+
+
 [简体中文](README_CN.md) | [English](README.md)
-
-# APIOAK
-
-[![Build Status](https://travis-ci.org/apioak/apioak.svg?branch=master)](https://travis-ci.org/apioak/apioak)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/apioak/apioak/blob/master/LICENSE)
 
 APIOAK provides full life cycle management of API release, management, and operation and maintenance. Assist users in simple, fast, low-cost, low-risk implementation of microservice aggregation, front-end and back-end separation, system integration, and open functions and data to partners and developers.
 
