@@ -17,7 +17,7 @@ if script_path:sub(1, 4) == '/usr' or script_path:sub(1, 4) == '/bin' then
     apioak_home = "/usr/local/apioak"
     package.cpath = "/usr/local/apioak/lib/lua/5.1/?.so;"
             .. package.cpath
-    
+
     package.path = "/usr/local/apioak/share/lua/5.1/?.lua;"
             .. "/usr/local/apioak/share/lua/5.1/?/init.lua;"
             .. package.path
@@ -25,10 +25,10 @@ else
     -- 开发模式：使用 lua_modules
     apioak_home = trim(execute_cmd("pwd"))
     local lua_modules_path = apioak_home .. "/lua_modules"
-    
+
     package.cpath = lua_modules_path .. "/lib/lua/5.1/?.so;"
             .. package.cpath
-    
+
     package.path = lua_modules_path .. "/share/lua/5.1/?.lua;"
             .. lua_modules_path .. "/share/lua/5.1/?/init.lua;"
             .. package.path
