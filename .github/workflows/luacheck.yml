@@ -12,22 +12,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Luacheck Install
-        run: |
-          sudo apt-get update
-          sudo apt-get install curl wget
-          sudo curl -R -O http://www.lua.org/ftp/lua-5.4.4.tar.gz && tar zxf lua-5.4.4.tar.gz
-          cd lua-5.4.4
-          sudo make all test && sudo make install && cd ../
-          sudo rm -rf lua-5.4.4.tar.gz lua-5.4.4
-          sudo wget https://luarocks.org/releases/luarocks-3.9.0.tar.gz && tar zxf luarocks-3.9.0.tar.gz
-          cd luarocks-3.9.0
-          sudo ./configure --prefix=/usr/local/ --with-lua-bin=/usr/local/bin/
-          sudo make && sudo make install
-          sudo luarocks install luacheck && cd ../
-          sudo cp luarocks-3.9.0/lua_modules/bin/luacheck /usr/local/bin/luacheck
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Code Check
-        run: |
-          git ls-files -- "*.lua" | xargs luacheck
+      - name: Setup Lua
+        uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "5.4"
+
+      - name: Setup LuaRocks
+        uses: leafo/gh-actions-luarocks@v4
+
+      - name: Install luacheck
+        run: luarocks install luacheck
+
+      - name: Run luacheck
+        run: git ls-files -- "*.lua" | xargs luacheck
