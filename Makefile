@@ -1,104 +1,97 @@
 UNAME            ?= $(shell uname)
-INSTALL          ?= install
 REMOVE           ?= rm -rf
-COPY             ?= cp -rf
-CHMOD            ?= chmod -R
-DOWNLOAD         ?= wget
-UNTAG            ?= tar -zxvf
-INST_OAK_PRODIR  ?= /usr/local/apioak
-INST_OAK_BINDIR  ?= /usr/bin
-LUTJIT_DIR       ?= $(shell ${OR_EXEC} -V 2>&1 | grep prefix | grep -Eo 'prefix=(.*?)/nginx' | grep -Eo '/.*/')luajit
-LUAROCKS_VER     ?= $(shell luarocks --version | grep -E -o  "luarocks [0-9]+.")
+APIOAK_DIR       ?= /usr/local/apioak
 
-RELY_PATH ?= ./rockspec/src/
-RELYS := net-url-1.1-1.src.rock
-RELYS += lrexlib-pcre-2.9.1-1.src.rock
-RELYS += jsonschema-0.9.8-0.src.rock
-RELYS += lua-resty-balancer-0.02rc5-0.src.rock
-RELYS += lua-tinyyaml-0.1-0.src.rock
-RELYS += luafilesystem-1.7.0-2.src.rock
-RELYS += penlight-1.5.4-1.src.rock
-RELYS += lua-resty-http-0.15-0.src.rock
-RELYS += lua-resty-consul-0.3-2.src.rock
-RELYS += lua-resty-worker-events-2.0.1-1.src.rock
-RELYS += lua-resty-jwt-0.2.0-0.src.rock
-RELYS += lua-resty-oakrouting-0.2.0-1.src.rock
-RELYS += lua-resty-lrucache-0.09-2.src.rock
-RELYS += luasocket-3.0rc1-2.src.rock
-RELYS += multipart-0.5.5-1.src.rock
-RELYS += lua-resty-jit-uuid-0.0.7-2.src.rock
-RELYS += lua-resty-dns-0.21-1.src.rock
+# Rockspec file
+ROCKSPEC         := rockspec/apioak-master-0.rockspec
 
-.PHONY: deps
-deps:
-	$(foreach rely, $(RELYS), luarocks install $(RELY_PATH)$(rely) --tree=deps;)
-
-#ifeq ($(UNAME),Darwin)
-#	luarocks install --lua-dir=$(LUTJIT_DIR) rockspec/apioak-master-0.rockspec --tree=deps --only-deps --local
-#else ifneq ($(LUAROCKS_VER),'luarocks 3.')
-#	luarocks install rockspec/apioak-master-0.rockspec --tree=deps --only-deps --local
-#else
-#	luarocks install --lua-dir=/usr/local/openresty/luajit rockspec/apioak-master-0.rockspec --tree=deps --only-deps --local
-#endif
-
+# Detect OpenResty LuaJIT path
+ifeq ($(UNAME), Darwin)
+	# macOS with Homebrew OpenResty
+	LUAJIT_DIR       ?= $(shell test -d /opt/homebrew/opt/openresty/luajit && echo /opt/homebrew/opt/openresty/luajit || echo /usr/local/opt/openresty/luajit)
+	LUAROCKS_FLAGS   := --lua-dir=$(LUAJIT_DIR)
+else
+	# Linux
+	LUAJIT_DIR       ?= /usr/local/openresty/luajit
+	ifneq ("$(wildcard $(LUAJIT_DIR))","")
+		LUAROCKS_FLAGS := --lua-dir=$(LUAJIT_DIR)
+	else
+		LUAROCKS_FLAGS :=
+	endif
+endif
 
 .PHONY: install
 install:
-	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak
-	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/admin
-	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/admin/dao
-	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/admin/schema
-	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/cmd
-	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/cmd/utils
-	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/pdk
-	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/plugin
-	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/plugin/cors
-	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/plugin/jwt-auth
-	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/plugin/key-auth
-	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/plugin/limit-conn
-	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/plugin/limit-count
-	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/plugin/limit-req
-	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/plugin/mock
-	$(INSTALL) -d $(INST_OAK_PRODIR)/apioak/sys
-	$(INSTALL) -d $(INST_OAK_PRODIR)/bin
-	$(INSTALL) -d $(INST_OAK_PRODIR)/conf
-	$(INSTALL) -d $(INST_OAK_PRODIR)/conf/cert
-	$(INSTALL) -d $(INST_OAK_PRODIR)/logs
-	$(INSTALL) -d $(INST_OAK_PRODIR)/deps
+	@echo "Installing APIOAK using luarocks..."
+	@echo "Using Lua/LuaJIT at: $(LUAJIT_DIR)"
+	luarocks make $(ROCKSPEC) --tree=$(APIOAK_DIR) $(LUAROCKS_FLAGS)
+	@echo "Installing binary and configuration files..."
+	@mkdir -p $(APIOAK_DIR)/bin
+	@mkdir -p $(APIOAK_DIR)/conf/cert
+	@install -m 755 bin/apioak $(APIOAK_DIR)/bin/apioak
+	@install -m 644 conf/apioak.yaml $(APIOAK_DIR)/conf/apioak.yaml
+	@install -m 644 conf/nginx.conf $(APIOAK_DIR)/conf/nginx.conf
+	@install -m 644 conf/mime.types $(APIOAK_DIR)/conf/mime.types
+	@install -m 644 conf/cert/apioak.crt $(APIOAK_DIR)/conf/cert/apioak.crt
+	@install -m 600 conf/cert/apioak.key $(APIOAK_DIR)/conf/cert/apioak.key
+	@echo ""
+	@echo "✅ Installation complete!"
+	@echo ""
+	@echo "APIOAK modules installed to: $(APIOAK_DIR)/share/lua/5.1/"
+	@echo "APIOAK dependencies installed to: $(APIOAK_DIR)/lib/lua/5.1/"
+	@echo "Binary installed to: $(APIOAK_DIR)/bin/apioak"
+	@echo "Configuration files installed to: $(APIOAK_DIR)/conf/"
+	@echo ""
+	@echo "To use APIOAK, add to your PATH:"
+	@echo "  export PATH=$(APIOAK_DIR)/bin:\$$PATH"
+	@echo ""
+	@echo "Then you can run:"
+	@echo "  apioak version"
+	@echo "  apioak start"
 
-	$(INSTALL) apioak/*.lua        			   $(INST_OAK_PRODIR)/apioak/
-	$(INSTALL) apioak/admin/*.lua  			   $(INST_OAK_PRODIR)/apioak/admin/
-	$(INSTALL) apioak/admin/dao/*.lua 		   $(INST_OAK_PRODIR)/apioak/admin/dao/
-	$(INSTALL) apioak/admin/schema/*.lua 	   $(INST_OAK_PRODIR)/apioak/admin/schema/
-	$(INSTALL) apioak/cmd/*.lua 			   $(INST_OAK_PRODIR)/apioak/cmd/
-	$(INSTALL) apioak/cmd/utils/*.lua 		   $(INST_OAK_PRODIR)/apioak/cmd/utils/
-	$(INSTALL) apioak/pdk/*.lua    			   $(INST_OAK_PRODIR)/apioak/pdk/
-	$(INSTALL) apioak/plugin/*.lua 			   $(INST_OAK_PRODIR)/apioak/plugin/
-	$(INSTALL) apioak/plugin/cors/*.lua 	   $(INST_OAK_PRODIR)/apioak/plugin/cors/
-	$(INSTALL) apioak/plugin/jwt-auth/*.lua    $(INST_OAK_PRODIR)/apioak/plugin/jwt-auth/
-	$(INSTALL) apioak/plugin/key-auth/*.lua    $(INST_OAK_PRODIR)/apioak/plugin/key-auth/
-	$(INSTALL) apioak/plugin/limit-conn/*.lua  $(INST_OAK_PRODIR)/apioak/plugin/limit-conn/
-	$(INSTALL) apioak/plugin/limit-count/*.lua $(INST_OAK_PRODIR)/apioak/plugin/limit-count/
-	$(INSTALL) apioak/plugin/limit-req/*.lua   $(INST_OAK_PRODIR)/apioak/plugin/limit-req/
-	$(INSTALL) apioak/plugin/mock/*.lua 	   $(INST_OAK_PRODIR)/apioak/plugin/mock/
-	$(INSTALL) apioak/sys/*.lua    			   $(INST_OAK_PRODIR)/apioak/sys/
-
-	$(INSTALL) bin/apioak $(INST_OAK_PRODIR)/bin/apioak
-	$(INSTALL) bin/apioak $(INST_OAK_BINDIR)/apioak
-
-	$(INSTALL) conf/mime.types  $(INST_OAK_PRODIR)/conf/mime.types
-	$(INSTALL) conf/apioak.yaml $(INST_OAK_PRODIR)/conf/apioak.yaml
-	$(INSTALL) conf/nginx.conf  $(INST_OAK_PRODIR)/conf/nginx.conf
-
-	$(INSTALL) conf/cert/apioak.crt $(INST_OAK_PRODIR)/conf/cert/apioak.crt
-	$(INSTALL) conf/cert/apioak.key $(INST_OAK_PRODIR)/conf/cert/apioak.key
-
-	$(INSTALL) README.md    $(INST_OAK_PRODIR)/README.md
-	$(INSTALL) README_CN.md $(INST_OAK_PRODIR)/README_CN.md
-	$(INSTALL) COPYRIGHT    $(INST_OAK_PRODIR)/COPYRIGHT
-	$(COPY) deps/*        	$(INST_OAK_PRODIR)/deps/
+.PHONY: dev
+dev:
+	@echo "Installing APIOAK for development..."
+	@echo "Using Lua/LuaJIT at: $(LUAJIT_DIR)"
+	luarocks make $(ROCKSPEC) --tree=./lua_modules $(LUAROCKS_FLAGS)
+	@echo ""
+	@echo "✅ Development installation complete!"
+	@echo ""
+	@echo "You can now run APIOAK directly:"
+	@echo "  ./bin/apioak version"
+	@echo "  ./bin/apioak start"
+	@echo ""
+	@echo "Note: The CLI automatically detects ./lua_modules/ and adds it to the search path."
 
 .PHONY: uninstall
 uninstall:
-	$(REMOVE) $(INST_OAK_PRODIR)
-	$(REMOVE) $(INST_OAK_BINDIR)/apioak
+	@echo "Uninstalling APIOAK..."
+	luarocks remove apioak --tree=$(APIOAK_DIR) 2>/dev/null || true
+	@echo "Removing binary and configuration files..."
+	@$(REMOVE) $(APIOAK_DIR)/bin/apioak
+	@$(REMOVE) $(APIOAK_DIR)/conf
+	@echo "APIOAK has been uninstalled."
+
+.PHONY: clean
+clean:
+	@echo "Cleaning local development installation..."
+	$(REMOVE) ./lua_modules
+	@echo "Clean complete!"
+
+.PHONY: help
+help:
+	@echo "APIOAK Makefile targets:"
+	@echo ""
+	@echo "  make install     - Install APIOAK and all dependencies to $(APIOAK_DIR)"
+	@echo "  make dev         - Install APIOAK for local development (./lua_modules)"
+	@echo "  make uninstall   - Uninstall APIOAK from $(APIOAK_DIR)"
+	@echo "  make clean       - Clean local development files"
+	@echo "  make help        - Show this help message"
+	@echo ""
+	@echo "Variables:"
+	@echo "  APIOAK_DIR       - Installation directory (default: /usr/local/apioak)"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make install"
+	@echo "  make install APIOAK_DIR=/opt/apioak"
+	@echo "  make install APIOAK_DIR=/usr/local/openresty/site"

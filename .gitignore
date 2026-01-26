@@ -41,4 +41,9 @@ luac.out
 .idea
 *.DS_Store
 .vscode
+
+# LuaRocks installation directories
 deps
+lua_modules
+share
+lib

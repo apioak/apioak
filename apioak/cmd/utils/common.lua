@@ -13,23 +13,24 @@ end
 
 local apioak_home
 if script_path:sub(1, 4) == '/usr' or script_path:sub(1, 4) == '/bin' then
+    -- 系统安装模式：使用标准 LuaRocks tree 路径
     apioak_home = "/usr/local/apioak"
-    package.cpath = "/usr/local/apioak/deps/lib64/lua/5.1/?.so;"
-            .. "/usr/local/apioak/deps/lib/lua/5.1/?.so;"
+    package.cpath = "/usr/local/apioak/lib/lua/5.1/?.so;"
             .. package.cpath
-
-    package.path = "/usr/local/apioak/deps/share/lua/5.1/apioak/lua/?.lua;"
-            .. "/usr/local/apioak/deps/share/lua/5.1/?.lua;"
-            .. "/usr/share/lua/5.1/apioak/lua/?.lua;"
-            .. "/usr/local/share/lua/5.1/apioak/lua/?.lua;"
+    
+    package.path = "/usr/local/apioak/share/lua/5.1/?.lua;"
+            .. "/usr/local/apioak/share/lua/5.1/?/init.lua;"
             .. package.path
 else
+    -- 开发模式：使用 lua_modules
     apioak_home = trim(execute_cmd("pwd"))
-    package.cpath = apioak_home .. "/deps/lib64/lua/5.1/?.so;"
+    local lua_modules_path = apioak_home .. "/lua_modules"
+    
+    package.cpath = lua_modules_path .. "/lib/lua/5.1/?.so;"
             .. package.cpath
-
-    package.path = apioak_home .. "/apioak/?.lua;"
-            .. apioak_home .. "/deps/share/lua/5.1/?.lua;"
+    
+    package.path = lua_modules_path .. "/share/lua/5.1/?.lua;"
+            .. lua_modules_path .. "/share/lua/5.1/?/init.lua;"
             .. package.path
 end
 
