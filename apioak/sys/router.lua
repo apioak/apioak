@@ -26,12 +26,16 @@ local function router_map_service_id()
 
     if err then
         pdk.log.error("router_map_service_id: get router list FAIL [".. err .."]")
-        return nil
+        return nil, err
     end
 
-    if not list or not list.list or (#list.list == 0) then
+    if not list or not list.list then
         pdk.log.error("router_map_service_id: router list null [" .. pdk.json.encode(list, true) .. "]")
-        return nil
+        return nil, "router list unavailable"
+    end
+
+    if #list.list == 0 then
+        return {}, nil
     end
 
     local router_map_service = {}
@@ -86,9 +90,13 @@ local function sync_update_router_data()
         return nil
     end
 
-    if not list or not list.list or (#list.list == 0) then
+    if not list or not list.list then
         pdk.log.error("sync_update_router_data: service list null [" .. pdk.json.encode(list, true) .. "]")
-        return nil
+        return nil, "service list unavailable"
+    end
+
+    if #list.list == 0 then
+        return {}, nil
     end
 
     local service_list = {}
@@ -119,10 +127,13 @@ local function sync_update_router_data()
     end
 
     if #service_list == 0 then
-        return nil
+        return {}, nil
     end
 
-    local router_map = router_map_service_id()
+    local router_map, router_map_err = router_map_service_id()
+    if router_map_err then
+        return nil, router_map_err
+    end
 
     local service_router_list = {}
 
@@ -147,7 +158,7 @@ local function sync_update_router_data()
     end
 
     if #service_router_list == 0 then
-        return nil
+        return {}, nil
     end
 
     return service_router_list
@@ -398,7 +409,12 @@ local function worker_event_router_handler_register()
             return
         end
 
-        if (type(data) ~= "table") or (#data == 0) then
+        if type(data) ~= "table" then
+            return
+        end
+
+        if #data == 0 then
+            router_objects = nil
             return
         end
 
